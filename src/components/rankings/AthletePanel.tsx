@@ -72,13 +72,9 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
               const chance = Math.round(contest.win_probability * 100);
               const delta = contest.rating_after - contest.rating_before;
               const result = contest.won ? "text-gain" : "text-drop";
-              // Only upsets are coloured: a win of a clear underdog, a loss of a clear favourite.
-              const chanceStyle =
-                contest.won && chance <= 35
-                  ? "text-gain font-semibold"
-                  : !contest.won && chance >= 65
-                    ? "text-drop font-semibold"
-                    : "text-ink";
+              // Only upsets stand out: a win of a clear underdog, a loss of a clear favourite.
+              const upset = contest.won ? chance <= 35 : chance >= 65;
+              const upsetColor = contest.won ? "text-gain border-gain" : "text-drop border-drop";
               return (
                 <div
                   key={contest.contest_id}
@@ -94,7 +90,16 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
                       {shortName(contest.opponent_family_name, contest.opponent_given_name)}
                     </Link>
                   </div>
-                  <span className={`w-24 shrink-0 text-right tabular-nums ${chanceStyle}`}>{chance}%</span>
+                  <span
+                    className={`w-24 shrink-0 inline-flex items-center justify-end gap-3 tabular-nums ${upset ? `${upsetColor} font-semibold` : "text-ink"}`}
+                  >
+                    {upset && (
+                      <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border leading-none">
+                        Upset
+                      </span>
+                    )}
+                    {chance}%
+                  </span>
                   <span className={`w-6 text-center font-bold shrink-0 ${result}`}>{contest.won ? "W" : "L"}</span>
                   <span className={`w-10 text-right font-bold shrink-0 tabular-nums ${result}`}>{signed(delta)}</span>
                   <Icon size={18} name="chevron_right" className="text-muted shrink-0 -mr-1" />
