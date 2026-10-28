@@ -11,7 +11,7 @@ import { changeText, ijfDifference, placesText } from "@/components/rankings/Cha
 import { Sparkline } from "@/components/rankings/Sparkline";
 import type { LeaderboardRow } from "@/lib/api";
 import { COUNTRY_NAMES } from "@/lib/countries";
-import { competitionCode, shortDate, shortName, signed } from "@/lib/format";
+import { competitionCode, fullName, shortDate, shortName, signed } from "@/lib/format";
 
 const SORTS = {
   "rating-desc": "Sort: rating ↓",
@@ -164,7 +164,7 @@ export function RankingsBrowser({
               setCountry(e.target.value);
               setPage(1);
             }}
-            className={CONTROL}
+            className={`${CONTROL} md:w-[110px]`} // the prototype's width, whatever the names
           >
             <option value="">All countries</option>
             {countries.map(({ code, name }) => (
@@ -273,7 +273,8 @@ export function RankingsBrowser({
                         onClick={(e) => e.stopPropagation()}
                         className="hover:underline"
                       >
-                        {shortName(row.family_name, row.given_name)}
+                        <span className="sm:hidden">{shortName(row.family_name, row.given_name)}</span>
+                        <span className="hidden sm:inline">{fullName(row.family_name, row.given_name)}</span>
                       </Link>
                     </td>
                     <td className={`${CELL} hidden sm:table-cell text-[12px] leading-[16px] whitespace-nowrap`}>

@@ -1,12 +1,20 @@
-// judobase writes family names in capitals ("ABE"); the design shows "Abe H.".
-// A few athletes have only a given name.
+// judobase writes family names in capitals ("ABE").
+function titleCase(name: string): string {
+  return name.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (match) => match.toUpperCase());
+}
+
+// "Abe H." (narrow screens). A few athletes have only a given name.
 export function shortName(familyName: string | null, givenName: string | null): string {
   if (!familyName) return givenName?.trim() || "—";
-  const family = familyName
-    .toLowerCase()
-    .replace(/(^|[\s'-])\p{L}/gu, (match) => match.toUpperCase());
   const initial = givenName?.trim()[0];
-  return initial ? `${family} ${initial.toUpperCase()}.` : family;
+  return initial ? `${titleCase(familyName)} ${initial.toUpperCase()}.` : titleCase(familyName);
+}
+
+// "Hifumi Abe", as in the athlete page's heading.
+export function fullName(familyName: string | null, givenName: string | null): string {
+  const given = givenName?.trim();
+  if (!familyName) return given || "—";
+  return given ? `${given} ${titleCase(familyName)}` : titleCase(familyName);
 }
 
 // Three-letter months everywhere ("Sep", while en-GB writes "Sept").
