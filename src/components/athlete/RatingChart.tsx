@@ -1,16 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { Athlete, HistoryRow } from "@/lib/api";
 import { monthYear } from "@/lib/format";
 
-// The prototype's chart: a 1000×280 canvas, the plot from x 75 to 860 (grid from 50)
-// and y 25 to 225 (six grid lines), labels of the latest point on the right.
-const LEFT = 75;
-const RIGHT = 860;
-const TOP = 25;
-const BOTTOM = 225;
+// Where things go on the canvas. From md up, the prototype's chart: a 1000×280 canvas
+// scaled to the page (the plot from x 75 to 860, grid from 50, y 25 to 225). Scaled
+// down to a phone its text would be 5px, so below md the canvas is the chart's real
+// width in pixels, with fewer dates and a narrow column for the labels on the right.
+type Layout = {
+  width: number;
+  height: number;
+  gridLeft: number;
+  valuesX: number; // right edge of the values on the left
+  left: number;
+  right: number;
+  top: number;
+  rowGap: number; // between the six grid lines
+  datesY: number;
+  maxDates: number;
+  labels: number; // the latest point's labels start this far right of the plot
+};
+
+const DESKTOP: Layout = {
+  width: 1000,
+  height: 280,
+  gridLeft: 50,
+  valuesX: 42,
+  left: 75,
+  right: 860,
+  top: 25,
+  rowGap: 40,
+  datesY: 255,
+  maxDates: 8,
+  labels: 16,
+};
+
+function phone(width: number): Layout {
+  const right = width - 96;
+  return {
+    width,
+    height: 226,
+    gridLeft: 38,
+    valuesX: 32,
+    left: 48,
+    right,
+    top: 14,
+    rowGap: 34,
+    datesY: 206,
+    maxDates: Math.max(2, Math.floor((right - 48) / 80)),
+    labels: 6,
+  };
+}
+
+const MD = 768;
 const RANGES = { "1Y": 1, "4Y": 4, All: null } as const;
 type Range = keyof typeof RANGES;
 const FONT = "'IBM Plex Sans', sans-serif";
@@ -33,6 +77,17 @@ export function RatingChart({
   // an athlete idle for years: the whole history rather than an empty window
   const lastContest = history.length ? new Date(history[0].fought_on).getTime() : now;
   const [range, setRange] = useState<Range>(now - lastContest > 3.5 * YEAR ? "All" : "4Y");
+  const box = useRef<HTMLDivElement>(null);
+  const [boxWidth, setBoxWidth] = useState<number | null>(null);
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => setBoxWidth(entry.contentRect.width));
+    if (box.current) observer.observe(box.current);
+    return () => observer.disconnect();
+  }, []);
+  const page = typeof window === "undefined" ? MD : window.innerWidth;
+  const at = boxWidth !== null && page < MD ? phone(Math.round(boxWidth)) : DESKTOP;
+  const { left: LEFT, right: RIGHT, top: TOP } = at;
+  const BOTTOM = TOP + 5 * at.rowGap;
 
   // the last contest of every competition (history is latest first)
   const seen = new Set<number>();
@@ -65,7 +120,7 @@ export function RatingChart({
   const last = shown[shown.length - 1];
   const real = shown.filter((p) => !p.edge);
   const peak = real.reduce((best, p) => (p.score > best.score ? p : best), real[0]);
-  const ticks = monthTicks(start, now);
+  const ticks = monthTicks(start, now, at.maxDates);
 
   return (
     <section className="mb-0 mt-14 lg:mt-16">
@@ -109,16 +164,20 @@ export function RatingChart({
         </div>
       </div>
 
-      <div className="w-full relative py-2">
-        <svg viewBox="0 0 1000 280" preserveAspectRatio="none" className="w-full h-auto overflow-visible block">
+      <div ref={box} className="w-full relative py-2">
+        <svg
+          viewBox={`0 0 ${at.width} ${at.height}`}
+          preserveAspectRatio="none"
+          className="w-full h-auto overflow-visible block"
+        >
           <g stroke="#D6CFC2" strokeWidth="0.8">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <line key={i} x1="50" x2={RIGHT} y1={TOP + i * 40} y2={TOP + i * 40} />
+              <line key={i} x1={at.gridLeft} x2={RIGHT} y1={TOP + i * at.rowGap} y2={TOP + i * at.rowGap} />
             ))}
           </g>
           <g fill="#66605C" fontFamily={FONT} fontSize="12" textAnchor="end">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <text key={i} x="42" y={TOP + i * 40 + 4}>
+              <text key={i} x={at.valuesX} y={TOP + i * at.rowGap + 4}>
                 {low + (5 - i) * step}
               </text>
             ))}
@@ -147,24 +206,31 @@ export function RatingChart({
             </g>
           )}
           <g fontFamily={FONT} fontSize="12">
-            <text fill="#66605C" x="876" y={y(last.rating) + 4}>
+            <text fill="#66605C" x={RIGHT + at.labels} y={y(last.rating) + 4}>
               Skill {last.rating}
             </text>
-            <line stroke="#D6CFC2" strokeWidth="0.8" x1="888" x2="888" y1={y(last.rating) + 11} y2={y(last.score) - 11} />
-            <text fill="#66605C" x="896" y={(y(last.rating) + y(last.score)) / 2 + 4}>
+            <line
+              stroke="#D6CFC2"
+              strokeWidth="0.8"
+              x1={RIGHT + at.labels + 12}
+              x2={RIGHT + at.labels + 12}
+              y1={y(last.rating) + 11}
+              y2={y(last.score) - 11}
+            />
+            <text fill="#66605C" x={RIGHT + at.labels + 20} y={(y(last.rating) + y(last.score)) / 2 + 4}>
               −{last.rating - last.score}
             </text>
-            <text fill="#33302E" fontWeight="700" x="888" y={y(last.score) + 4}>
+            <text fill="#33302E" fontWeight="700" x={RIGHT + at.labels + 12} y={y(last.score) + 4}>
               Rating {last.score}
             </text>
           </g>
           <g fill="#66605C" fontFamily={FONT} fontSize="12" textAnchor="middle">
             {ticks.map((tick) => (
-              <text key={tick} x={x(tick)} y="255">
+              <text key={tick} x={x(tick)} y={at.datesY}>
                 {monthYear(new Date(tick).toISOString())}
               </text>
             ))}
-            <text x={RIGHT} y="255">
+            <text x={RIGHT} y={at.datesY}>
               {monthYear(new Date(now).toISOString())}
             </text>
           </g>
@@ -183,17 +249,18 @@ function scale(low: number, high: number): [number, number] {
   return [Math.floor(low / 1000) * 1000, 1000];
 }
 
-// First days of months every 1, 3, 6, 12 or 24 months, at most 8, not too close to the end.
-function monthTicks(start: number, end: number): number[] {
+// First days of months every 1, 3, 6, 12 or 24 months, at most `most`, not too close
+// to the end (today's date is written there).
+function monthTicks(start: number, end: number, most: number): number[] {
   const months = (end - start) / (30.44 * 24 * 3600 * 1000);
-  const every = [1, 3, 6, 12, 24].find((n) => months / n <= 8) ?? 48;
+  const every = [1, 3, 6, 12, 24, 48, 96].find((n) => months / n <= most) ?? 192;
   const ticks: number[] = [];
   const date = new Date(start);
   date.setUTCDate(1);
   date.setUTCMonth(date.getUTCMonth() + 1);
   while (date.getTime() < end) {
     const index = date.getUTCFullYear() * 12 + date.getUTCMonth();
-    const tooClose = (end - date.getTime()) / (end - start) < 0.07;
+    const tooClose = (end - date.getTime()) / (end - start) < 0.6 / most;
     if (index % every === (every === 6 ? 4 : 0) && !tooClose) ticks.push(date.getTime());
     date.setUTCMonth(date.getUTCMonth() + 1);
   }
