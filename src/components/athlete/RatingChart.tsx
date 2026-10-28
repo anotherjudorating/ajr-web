@@ -21,6 +21,9 @@ type Layout = {
   datesY: number;
   maxDates: number;
   labels: number; // the latest point's labels start this far right of the plot
+  // the peak and the latest score marked on the scale (dashed lines to it) instead
+  // of labels on the right, as on the prototype's head-to-head chart for phones
+  onScale: boolean;
 };
 
 const DESKTOP: Layout = {
@@ -35,10 +38,11 @@ const DESKTOP: Layout = {
   datesY: 255,
   maxDates: 8,
   labels: 16,
+  onScale: false,
 };
 
 function phone(width: number): Layout {
-  const right = width - 96;
+  const right = width - 10;
   return {
     width,
     height: 226,
@@ -51,6 +55,7 @@ function phone(width: number): Layout {
     datesY: 206,
     maxDates: Math.max(2, Math.floor((right - 48) / 80)),
     labels: 6,
+    onScale: true,
   };
 }
 
@@ -120,7 +125,21 @@ export function RatingChart({
   const last = shown[shown.length - 1];
   const real = shown.filter((p) => !p.edge);
   const peak = real.reduce((best, p) => (p.score > best.score ? p : best), real[0]);
-  const ticks = monthTicks(start, now, at.maxDates);
+  // today's date is written at the right end: no other date too close to it
+  const ticks = monthTicks(start, now, at.maxDates).filter(
+    (tick) => RIGHT - x(tick) >= (at.onScale ? 85 : 55),
+  );
+
+  // marks on the scale: the latest score and the peak, pushed apart when too close
+  const marks = [{ point: last, color: "#33302E", at: y(last.score) }];
+  if (peak !== last) marks.push({ point: peak, color: "#66605C", at: y(peak.score) });
+  if (marks.length === 2 && Math.abs(marks[0].at - marks[1].at) < 14) {
+    const middle = (marks[0].at + marks[1].at) / 2;
+    const [lower, upper] = marks[0].at > marks[1].at ? [marks[0], marks[1]] : [marks[1], marks[0]];
+    lower.at = middle + 7;
+    upper.at = middle - 7;
+  }
+  const crowded = (row: number) => at.onScale && marks.some((mark) => Math.abs(mark.at - row) < 12);
 
   return (
     <section className="mb-0 mt-14 lg:mt-16">
@@ -176,11 +195,14 @@ export function RatingChart({
             ))}
           </g>
           <g fill="#66605C" fontFamily={FONT} fontSize="12" textAnchor="end">
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <text key={i} x={at.valuesX} y={TOP + i * at.rowGap + 4}>
-                {low + (5 - i) * step}
-              </text>
-            ))}
+            {[0, 1, 2, 3, 4, 5].map(
+              (i) =>
+                !crowded(TOP + i * at.rowGap) && (
+                  <text key={i} x={at.valuesX} y={TOP + i * at.rowGap + 4}>
+                    {low + (5 - i) * step}
+                  </text>
+                ),
+            )}
           </g>
           <polygon
             fill="#33302E"
@@ -197,7 +219,30 @@ export function RatingChart({
             </g>
           )}
           <circle cx={x(last.day)} cy={y(last.score)} fill="#990F3D" r="4" />
-          {peak !== last && (
+          {at.onScale && (
+            <>
+              <g strokeWidth="0.8" strokeDasharray="2,2">
+                {marks.map(({ point, color }) => (
+                  <line
+                    key={point.day}
+                    x1={at.gridLeft}
+                    x2={x(point.day)}
+                    y1={y(point.score)}
+                    y2={y(point.score)}
+                    stroke={color}
+                  />
+                ))}
+              </g>
+              <g fontFamily={FONT} fontSize="12" fontWeight="700" textAnchor="end">
+                {marks.map(({ point, color, at: row }) => (
+                  <text key={point.day} x={at.valuesX} y={row + 4} fill={color}>
+                    {Math.round(point.score)}
+                  </text>
+                ))}
+              </g>
+            </>
+          )}
+          {!at.onScale && peak !== last && (
             <g transform={`translate(${x(peak.day)}, ${y(peak.score)})`}>
               <rect fill="#F3EEE3" height="16" stroke="#D6CFC2" strokeWidth="0.8" width="68" x="-34" y="-24" />
               <text fill="#33302E" fontFamily={FONT} fontSize="11" fontWeight="600" textAnchor="middle" x="0" y="-12">
@@ -205,7 +250,7 @@ export function RatingChart({
               </text>
             </g>
           )}
-          <g fontFamily={FONT} fontSize="12">
+          <g fontFamily={FONT} fontSize="12" display={at.onScale ? "none" : undefined}>
             <text fill="#66605C" x={RIGHT + at.labels} y={y(last.rating) + 4}>
               Skill {last.rating}
             </text>
@@ -230,7 +275,8 @@ export function RatingChart({
                 {monthYear(new Date(tick).toISOString())}
               </text>
             ))}
-            <text x={RIGHT} y={at.datesY}>
+            {/* on a phone the plot reaches the edge: today's date ends there */}
+            <text x={RIGHT} y={at.datesY} textAnchor={at.onScale ? "end" : undefined}>
               {monthYear(new Date(now).toISOString())}
             </text>
           </g>
@@ -249,8 +295,7 @@ function scale(low: number, high: number): [number, number] {
   return [Math.floor(low / 1000) * 1000, 1000];
 }
 
-// First days of months every 1, 3, 6, 12 or 24 months, at most `most`, not too close
-// to the end (today's date is written there).
+// First days of months every 1, 3, 6, 12 or 24 months (and longer), at most `most`.
 function monthTicks(start: number, end: number, most: number): number[] {
   const months = (end - start) / (30.44 * 24 * 3600 * 1000);
   const every = [1, 3, 6, 12, 24, 48, 96].find((n) => months / n <= most) ?? 192;
@@ -260,8 +305,7 @@ function monthTicks(start: number, end: number, most: number): number[] {
   date.setUTCMonth(date.getUTCMonth() + 1);
   while (date.getTime() < end) {
     const index = date.getUTCFullYear() * 12 + date.getUTCMonth();
-    const tooClose = (end - date.getTime()) / (end - start) < 0.6 / most;
-    if (index % every === (every === 6 ? 4 : 0) && !tooClose) ticks.push(date.getTime());
+    if (index % every === (every === 6 ? 4 : 0)) ticks.push(date.getTime());
     date.setUTCMonth(date.getUTCMonth() + 1);
   }
   return ticks;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 
 import { Flag } from "@/components/Flag";
 import { changeText, ijfDifference, placesText } from "@/components/rankings/Changes";
@@ -9,7 +9,6 @@ import { fullName, monthYear } from "@/lib/format";
 
 const LABEL = "text-xs uppercase tracking-wider text-muted font-semibold";
 const BIG = "font-serif text-[28px] leading-tight font-bold text-ink";
-const RD_FACTOR = 3; // score = rating − 3 × RD (the backend's rating_settings)
 
 // Name, weights, places and the rating with its parts.
 export function AthleteHeader({
@@ -23,10 +22,9 @@ export function AthleteHeader({
   onWeight: (weight: string) => void;
   today: string;
 }) {
-  const [explained, setExplained] = useState(false);
   const age = athlete.birth_year ? Number(today.slice(0, 4)) - athlete.birth_year : null;
   const rating = athlete.rating ?? 0;
-  const uncertainty = rating - (athlete.score ?? 0); // RD_FACTOR × RD, rounded as the score is
+  const uncertainty = rating - (athlete.score ?? 0); // 3 × RD, rounded as the score is
 
   return (
     <>
@@ -124,26 +122,13 @@ export function AthleteHeader({
               <span className="text-[15px] leading-4 font-medium mx-1">=</span>
               <span className="tabular-nums font-bold text-ink">{athlete.score}</span>
             </div>
-            <button
-              type="button"
-              onClick={() => setExplained(!explained)}
-              className="font-serif text-[14px] leading-4 font-semibold text-claret hover:underline cursor-pointer"
-            >
+            <Link href="/methodology" className="font-serif text-[14px] leading-4 font-semibold text-claret hover:underline">
               How it works
-            </button>
+            </Link>
           </div>
         </div>
       </header>
 
-      {explained && (
-        <div className="w-full bg-panel border-l-[3px] border-l-claret p-5 mt-6">
-          <h3 className="font-serif text-[16px] font-semibold text-ink mb-3">How this rating is calculated</h3>
-          <p className="text-sm text-muted">
-            {rating} skill − {uncertainty} uncertainty ({RD_FACTOR} × RD {athlete.rd}) = {athlete.score}. RD
-            shrinks with every contest and grows while an athlete is idle. Win chances use the skill rating.
-          </p>
-        </div>
-      )}
     </>
   );
 }
