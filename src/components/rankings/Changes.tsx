@@ -1,8 +1,14 @@
 import { signed } from "@/lib/format";
 
-// Places moved: ↑2 teal, ↓1 red, – unchanged, NEW when not in the table back then.
-export function placesText(placesUp: number | null): { text: string; color: string } {
-  if (placesUp === null) return { text: "NEW", color: "text-claret text-[11px] font-bold" };
+// Places moved: ↑2 teal, ↓1 red, – unchanged. Not in the table back then: NEW (first
+// time in this weight) or RE (back in it).
+export function placesText(
+  placesUp: number | null,
+  entry: "new" | "returning" | null = "new",
+): { text: string; color: string } {
+  if (placesUp === null) {
+    return { text: entry === "returning" ? "RE" : "NEW", color: "text-claret text-[11px] font-bold" };
+  }
   if (placesUp > 0) return { text: `↑${placesUp}`, color: "text-gain" };
   if (placesUp < 0) return { text: `↓${-placesUp}`, color: "text-drop" };
   return { text: "–", color: "" };

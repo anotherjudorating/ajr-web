@@ -260,7 +260,7 @@ export function RankingsBrowser({
           </thead>
           <tbody className="text-ink text-[14px] leading-[20px]">
             {pageRows.map((row) => {
-              const places90 = placesText(row.places_up_90d);
+              const places90 = placesText(row.places_up_90d, row.entry);
               const places6m = placesText(row.places_up_6m);
               const change90 = changeText(row.score_change_90d);
               const change6m = changeText(row.score_change_6m);
