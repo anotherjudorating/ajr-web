@@ -12,9 +12,9 @@ import { roundCode, shortDate, shortName, signed } from "@/lib/format";
 
 const DAY = 24 * 60 * 60 * 1000;
 
-// The expanded row: IJF place, the change over 90 days and the contests behind it,
-// grouped by tournament. The contests are loaded when the row is first opened.
-export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string }) {
+// The expanded row: IJF place, the change over 90 days and the contests behind it in
+// this weight, grouped by tournament. The contests are loaded when the row is first opened.
+export function AthletePanel({ row, weight, asOf }: { row: LeaderboardRow; weight: string; asOf: string }) {
   const [history, setHistory] = useState<HistoryRow[] | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -22,12 +22,15 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
     fetchAthleteHistory(row.athlete_id).then(setHistory, () => setFailed(true));
   }, [row.athlete_id]);
 
-  const change = changeText(row.score_change_90d);
   const end = new Date(asOf).getTime();
   const recent = (history ?? []).filter((contest) => {
     const day = new Date(contest.fought_on).getTime();
-    return day <= end && day > end - 90 * DAY;
+    return contest.weight === weight && day <= end && day > end - 90 * DAY;
   });
+  // Not in this table 90 days ago (came from another weight or back after a break):
+  // the change is what these contests brought.
+  const contestsSum = recent.reduce((sum, c) => sum + c.rating_after - c.rating_before, 0);
+  const change = changeText(row.score_change_90d ?? (recent.length ? contestsSum : null));
 
   // Tournaments latest first; contests inside in the order they were fought.
   const groups: { id: number; name: string; date: string; contests: HistoryRow[] }[] = [];

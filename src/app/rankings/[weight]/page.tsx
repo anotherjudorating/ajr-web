@@ -50,6 +50,7 @@ async function Rankings({ params, searchParams }: PageProps<"/rankings/[weight]"
       <RankingsBrowser
         key={`${path}-${asOf}`}
         rows={rows}
+        weight={weight.api}
         asOf={asOf}
         latest={latest}
         path={path}
