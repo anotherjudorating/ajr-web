@@ -9,11 +9,11 @@ import { Icon } from "@/components/Icon";
 import { AthletePanel } from "@/components/rankings/AthletePanel";
 import { changeText, ijfDifference, placesText } from "@/components/rankings/Changes";
 import { Sparkline } from "@/components/rankings/Sparkline";
+import { CELL, Pagination, TH, Tip, Toolbar } from "@/components/rankings/TableParts";
 import type { LeaderboardRow } from "@/lib/api";
 import { fetchAthleteHistory } from "@/lib/browser-api";
 import { COUNTRY_NAMES } from "@/lib/countries";
 import { competitionCode, fullName, shortDate, shortName, signed } from "@/lib/format";
-import { pageNumbers } from "@/lib/pages";
 
 const SORTS = {
   "rating-desc": "Sort: rating ↓",
@@ -25,13 +25,8 @@ const SORTS = {
 } as const;
 type Sort = keyof typeof SORTS;
 
-const PAGE_SIZES = [20, 50, 100];
 const COLUMNS = 14;
 
-const CONTROL =
-  "h-8 py-0 px-2.5 bg-paper border border-rule text-[12px] text-ink focus:outline-none focus:border-ink cursor-pointer min-w-0";
-const TH = "px-2 py-2 sm:px-3 sm:py-2.5 text-[10px] sm:text-[11px] text-muted uppercase tracking-wider font-semibold";
-const CELL = "px-2 py-2 sm:px-3 sm:py-2.5";
 
 function sortRows(rows: LeaderboardRow[], sort: Sort): LeaderboardRow[] {
   const [key, direction] = sort.split("-") as ["rating" | "d90" | "d6m", "asc" | "desc"];
@@ -148,76 +143,31 @@ export function RankingsBrowser({
     });
 
   const setDay = (day: string) => {
-    if (!day) return;
     router.push(day >= latest ? path : `${path}?date=${day}`);
   };
 
   return (
     <>
-      {/* toolbar */}
-      <div className="mt-6 border-b-2 border-ink pb-2 flex flex-col lg:flex-row lg:items-center gap-2">
-        <div className="relative w-full md:w-72 lg:w-56 shrink-0">
-          <Icon size={16}
-            name="search"
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
-          />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Search athlete"
-            className="w-full h-8 pl-8 pr-2.5 bg-paper border border-rule text-[12px] placeholder:text-muted focus:outline-none focus:border-ink"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
-          <select
-            value={country}
-            onChange={(e) => {
-              setCountry(e.target.value);
-              setPage(1);
-            }}
-            className={`${CONTROL} md:w-[110px]`} // the prototype's width, whatever the names
-          >
-            <option value="">All countries</option>
-            {countries.map(({ code, name }) => (
-              <option key={code} value={code}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <input
-            type="date"
-            value={asOf}
-            min="2005-01-01"
-            max={latest}
-            title="Ranking as of this date"
-            onChange={(e) => setDay(e.target.value)}
-            className={`${CONTROL} md:w-[111px] tabular-nums`} // its width with a date, also while loading
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto">
-          <div className="min-w-0 grid md:block">
-            <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className={CONTROL}>
-              {Object.entries(SORTS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button
-            type="button"
-            onClick={() => downloadCsv(shown, asOf, csvName)}
-            className="w-full md:w-auto shrink-0 h-8 px-3 inline-flex items-center justify-center gap-1.5 border border-rule text-[12px] text-ink hover:border-ink"
-          >
-            <Icon size={16} name="download" className="text-muted" />
-            Export CSV
-          </button>
-        </div>
-      </div>
+      <Toolbar
+        query={query}
+        onQuery={(value) => {
+          setQuery(value);
+          setPage(1);
+        }}
+        countries={countries}
+        country={country}
+        onCountry={(value) => {
+          setCountry(value);
+          setPage(1);
+        }}
+        asOf={asOf}
+        latest={latest}
+        onDay={setDay}
+        sorts={SORTS}
+        sort={sort}
+        onSort={setSort}
+        onCsv={() => downloadCsv(shown, asOf, csvName)}
+      />
 
       {/* table */}
       <div className="w-full border-b border-rule bg-paper">
@@ -392,93 +342,21 @@ export function RankingsBrowser({
         </table>
       </div>
 
-      {/* below the table */}
-      <div className="w-full border-t border-rule py-4 flex items-center justify-between text-[12px]">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full text-[12px] text-muted">
-          <div className="flex items-center justify-between w-full sm:w-auto sm:gap-6">
-            <div className="text-muted">
-              {loading
-                ? "Loading…"
-                : shown.length
-                  ? `${first + 1}–${first + pageRows.length} of ${shown.length} athletes`
-                  : "0 athletes"}
-            </div>
-            <div className="flex items-center gap-2 text-[12px]">
-              <span className="text-muted">Show</span>
-              {PAGE_SIZES.map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => {
-                    setPageSize(size);
-                    setPage(1);
-                  }}
-                  className={
-                    size === pageSize
-                      ? "font-bold text-ink border-b-2 border-claret px-1 pb-0.5"
-                      : "text-muted hover:text-ink px-1 pb-0.5 border-b-2 border-transparent transition-colors cursor-pointer"
-                  }
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center justify-center sm:justify-end gap-1 sm:gap-2 w-full sm:w-auto">
-            <PageButton disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>
-              ‹
-            </PageButton>
-            {pageNumbers(currentPage, pages).map((n, i) =>
-              n === "…" ? (
-                <span key={`gap-${i}`} className="text-muted px-1 select-none flex items-center justify-center h-8">
-                  …
-                </span>
-              ) : (
-                <PageButton key={n} active={n === currentPage} onClick={() => setPage(n)}>
-                  {n}
-                </PageButton>
-              ),
-            )}
-            <PageButton disabled={currentPage === pages} onClick={() => setPage(currentPage + 1)}>
-              ›
-            </PageButton>
-          </div>
-        </div>
-      </div>
+      <Pagination
+        loading={loading}
+        total={shown.length}
+        first={first}
+        count={pageRows.length}
+        noun="athletes"
+        pageSize={pageSize}
+        onPageSize={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+        page={currentPage}
+        pages={pages}
+        onPage={setPage}
+      />
     </>
-  );
-}
-
-function Tip({ children, center = false }: { children: React.ReactNode; center?: boolean }) {
-  return (
-    <div
-      className={`hidden group-hover:block absolute ${center ? "left-1/2 -translate-x-1/2" : "right-0"} bottom-full mb-1 z-30 bg-ink text-paper py-1 px-2 text-left whitespace-nowrap pointer-events-none select-none text-[11px] font-normal leading-tight normal-case tracking-normal`}
-    >
-      {children}
-    </div>
-  );
-}
-
-function PageButton({
-  children,
-  onClick,
-  active = false,
-  disabled = false,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  active?: boolean;
-  disabled?: boolean;
-}) {
-  const base = "min-w-[32px] h-8 flex items-center justify-center text-sm";
-  if (disabled) return <span className={`${base} text-muted opacity-40 cursor-not-allowed select-none`}>{children}</span>;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`${base} ${active ? "font-bold text-ink border-b-2 border-claret" : "text-muted hover:text-ink cursor-pointer transition-colors"}`}
-    >
-      {children}
-    </button>
   );
 }
