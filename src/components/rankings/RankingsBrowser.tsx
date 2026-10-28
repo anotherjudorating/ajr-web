@@ -10,6 +10,7 @@ import { AthletePanel } from "@/components/rankings/AthletePanel";
 import { changeText, ijfDifference, placesText } from "@/components/rankings/Changes";
 import { Sparkline } from "@/components/rankings/Sparkline";
 import type { LeaderboardRow } from "@/lib/api";
+import { COUNTRY_NAMES } from "@/lib/countries";
 import { competitionCode, shortDate, shortName, signed } from "@/lib/format";
 
 const SORTS = {
@@ -99,8 +100,12 @@ export function RankingsBrowser({
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState<Set<number>>(new Set());
 
+  // the countries in this table, by full name
   const countries = useMemo(
-    () => [...new Set(rows.map((r) => r.country).filter((c): c is string => !!c))].sort(),
+    () =>
+      [...new Set(rows.map((r) => r.country).filter((c): c is string => !!c))]
+        .map((code) => ({ code, name: COUNTRY_NAMES[code] ?? code }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
     [rows],
   );
   const shown = useMemo(() => {
@@ -108,7 +113,7 @@ export function RankingsBrowser({
     const filtered = rows.filter(
       (r) =>
         (!country || r.country === country) &&
-        (!needle || `${r.family_name} ${r.given_name ?? ""}`.toLowerCase().includes(needle)),
+        (!needle || `${r.family_name ?? ""} ${r.given_name ?? ""}`.toLowerCase().includes(needle)),
     );
     return sortRows(filtered, sort);
   }, [rows, query, country, sort]);
@@ -162,9 +167,9 @@ export function RankingsBrowser({
             className={CONTROL}
           >
             <option value="">All countries</option>
-            {countries.map((c) => (
-              <option key={c} value={c}>
-                {c}
+            {countries.map(({ code, name }) => (
+              <option key={code} value={code}>
+                {name}
               </option>
             ))}
           </select>
@@ -252,11 +257,7 @@ export function RankingsBrowser({
               return (
                 <Fragment key={row.athlete_id}>
                   <tr
-                    role="button"
-                    tabIndex={0}
-                    aria-expanded={isOpen}
-                    onClick={() => toggle(row.athlete_id)}
-                    onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && toggle(row.athlete_id)}
+                    onClick={() => router.push(`/athletes/${row.athlete_id}`)}
                     className="athlete-row border-b border-rule hover:bg-panel/60 transition-colors cursor-pointer"
                   >
                     <td className={`${CELL} px-1 w-9 sm:w-12 text-right tabular-nums whitespace-nowrap font-medium`}>
@@ -278,7 +279,7 @@ export function RankingsBrowser({
                     <td className={`${CELL} hidden sm:table-cell text-[12px] leading-[16px] whitespace-nowrap`}>
                       <div className="inline-flex items-center gap-1.5">
                         <Flag ioc={row.country} />
-                        <span>{row.country}</span>
+                        <span title={row.country ? COUNTRY_NAMES[row.country] : undefined}>{row.country}</span>
                       </div>
                     </td>
                     <td className={`${CELL} w-14 sm:w-20 text-right font-bold tabular-nums relative group cursor-pointer`}>
@@ -327,6 +328,19 @@ export function RankingsBrowser({
                     </td>
                     <td
                       title="Show last 90 days"
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isOpen}
+                      onClick={(e) => {
+                        e.stopPropagation(); // expand, don't open the athlete
+                        toggle(row.athlete_id);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggle(row.athlete_id);
+                        }
+                      }}
                       className="w-10 sm:w-12 px-1 py-2 text-center text-muted cursor-pointer align-middle hover:bg-panel hover:text-ink"
                     >
                       <Icon size={16}

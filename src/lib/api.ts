@@ -10,7 +10,7 @@ const KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 export type LeaderboardRow = {
   place: number;
   athlete_id: number;
-  family_name: string;
+  family_name: string | null;
   given_name: string | null;
   country: string | null; // IOC code
   rating: number;
@@ -32,7 +32,7 @@ export type LeaderboardRow = {
 
 export type Athlete = {
   id: number;
-  family_name: string;
+  family_name: string | null;
   given_name: string | null;
   gender: string | null;
   birth_year: number | null;
@@ -56,7 +56,7 @@ export type HistoryRow = {
   round: string | null;
   weight: string | null;
   opponent_id: number;
-  opponent_family_name: string;
+  opponent_family_name: string | null;
   opponent_given_name: string | null;
   opponent_country: string | null;
   won: boolean;

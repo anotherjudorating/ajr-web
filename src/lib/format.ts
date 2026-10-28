@@ -1,5 +1,7 @@
 // judobase writes family names in capitals ("ABE"); the design shows "Abe H.".
-export function shortName(familyName: string, givenName: string | null): string {
+// A few athletes have only a given name.
+export function shortName(familyName: string | null, givenName: string | null): string {
+  if (!familyName) return givenName?.trim() || "—";
   const family = familyName
     .toLowerCase()
     .replace(/(^|[\s'-])\p{L}/gu, (match) => match.toUpperCase());
