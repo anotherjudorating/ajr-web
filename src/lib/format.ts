@@ -16,9 +16,49 @@ export function formatDate(value: string): string {
   return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 }
 
+// "2026-10-05" -> "5 Oct"
+export function shortDate(value: string): string {
+  const date = new Date(value);
+  return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]}`;
+}
+
 // +18 / −23 / 0, with a real minus sign
 export function signed(value: number): string {
   if (value > 0) return `+${value}`;
   if (value < 0) return `−${Math.abs(value)}`;
   return "0";
+}
+
+// A competition in a few letters, as in the design: "Grand Slam" in Abu Dhabi -> "GS ABU".
+export function competitionCode(rank: string | null, city: string | null): string {
+  const initials = (rank ?? "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word[0].toUpperCase())
+    .join("");
+  const place = (city ?? "").replace(/[^\p{L}]/gu, "").slice(0, 3).toUpperCase();
+  return [initials, place].filter(Boolean).join(" ");
+}
+
+// judobase round names -> the short codes of the design (R32, QF, SF, BR, F…)
+const ROUNDS: Record<string, string> = {
+  "Round of 128": "R128",
+  "Round of 64": "R64",
+  "Round of 32": "R32",
+  "Round of 16": "R16",
+  "Quarter-Final": "QF",
+  "Quarter Final": "QF",
+  "Semi-Final": "SF",
+  "Semi Final": "SF",
+  Repechage: "REP",
+  Bronze: "BR",
+  Final: "F",
+};
+
+export function roundCode(round: string | null): string {
+  if (!round) return "";
+  if (ROUNDS[round]) return ROUNDS[round];
+  const pool = round.match(/^(Repechage )?Round (\d+)$/); // "Round 2", "Repechage Round 1"
+  if (pool) return `${pool[1] ? "REP" : "R"}${pool[2]}`;
+  return round.slice(0, 3).toUpperCase();
 }

@@ -21,6 +21,13 @@ export type LeaderboardRow = {
   score_change_90d: number | null;
   score_change_6m: number | null;
   wrl_place: number | null; // IJF World Ranking List, today's table only
+  places_up_6m: number | null;
+  birth_year: number | null;
+  trend: (number | null)[]; // score 150, 120, 90, 60, 30 days before and on the day
+  last_competition_id: number | null;
+  last_competition_name: string | null;
+  last_competition_rank: string | null; // "Grand Slam", "World Championships"…
+  last_competition_city: string | null;
 };
 
 export type Athlete = {
@@ -73,10 +80,11 @@ async function rpc<T>(name: string, params: Record<string, string | number> = {}
   return response.json() as Promise<T>;
 }
 
-export async function leaderboard(weight: string, limit = 100): Promise<LeaderboardRow[]> {
+// The whole table of a weight category (a few hundred rows), today's or on `day`.
+export async function leaderboard(weight: string, day?: string): Promise<LeaderboardRow[]> {
   "use cache";
   cacheLife("data");
-  return rpc<LeaderboardRow[]>("leaderboard", { weight, limit });
+  return rpc<LeaderboardRow[]>("leaderboard", day ? { weight, day } : { weight });
 }
 
 export async function athlete(id: number): Promise<Athlete | null> {
