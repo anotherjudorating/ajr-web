@@ -10,7 +10,7 @@ const KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 export type LeaderboardRow = {
   place: number;
   athlete_id: number;
-  family_name: string;
+  family_name: string | null;
   given_name: string | null;
   country: string | null; // IOC code
   rating: number;
@@ -21,11 +21,19 @@ export type LeaderboardRow = {
   score_change_90d: number | null;
   score_change_6m: number | null;
   wrl_place: number | null; // IJF World Ranking List, today's table only
+  places_up_6m: number | null;
+  birth_year: number | null;
+  trend: (number | null)[]; // score 150, 120, 90, 60, 30 days before and on the day
+  last_competition_id: number | null;
+  last_competition_name: string | null;
+  last_competition_rank: string | null; // "Grand Slam", "World Championships"…
+  last_competition_city: string | null;
+  entry: "new" | "returning" | null; // not in the table 90 days ago: first time in this weight or back
 };
 
 export type Athlete = {
   id: number;
-  family_name: string;
+  family_name: string | null;
   given_name: string | null;
   gender: string | null;
   birth_year: number | null;
@@ -39,6 +47,14 @@ export type Athlete = {
   last_contest: string | null;
   contests: number;
   wrl_place: number | null;
+  weights: string[]; // fought in, the latest first
+  peak_score: number | null;
+  peak_on: string | null;
+  peak_place: number | null; // the place in that day's table
+  score_change_90d: number | null;
+  score_change_6m: number | null;
+  places_up_90d: number | null;
+  places_up_6m: number | null;
 };
 
 export type HistoryRow = {
@@ -49,7 +65,7 @@ export type HistoryRow = {
   round: string | null;
   weight: string | null;
   opponent_id: number;
-  opponent_family_name: string;
+  opponent_family_name: string | null;
   opponent_given_name: string | null;
   opponent_country: string | null;
   won: boolean;
@@ -57,6 +73,13 @@ export type HistoryRow = {
   rating_before: number;
   rating_after: number;
   rd_after: number;
+  rd_before: number;
+  score_before: number;
+  score_after: number;
+  opponent_score: number | null; // before the contest
+  // how the athlete ended the competition: gold, silver, bronze, 5th, 7th, the round
+  // they lost in ("Round of 16"), or null (still in, pools, unknown)
+  result: string | null;
 };
 
 async function rpc<T>(name: string, params: Record<string, string | number> = {}): Promise<T> {
@@ -73,10 +96,11 @@ async function rpc<T>(name: string, params: Record<string, string | number> = {}
   return response.json() as Promise<T>;
 }
 
-export async function leaderboard(weight: string, limit = 100): Promise<LeaderboardRow[]> {
+// The whole table of a weight category (a few hundred rows), today's or on `day`.
+export async function leaderboard(weight: string, day?: string): Promise<LeaderboardRow[]> {
   "use cache";
   cacheLife("data");
-  return rpc<LeaderboardRow[]>("leaderboard", { weight, limit });
+  return rpc<LeaderboardRow[]>("leaderboard", day ? { weight, day } : { weight });
 }
 
 export async function athlete(id: number): Promise<Athlete | null> {

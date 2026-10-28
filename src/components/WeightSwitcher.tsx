@@ -1,34 +1,50 @@
 import Link from "next/link";
 
-import { MEN, WOMEN, type Weight } from "@/lib/weights";
+import { MEN, WOMEN } from "@/lib/weights";
 
-// Two rows of weight categories; the current one is bold with a claret underline.
-export function WeightSwitcher({ current, basePath }: { current: Weight; basePath: string }) {
+const TAB = "px-1 py-1.5 text-[13px] sm:text-[15px] sm:px-2 tabular-nums whitespace-nowrap cursor-pointer";
+const ACTIVE = "font-bold text-ink border-b-2 border-claret";
+const INACTIVE = "hover:text-ink transition-colors text-muted";
+const LABEL = "w-12 shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted";
+
+// MEN: P4P −60 … +100 / WOMEN: P4P −48 … +78 / TEAMS: Men Women Mixed.
+// `current` is the path of the open table; `query` keeps the date when switching.
+export function WeightSwitcher({ current, query = "" }: { current: string; query?: string }) {
+  const tab = (href: string, label: string, numeric = true) => (
+    <Link
+      key={href}
+      href={`${href}${query}`}
+      className={`${numeric ? TAB : TAB.replace(" tabular-nums", "")} ${href === current ? ACTIVE : INACTIVE}`}
+    >
+      {label}
+    </Link>
+  );
+
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="mb-7 flex flex-col gap-2">
       {[
-        { title: "Men", weights: MEN },
-        { title: "Women", weights: WOMEN },
-      ].map(({ title, weights }) => (
-        <div key={title} className="flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1">
-          <span className="w-14 text-[11px] font-bold uppercase tracking-[0.08em] text-muted">
-            {title}
-          </span>
-          {weights.map((w) => (
-            <Link
-              key={w.slug}
-              href={`${basePath}/${w.slug}`}
-              className={`tnum text-[14px] pb-0.5 border-b-2 ${
-                w.slug === current.slug
-                  ? "font-bold text-ink border-claret"
-                  : "text-muted hover:text-ink border-transparent"
-              }`}
-            >
-              {w.label}
-            </Link>
-          ))}
+        { title: "Men", p4p: "/rankings/p4p/men", weights: MEN },
+        { title: "Women", p4p: "/rankings/p4p/women", weights: WOMEN },
+      ].map(({ title, p4p, weights }, index) => (
+        <div
+          key={title}
+          className={`flex flex-row flex-nowrap items-center w-full ${index ? "mt-2 sm:mt-2.5" : ""}`}
+        >
+          <span className={LABEL}>{title}</span>
+          <div className="flex flex-row flex-nowrap items-center justify-between flex-1 min-w-0 sm:justify-start sm:gap-2">
+            {tab(p4p, "P4P")}
+            {weights.map((w) => tab(`/rankings/${w.slug}`, w.label))}
+          </div>
         </div>
       ))}
+      <div className="flex flex-row flex-nowrap items-center w-full mt-2 sm:mt-2.5">
+        <span className={LABEL}>Teams</span>
+        <div className="flex flex-row flex-nowrap items-center flex-1 min-w-0 gap-4 sm:gap-2">
+          {tab("/rankings/teams/men", "Men", false)}
+          {tab("/rankings/teams/women", "Women", false)}
+          {tab("/rankings/teams/mixed", "Mixed", false)}
+        </div>
+      </div>
     </div>
   );
 }
