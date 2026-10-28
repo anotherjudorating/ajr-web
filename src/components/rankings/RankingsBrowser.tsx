@@ -99,14 +99,12 @@ function downloadCsv(rows: LeaderboardRow[], asOf: string, fileName: string) {
 
 export function RankingsBrowser({
   rows,
-  weight,
   asOf,
   latest,
   path,
   csvName,
 }: {
   rows: LeaderboardRow[];
-  weight: string; // the category, as the backend writes it: "-73"
   asOf: string; // the day of the table, YYYY-MM-DD
   latest: string; // the newest day there is data for
   path: string; // e.g. /rankings/men-73
@@ -374,7 +372,7 @@ export function RankingsBrowser({
                   {isOpen && (
                     <tr className="athlete-panel border-b border-rule">
                       <td className="p-0" colSpan={visibleColumns}>
-                        <AthletePanel row={row} weight={weight} asOf={asOf} />
+                        <AthletePanel row={row} asOf={asOf} />
                       </td>
                     </tr>
                   )}
