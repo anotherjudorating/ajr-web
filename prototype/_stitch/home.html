@@ -1,0 +1,331 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Another Judo Rating</title><meta name="description" content="Independent Glicko-2 judo rating: the strongest judoka in every weight, rankings, biggest movers, upsets and upcoming tournaments.">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-low": "#f9f2ef",
+            "secondary-container": "#7fb2fe",
+            "surface-container": "#f3ece9",
+            "on-background": "#1e1b19",
+            "inverse-surface": "#33302e",
+            "surface-container-highest": "#e8e1de",
+            "secondary": "#225fa5",
+            "on-surface": "#1e1b19",
+            "gain-teal": "#0D7680",
+            "error": "#ba1a1a",
+            "accent-claret": "#990F3D",
+            "outline": "#8c7073",
+            "primary-fixed": "#ffd9dd",
+            "surface-container-high": "#eee7e3",
+            "drop-red": "#CC0000",
+            "panel-secondary": "#E9E2D3",
+            "primary": "#720029",
+            "oxford-blue": "#0F5499",
+            "surface": "#F3EEE3",
+            "outline-variant": "#dfbfc2",
+            "on-surface-variant": "#584144",
+            "hairline-rule": "#D6CFC2",
+            "paper-base": "#F3EEE3",
+            "background": "#F3EEE3",
+            "primary-container": "#990f3d",
+            "text-primary": "#33302E",
+            "text-secondary": "#66605C",
+            "surface-bright": "#F3EEE3",
+            "surface-container-lowest": "#ffffff"
+          },
+          fontFamily: {
+            "label-caps": ["IBM Plex Sans"],
+            "body-lg": ["IBM Plex Sans"],
+            "tabular-data-sm": ["IBM Plex Sans"],
+            "label-caps-sm": ["IBM Plex Sans"],
+            "headline-md": ['"Source Serif 4"'],
+            "headline-xl": ['"Source Serif 4"'],
+            "tabular-data-md": ["IBM Plex Sans"],
+            "display-masthead": ['"Source Serif 4"'],
+            "body-md": ["IBM Plex Sans"],
+            "tabular-data-lg": ['"Source Serif 4"'],
+            "headline-lg": ['"Source Serif 4"'],
+            "body-sm": ["IBM Plex Sans"],
+            "headline-xl-mobile": ['"Source Serif 4"'],
+            "headline-sm": ['"Source Serif 4"']
+          },
+          fontSize: {
+            "label-caps": ["11px", { lineHeight: "14px", letterSpacing: "0.08em", fontWeight: "700" }],
+            "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+            "tabular-data-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+            "label-caps-sm": ["10px", { lineHeight: "12px", letterSpacing: "0.05em", fontWeight: "700" }],
+            "headline-md": ["20px", { lineHeight: "24px", fontWeight: "600" }],
+            "headline-xl": ["36px", { lineHeight: "40px", letterSpacing: "-0.015em", fontWeight: "700" }],
+            "tabular-data-md": ["14px", { lineHeight: "18px", fontWeight: "500" }],
+            "display-masthead": ["44px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "700" }],
+            "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+            "tabular-data-lg": ["24px", { lineHeight: "28px", fontWeight: "700" }],
+            "headline-lg": ["26px", { lineHeight: "30px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }],
+            "headline-xl-mobile": ["28px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "700" }],
+            "headline-sm": ["16px", { lineHeight: "20px", fontWeight: "600" }]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    @layer base {
+      html, body { margin: 0; padding: 0; }
+      body { overscroll-behavior: none; }
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #D6CFC2; }
+    
+    .highlight-match {
+      background-color: #ffd9dd;
+      color: #720029;
+      font-weight: 600;
+      padding: 0 2px;
+    }
+    .prob-bar {
+      transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    [data-tooltip] {
+      position: relative;
+    }
+  </style>
+<style class="">.divide-hairline-rule\/50 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(214, 207, 194, 0.4) !important; }</style></head>
+<body class="bg-paper-base text-text-primary font-body-md text-body-md antialiased min-h-screen flex flex-col">
+<!-- Floating Athlete Quick Tooltip -->
+
+<!-- Header -->
+<header class="fixed top-0 left-0 right-0 w-full z-50 bg-paper-base border-b border-hairline-rule hidden md:block">
+<div class="h-16 max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 flex items-center justify-between gap-3">
+<!-- Brand & Desktop Nav -->
+<div class="flex items-center h-full">
+<a href="/" class="text-[22px] leading-[28px] font-bold tracking-tight whitespace-nowrap text-[#33302E]" style="font-family: &quot;Source Serif 4&quot;, serif;">Another Judo Rating</a>
+<nav class="hidden md:flex items-center gap-6 lg:gap-8 h-full ml-8 lg:ml-12">
+<a class="h-full inline-flex items-center text-[15px] font-normal text-text-secondary hover:text-text-primary border-b-2 border-transparent -mb-px tracking-normal transition-colors" href="#">Rankings</a>
+<a class="h-full inline-flex items-center text-[15px] font-normal text-text-secondary hover:text-text-primary border-b-2 border-transparent -mb-px tracking-normal transition-colors" href="#">Tournaments</a>
+<a class="h-full inline-flex items-center text-[15px] font-normal text-text-secondary hover:text-text-primary border-b-2 border-transparent -mb-px tracking-normal transition-colors" href="#">Head-to-head</a>
+<a class="h-full inline-flex items-center text-[15px] font-normal text-text-secondary hover:text-text-primary border-b-2 border-transparent -mb-px tracking-normal transition-colors" href="#">Methodology</a>
+</nav>
+</div>
+<!-- Desktop Search -->
+<div class="flex items-center gap-2"><button type="button" aria-label="Search" class="lg:hidden w-10 h-10 flex items-center justify-center text-[#66605C]"><span class="material-symbols-outlined text-[22px]">search</span></button><div class="hidden lg:flex relative items-center w-[240px]"><span class="material-symbols-outlined absolute left-2.5 text-text-secondary text-[18px] pointer-events-none select-none">search</span><input autocomplete="off" class="w-full h-8 pl-8 pr-6 bg-paper-base text-text-primary placeholder:text-text-secondary font-body-sm text-body-sm border border-hairline-rule rounded-none focus:outline-none focus:border-text-primary transition-colors" id="global-search" placeholder="Filter athletes / country" type="text"><button class="hidden absolute right-1.5 text-text-secondary hover:text-text-primary text-xs" id="clear-search-btn" title="Clear filter"><span class="material-symbols-outlined text-[16px]">close</span></button></div></div>
+</div>
+</header>
+
+<!-- Mobile Header Row 1 (Fixed, md:hidden) -->
+<div class="fixed top-0 left-0 right-0 z-50 h-12 px-4 bg-[#F3EEE3] border-b border-[#D6CFC2] flex items-center justify-between md:hidden" id="mobile-header-row-1">
+  <!-- Default state -->
+  <div class="items-center justify-between w-full flex" id="mobile-header-default">
+    <a href="/" class="text-[20px] leading-[28px] font-bold tracking-tight text-[#33302E] whitespace-nowrap" style="font-family: &quot;Source Serif 4&quot;, serif;">Another Judo Rating</a>
+    <button id="mobile-open-search-btn" aria-label="Search" class="w-10 h-10 flex items-center justify-center text-[#66605C] active:text-[#33302E] shrink-0">
+      <span class="material-symbols-outlined text-[22px]">search</span>
+    </button>
+  </div>
+  <!-- Search state -->
+  <div class="relative items-center w-full hidden" id="mobile-header-search">
+    <span class="material-symbols-outlined absolute left-2 text-[#66605C] text-[18px] pointer-events-none select-none">search</span>
+    <input type="text" id="mobile-search-input" class="h-8 text-[12px] border border-[#33302E] bg-[#F3EEE3] text-[#33302E] placeholder:text-[#66605C] pl-8 pr-8 w-full rounded-none focus:outline-none" placeholder="Filter athletes / country" autocomplete="off">
+    <button id="mobile-close-search-btn" aria-label="Close search" class="absolute right-1 w-8 h-8 flex items-center justify-center text-[#66605C] hover:text-[#33302E]">
+      <span class="material-symbols-outlined text-[20px]">close</span>
+    </button>
+  </div>
+</div>
+<!-- Mobile Off-Canvas Drawer -->
+
+<!-- Main Wrap -->
+<main class="flex-1 w-full bg-paper-base transition-all duration-300 pt-12 md:pt-16" id="main-container">
+  <!-- Mobile Header Row 2 (Unfixed in page flow under row 1) -->
+  <nav class="h-10 px-4 border-b border-[#D6CFC2] flex items-center justify-between bg-[#F3EEE3] md:hidden overflow-x-auto" aria-label="Mobile navigation">
+    <a href="#" class="text-[13px] text-[#66605C] hover:text-[#33302E] transition-colors whitespace-nowrap">Rankings</a>
+    <a href="#" class="text-[13px] text-[#66605C] hover:text-[#33302E] transition-colors whitespace-nowrap">Tournaments</a>
+    <a href="#" class="text-[13px] text-[#66605C] hover:text-[#33302E] transition-colors whitespace-nowrap">Head-to-head</a>
+    <a href="#" class="text-[13px] text-[#66605C] hover:text-[#33302E] transition-colors whitespace-nowrap">Methodology</a>
+  </nav>
+<div class="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-space-xl">
+<div class="flex flex-col w-full">
+<!-- Active Filter Indicator Badge (Dynamic) -->
+<div class="hidden mb-6 p-2.5 bg-panel-secondary/70 border border-hairline-rule text-xs flex items-center justify-between" id="filter-banner">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-accent-claret text-[18px]">filter_list</span>
+<span class="">Filtering records by: <strong class="text-accent-claret font-semibold" id="filter-query-text"></strong></span>
+</div>
+<button class="text-accent-claret underline text-xs hover:text-primary font-medium" id="reset-filter-link">Clear filter</button>
+</div>
+<!-- 1. Lead Section -->
+<section class="mb-10 md:mb-12 lg:mb-16">
+<div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 mb-2">
+<h1 class="serif text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold tracking-[-0.015em] text-[#33302E]">
+              Who is the strongest judoka right now?
+            </h1>
+</div>
+<p class="font-body-lg text-body-lg text-text-secondary max-w-3xl leading-relaxed">
+            A Glicko-2 rating for every IJF World Tour athlete that moves only with who they beat and who beats them. <a href="/methodology" class="serif font-semibold text-[#990F3D] hover:underline whitespace-nowrap">How it works</a>
+          </p>
+</section>
+<!-- 2. Dual Side-by-Side Ranking Panels: Men & Women (Stacked on tablet md, side-by-side on lg) -->
+<section class="mb-14 md:mb-16">
+<div class="grid grid-cols-1 lg:grid-cols-2 ranking-panels-container lg:gap-x-24 gap-y-14">
+<!-- Left Panel: Men -->
+<div class="flex flex-col w-full">
+<!-- Panel Header -->
+<div class="flex flex-row items-center justify-between gap-3 border-b-2 border-text-primary pb-2 mb-0">
+<div class="flex items-center gap-3 min-w-0"><h2 class="serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight text-text-primary">Men</h2>
+<div class="w-auto shrink-0">
+<select class="w-28 sm:w-36 rounded-none border border-hairline-rule bg-paper-base text-text-primary text-xs py-1 px-2 focus:outline-none focus:border-text-primary font-body-sm transition-colors cursor-pointer" id="select-men-weight">
+<option selected="" value="Leaders">All weights</option>
+<option value="−60 kg">−60 kg</option>
+<option value="−66 kg">−66 kg</option>
+<option value="−73 kg">−73 kg</option>
+<option value="−81 kg">−81 kg</option>
+<option value="−90 kg">−90 kg</option>
+<option value="−100 kg">−100 kg</option>
+<option value="+100 kg">+100 kg</option>
+</select>
+</div></div>
+<a class="serif shrink-0 whitespace-nowrap text-[14px] font-semibold text-[#990F3D] hover:underline" href="rankings.html#p4p-men">P4P men ranking</a>
+</div>
+<!-- Desktop & Tablet Table View (>= md standard table format) -->
+<div class="block desktop-table-view w-full"><div onclick="location.href='#athlete/arai-d-'" role="link" class="h-10 sm:h-11 py-0 flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group" data-last="Gold · Zagreb GP" data-name="Arai D." data-rd="±42" data-winrate="84.2%"><div class="truncate pr-2 flex items-baseline gap-1.5"><span class="font-medium text-text-primary truncate group-hover:underline">Arai D.</span><span class="text-text-secondary text-xs hidden sm:inline whitespace-nowrap">−100 kg</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑3</span><span class="text-gain-teal font-medium w-12 text-right">+111</span><span class="text-text-primary font-normal w-12 text-right">2159</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='#athlete/keldiyorova-d-'" role="link" class="h-10 sm:h-11 py-0 flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group" data-last="Gold · Olympic Games" data-name="Keldiyorova D." data-rd="±34" data-winrate="91.5%"><div class="truncate pr-2 flex items-baseline gap-1.5"><span class="font-medium text-text-primary truncate group-hover:underline">Keldiyorova D.</span><span class="text-text-secondary text-xs hidden sm:inline whitespace-nowrap">−52 kg</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑2</span><span class="text-gain-teal font-medium w-12 text-right">+110</span><span class="text-text-primary font-normal w-12 text-right">2285</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='#athlete/leski-a-'" role="link" class="h-10 sm:h-11 py-0 flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group" data-last="Gold · Olympic Games" data-name="Leski A." data-rd="±39" data-winrate="86.0%"><div class="truncate pr-2 flex items-baseline gap-1.5"><span class="font-medium text-text-primary truncate group-hover:underline">Leski A.</span><span class="text-text-secondary text-xs hidden sm:inline whitespace-nowrap">−63 kg</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑2</span><span class="text-gain-teal font-medium w-12 text-right">+105</span><span class="text-text-primary font-normal w-12 text-right">2265</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='#athlete/heydarov-h-'" role="link" class="h-10 sm:h-11 py-0 flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group" data-last="Gold · World Ch." data-name="Heydarov H." data-rd="±29" data-winrate="93.8%"><div class="truncate pr-2 flex items-baseline gap-1.5"><span class="font-medium text-text-primary truncate group-hover:underline">Heydarov H.</span><span class="text-text-secondary text-xs hidden sm:inline whitespace-nowrap">−73 kg</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-drop-red text-xs w-6 text-right font-medium">↓2</span><span class="text-drop-red font-medium w-12 text-right">−98</span><span class="text-text-primary font-normal w-12 text-right">2244</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='#athlete/babulfath-t-'" role="link" class="h-10 sm:h-11 py-0 flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group" data-last="Bronze · Olympic Games" data-name="Babulfath T." data-rd="±44" data-winrate="82.4%"><div class="truncate pr-2 flex items-baseline gap-1.5"><span class="font-medium text-text-primary truncate group-hover:underline">Babulfath T.</span><span class="text-text-secondary text-xs hidden sm:inline whitespace-nowrap">−48 kg</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑1</span><span class="text-gain-teal font-medium w-12 text-right">+95</span><span class="text-text-primary font-normal w-12 text-right">2210</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><table class="w-full text-left border-collapse text-body-md font-body-md"><tbody class="divide-y divide-hairline-rule/50" id="men-tbody"></tbody></table></div>
+<!-- Mobile Stacked Card View (< md) -->
+
+
+</div>
+<!-- Right Panel: Women -->
+<div class="flex flex-col w-full">
+<!-- Panel Header -->
+<div class="flex flex-row items-center justify-between gap-3 border-b-2 border-text-primary pb-2 mb-0">
+<div class="flex items-center gap-3 min-w-0"><h2 class="serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight text-text-primary">Women</h2>
+<div class="w-auto shrink-0">
+<select class="w-28 sm:w-36 rounded-none border border-hairline-rule bg-paper-base text-text-primary text-xs py-1 px-2 focus:outline-none focus:border-text-primary font-body-sm transition-colors cursor-pointer" id="select-women-weight">
+<option selected="" value="Leaders">All weights</option>
+<option value="−48 kg">−48 kg</option>
+<option value="−52 kg">−52 kg</option>
+<option value="−57 kg">−57 kg</option>
+<option value="−63 kg">−63 kg</option>
+<option value="−70 kg">−70 kg</option>
+<option value="−78 kg">−78 kg</option>
+<option value="+78 kg">+78 kg</option>
+</select>
+</div></div>
+<a class="serif shrink-0 whitespace-nowrap text-[14px] font-semibold text-[#990F3D] hover:underline" href="rankings.html#p4p-women">P4P women ranking</a>
+</div>
+<!-- Desktop & Tablet Table View (>= md) -->
+<div class="block desktop-table-view w-full"><div onclick="location.href='#athlete/arai-d-'" role="link" class="h-10 sm:h-11 py-0 flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group" data-last="Gold · Zagreb GP" data-name="Arai D." data-rd="±42" data-winrate="84.2%"><div class="truncate pr-2 flex items-baseline gap-1.5"><span class="font-medium text-text-primary truncate group-hover:underline">Arai D.</span><span class="text-text-secondary text-xs hidden sm:inline whitespace-nowrap">−100 kg</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑3</span><span class="text-gain-teal font-medium w-12 text-right">+111</span><span class="text-text-primary font-normal w-12 text-right">2159</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='#athlete/keldiyorova-d-'" role="link" class="h-10 sm:h-11 py-0 flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group" data-last="Gold · Olympic Games" data-name="Keldiyorova D." data-rd="±34" data-winrate="91.5%"><div class="truncate pr-2 flex items-baseline gap-1.5"><span class="font-medium text-text-primary truncate group-hover:underline">Keldiyorova D.</span><span class="text-text-secondary text-xs hidden sm:inline whitespace-nowrap">−52 kg</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑2</span><span class="text-gain-teal font-medium w-12 text-right">+110</span><span class="text-text-primary font-normal w-12 text-right">2285</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='#athlete/leski-a-'" role="link" class="h-10 sm:h-11 py-0 flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group" data-last="Gold · Olympic Games" data-name="Leski A." data-rd="±39" data-winrate="86.0%"><div class="truncate pr-2 flex items-baseline gap-1.5"><span class="font-medium text-text-primary truncate group-hover:underline">Leski A.</span><span class="text-text-secondary text-xs hidden sm:inline whitespace-nowrap">−63 kg</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑2</span><span class="text-gain-teal font-medium w-12 text-right">+105</span><span class="text-text-primary font-normal w-12 text-right">2265</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='#athlete/heydarov-h-'" role="link" class="h-10 sm:h-11 py-0 flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group" data-last="Gold · World Ch." data-name="Heydarov H." data-rd="±29" data-winrate="93.8%"><div class="truncate pr-2 flex items-baseline gap-1.5"><span class="font-medium text-text-primary truncate group-hover:underline">Heydarov H.</span><span class="text-text-secondary text-xs hidden sm:inline whitespace-nowrap">−73 kg</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-drop-red text-xs w-6 text-right font-medium">↓2</span><span class="text-drop-red font-medium w-12 text-right">−98</span><span class="text-text-primary font-normal w-12 text-right">2244</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='#athlete/babulfath-t-'" role="link" class="h-10 sm:h-11 py-0 flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group" data-last="Bronze · Olympic Games" data-name="Babulfath T." data-rd="±44" data-winrate="82.4%"><div class="truncate pr-2 flex items-baseline gap-1.5"><span class="font-medium text-text-primary truncate group-hover:underline">Babulfath T.</span><span class="text-text-secondary text-xs hidden sm:inline whitespace-nowrap">−48 kg</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑1</span><span class="text-gain-teal font-medium w-12 text-right">+95</span><span class="text-text-primary font-normal w-12 text-right">2210</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><table class="w-full text-left border-collapse text-body-md font-body-md"><tbody class="divide-y divide-hairline-rule/50" id="women-tbody"></tbody></table></div>
+<!-- Mobile Stacked Card View (< md) -->
+
+
+</div>
+</div>
+</section>
+<!-- 4. Bottom Wire: Two columns on tablet (md), Three on desktop (lg) -->
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-y-14 md:gap-x-16 xl:gap-x-24">
+<!-- Column 1: Biggest movers -->
+<div class="flex flex-col">
+<div class="flex items-baseline justify-between border-b-2 border-text-primary pb-2 mb-0">
+<h2 class="serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight text-text-primary">Biggest movers</h2>
+<span class="text-[10px] font-label-caps text-text-secondary uppercase">last 90 days</span>
+</div>
+<div><div onclick="location.href='athlete.html'" role="link" class="h-10 sm:h-11 py-0 border-b border-[#D6CFC2] flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group"><div class="min-w-0 pr-2 flex items-baseline"><svg class="w-4 h-3 shrink-0 mr-1.5 self-center" viewBox="0 0 16 12"><rect width="16" height="12" fill="#E30A17"/><circle cx="6.5" cy="6" r="2.8" fill="#FFF"/><circle cx="7.3" cy="6" r="2.2" fill="#E30A17"/></svg><span class="font-medium text-text-primary truncate group-hover:underline">Demirel U.</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑4</span><span class="text-gain-teal font-medium w-12 text-right">+29</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='athlete.html'" role="link" class="h-10 sm:h-11 py-0 border-b border-[#D6CFC2] flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group"><div class="min-w-0 pr-2 flex items-baseline"><svg class="w-4 h-3 shrink-0 mr-1.5 self-center" viewBox="0 0 16 12"><rect width="16" height="12" fill="#FFF"/><rect width="4" height="12" fill="#D80621"/><rect x="12" width="4" height="12" fill="#D80621"/><circle cx="8" cy="6" r="2" fill="#D80621"/></svg><span class="font-medium text-text-primary truncate group-hover:underline">Gauthier-Drapeau F.</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑6</span><span class="text-gain-teal font-medium w-12 text-right">+28</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='athlete.html'" role="link" class="h-10 sm:h-11 py-0 border-b border-[#D6CFC2] flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group"><div class="min-w-0 pr-2 flex items-baseline"><svg class="w-4 h-3 shrink-0 mr-1.5 self-center" viewBox="0 0 16 12"><rect width="16" height="12" fill="#006AA7"/><rect x="5" width="2" height="12" fill="#FECC00"/><rect y="5" width="16" height="2" fill="#FECC00"/></svg><span class="font-medium text-text-primary truncate group-hover:underline">Babulfath T.</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑3</span><span class="text-gain-teal font-medium w-12 text-right">+25</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='athlete.html'" role="link" class="h-10 sm:h-11 py-0 border-b border-[#D6CFC2] flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group"><div class="min-w-0 pr-2 flex items-baseline"><svg class="w-4 h-3 shrink-0 mr-1.5 self-center" viewBox="0 0 16 12"><rect width="5.33" height="12" fill="#002654"/><rect x="5.33" width="5.34" height="12" fill="#FFF"/><rect x="10.67" width="5.33" height="12" fill="#CE1126"/></svg><span class="font-medium text-text-primary truncate group-hover:underline">Gaba J. B.</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-gain-teal text-xs w-6 text-right font-medium">↑3</span><span class="text-gain-teal font-medium w-12 text-right">+24</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div onclick="location.href='athlete.html'" role="link" class="h-10 sm:h-11 py-0 border-b border-[#D6CFC2] flex items-center justify-between text-body-md hover:bg-panel-secondary/30 transition-colors px-1 cursor-pointer athlete-row group"><div class="min-w-0 pr-2 flex items-baseline"><svg class="w-4 h-3 shrink-0 mr-1.5 self-center" viewBox="0 0 16 12"><rect width="16" height="12" fill="#FFF"/><rect width="16" height="3.4" fill="#CC0000"/><rect y="8.6" width="16" height="3.4" fill="#006600"/></svg><span class="font-medium text-text-primary truncate group-hover:underline">Hojazoda B.</span></div><div class="flex items-center gap-2 sm:gap-3 shrink-0 tabular-nums font-tabular-data-md text-tabular-data-md"><span class="text-[#CC0000] text-xs w-6 text-right font-medium">↓3</span><span class="text-[#CC0000] font-medium w-12 text-right">−22</span><span class="material-symbols-outlined text-[18px] text-[#66605C] align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div></div>
+</div>
+<!-- Column 2: Upsets of the week -->
+<div class="flex flex-col">
+<div class="flex items-baseline justify-between border-b-2 border-text-primary pb-2 mb-0">
+<h2 class="serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight text-text-primary">Upsets of the month</h2>
+<a class="serif shrink-0 whitespace-nowrap text-[14px] font-semibold text-[#990F3D] hover:underline" href="contests.html#res=uw&amp;s=chance">All upsets</a>
+</div>
+<div class="flex flex-col"><a href="/contest/keldiyorova-abe" class="block hover:bg-[#E9E2D3]/40 py-3 border-b border-[#D6CFC2] transition-colors group"><div class="flex items-center justify-between"><div class="flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0 inline-block" viewBox="0 0 16 12"><rect width="16" height="4" fill="#0099B5"></rect><rect y="4" width="16" height="0.5" fill="#CE1126"></rect><rect y="4.5" width="16" height="3" fill="#FFFFFF"></rect><rect y="7.5" width="16" height="0.5" fill="#CE1126"></rect><rect y="8" width="16" height="4" fill="#1EB53A"></rect><circle cx="2.5" cy="2" r="1.2" fill="#FFFFFF"></circle><circle cx="2.8" cy="2" r="1.0" fill="#0099B5"></circle></svg><span class="font-semibold text-[#33302E]">Keldiyorova</span><span class="text-[#0D7680] font-semibold tabular-nums ml-2">14%</span></div><div class="flex items-center gap-1.5"><span class="text-[#66605C] tabular-nums mr-2">86%</span><span class="text-[#66605C]">Abe</span><svg class="w-4 h-3 shrink-0 inline-block" viewBox="0 0 16 12"><rect width="16" height="12" fill="#FFFFFF"></rect><circle cx="8" cy="6" r="3.6" fill="#BC002D"></circle></svg><span class="material-symbols-outlined text-[18px] text-[#66605C] ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div class="mt-1.5"><div class="h-1.5 w-full flex border overflow-hidden rounded-none bg-transparent border-[#33302E]"><div class="bg-[#0D7680] h-full prob-bar rounded-none" style="width: 14%;"></div></div></div><div class="mt-1.5 text-[12px] text-[#66605C] flex items-center justify-between"><span class="">Paris GS<span class="inline-block w-px h-3 bg-[#D6CFC2] mx-2 align-middle"></span>Final</span><span class="tabular-nums">Rating gap 138 points</span></div></a><a href="/contest/babulfath-scutto" class="block hover:bg-[#E9E2D3]/40 py-3 border-b border-[#D6CFC2] transition-colors group"><div class="flex items-center justify-between"><div class="flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0 inline-block" viewBox="0 0 16 12"><rect width="16" height="12" fill="#006AA7"></rect><rect x="5" width="2" height="12" fill="#FECC00"></rect><rect y="5" width="16" height="2" fill="#FECC00"></rect></svg><span class="font-semibold text-[#33302E]">Babulfath</span><span class="text-[#0D7680] font-semibold tabular-nums ml-2">21%</span></div><div class="flex items-center gap-1.5"><span class="text-[#66605C] tabular-nums mr-2">79%</span><span class="text-[#66605C]">Scutto</span><svg class="w-4 h-3 shrink-0 inline-block" viewBox="0 0 16 12"><rect width="5.33" height="12" fill="#009246"></rect><rect x="5.33" width="5.34" height="12" fill="#FFFFFF"></rect><rect x="10.67" width="5.33" height="12" fill="#CE2B37"></rect></svg><span class="material-symbols-outlined text-[18px] text-[#66605C] ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div class="mt-1.5"><div class="h-1.5 w-full flex border overflow-hidden rounded-none bg-transparent border-[#33302E]"><div class="bg-[#0D7680] h-full prob-bar rounded-none" style="width: 21%;"></div></div></div><div class="mt-1.5 text-[12px] text-[#66605C] flex items-center justify-between"><span class="">Abu Dhabi GS<span class="inline-block w-px h-3 bg-[#D6CFC2] mx-2 align-middle"></span>QF</span><span class="tabular-nums">Rating gap 112 points</span></div></a><a href="/contest/arai-kanikovskiy" class="block hover:bg-[#E9E2D3]/40 py-3 border-b border-[#D6CFC2] transition-colors group"><div class="flex items-center justify-between"><div class="flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0 inline-block" viewBox="0 0 16 12"><rect width="16" height="12" fill="#FFFFFF"></rect><circle cx="8" cy="6" r="3.6" fill="#BC002D"></circle></svg><span class="font-semibold text-[#33302E]">Arai</span><span class="text-[#0D7680] font-semibold tabular-nums ml-2">28%</span></div><div class="flex items-center gap-1.5"><span class="text-[#66605C] tabular-nums mr-2">72%</span><span class="text-[#66605C]">Kanikovskiy</span><svg class="w-4 h-3 shrink-0 inline-block" viewBox="0 0 16 12"><rect width="16" height="4" fill="#FFFFFF"></rect><rect y="4" width="16" height="4" fill="#0039A6"></rect><rect y="8" width="16" height="4" fill="#D52B1E"></rect></svg><span class="material-symbols-outlined text-[18px] text-[#66605C] ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div class="mt-1.5"><div class="h-1.5 w-full flex border overflow-hidden rounded-none bg-transparent border-[#33302E]"><div class="bg-[#0D7680] h-full prob-bar rounded-none" style="width: 28%;"></div></div></div><div class="mt-1.5 text-[12px] text-[#66605C] flex items-center justify-between"><span class="">Tokyo GS<span class="inline-block w-px h-3 bg-[#D6CFC2] mx-2 align-middle"></span>SF</span><span class="tabular-nums">Rating gap 94 points</span></div></a><a href="/contest/leski-matic" class="block hover:bg-[#E9E2D3]/40 py-3 transition-colors group"><div class="flex items-center justify-between"><div class="flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0 inline-block" viewBox="0 0 16 12"><rect width="16" height="4" fill="#FFFFFF"></rect><rect y="4" width="16" height="4" fill="#005DA4"></rect><rect y="8" width="16" height="4" fill="#ED1C24"></rect></svg><span class="font-semibold text-[#33302E]">Leski</span><span class="text-[#0D7680] font-semibold tabular-nums ml-2">34%</span></div><div class="flex items-center gap-1.5"><span class="text-[#66605C] tabular-nums mr-2">66%</span><span class="text-[#66605C]">Matic</span><svg class="w-4 h-3 shrink-0 inline-block" viewBox="0 0 16 12"><rect width="16" height="4" fill="#FF0000"></rect><rect y="4" width="16" height="4" fill="#FFFFFF"></rect><rect y="8" width="16" height="4" fill="#171796"></rect></svg><span class="material-symbols-outlined text-[18px] text-[#66605C] ml-1 group-hover:translate-x-0.5 transition-transform">chevron_right</span></div></div><div class="mt-1.5"><div class="h-1.5 w-full flex border overflow-hidden rounded-none bg-transparent border-[#33302E]"><div class="bg-[#0D7680] h-full prob-bar rounded-none" style="width: 34%;"></div></div></div><div class="mt-1.5 text-[12px] text-[#66605C] flex items-center justify-between"><span class="">Zagreb GP<span class="inline-block w-px h-3 bg-[#D6CFC2] mx-2 align-middle"></span>R16</span><span class="tabular-nums">Rating gap 76 points</span></div></a></div>
+</div>
+<!-- Column 3: Upcoming tournaments (Full width on tablet md:col-span-2, single column on desktop lg:col-span-1) -->
+<div class="flex flex-col md:col-span-2 lg:col-span-1"><div class="flex items-baseline justify-between border-b-2 border-[#33302E] pb-2 mb-0"><h2 class="serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight text-text-primary">Upcoming</h2><a href="/tournaments" class="text-[14px] font-semibold text-[#990F3D] hover:underline" style="font-family: 'Source Serif 4', serif;">All tournaments</a></div><div class="flex flex-col"><a href="/tournaments" class="h-10 sm:h-11 py-0 px-1 border-b border-[#D6CFC2] flex items-center justify-between text-[13px] sm:text-[14px] hover:bg-[#E9E2D3]/40 cursor-pointer transition-colors group"><div class="flex items-center gap-2 truncate pr-2"><svg class="w-4 h-3 shrink-0 inline-block align-middle" viewBox="0 0 30 20" preserveAspectRatio="none"><rect width="30" height="20" fill="#FFFFFF"></rect><circle cx="15" cy="10" r="6" fill="#BC002D"></circle></svg><span class="font-medium text-[#33302E] truncate">Tokyo Grand Slam</span></div><div class="flex items-center shrink-0"><span class="text-[#66605C] tabular-nums whitespace-nowrap text-right">7–8 Dec</span><span class="w-6 sm:w-8 px-0 text-right flex justify-end items-center"><span class="material-symbols-outlined text-[18px] text-[#66605C]">chevron_right</span></span></div></a><a href="/tournaments" class="h-10 sm:h-11 py-0 px-1 border-b border-[#D6CFC2] flex items-center justify-between text-[13px] sm:text-[14px] hover:bg-[#E9E2D3]/40 cursor-pointer transition-colors group"><div class="flex items-center gap-2 truncate pr-2"><svg class="w-4 h-3 shrink-0 inline-block align-middle" viewBox="0 0 30 20" preserveAspectRatio="none"><rect width="12" height="20" fill="#006600"></rect><rect x="12" width="18" height="20" fill="#FF0000"></rect><circle cx="12" cy="10" r="4.5" fill="#FFCC00"></circle><circle cx="12" cy="10" r="3" fill="#FFFFFF"></circle><rect x="10.5" y="8.5" width="3" height="3.5" fill="#002B7F"></rect></svg><span class="font-medium text-[#33302E] truncate">Odivelas Grand Prix</span></div><div class="flex items-center shrink-0"><span class="text-[#66605C] tabular-nums whitespace-nowrap text-right">23–25 Jan</span><span class="w-6 sm:w-8 px-0 text-right flex justify-end items-center"><span class="material-symbols-outlined text-[18px] text-[#66605C]">chevron_right</span></span></div></a><a href="/tournaments" class="h-10 sm:h-11 py-0 px-1 border-b border-[#D6CFC2] last:border-b-0 flex items-center justify-between text-[13px] sm:text-[14px] hover:bg-[#E9E2D3]/40 cursor-pointer transition-colors group"><div class="flex items-center gap-2 truncate pr-2"><svg class="w-4 h-3 shrink-0 inline-block align-middle" viewBox="0 0 30 20" preserveAspectRatio="none"><rect width="10" height="20" fill="#002654"></rect><rect x="10" width="10" height="20" fill="#FFFFFF"></rect><rect x="20" width="10" height="20" fill="#CE1126"></rect></svg><span class="font-medium text-[#33302E] truncate">Paris Grand Slam</span></div><div class="flex items-center shrink-0"><span class="text-[#66605C] tabular-nums whitespace-nowrap text-right">7–8 Feb</span><span class="w-6 sm:w-8 px-0 text-right flex justify-end items-center"><span class="material-symbols-outlined text-[18px] text-[#66605C]">chevron_right</span></span></div></a></div></div>
+</section>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full bg-[#F3EEE3] border-t border-[#D6CFC2] mt-10 md:mt-12 lg:mt-16">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-4 sm:py-0 sm:h-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+    <!-- Mobile: First line Methodology link (hidden on sm+) -->
+    <a href="/methodology" class="sm:hidden text-[13px] text-[#33302E] hover:underline">Methodology</a>
+    <!-- Metadata line: on mobile it is second line with mt-2 (or gap), on desktop it is on the left -->
+    <div class="flex items-center text-[12px] text-[#66605C] whitespace-nowrap mt-2 sm:mt-0">
+      <span class="">Ratings updated 20 Nov 2026</span>
+      <span class="inline-block w-px h-3 bg-[#D6CFC2] mx-2 align-middle"></span>
+      <span class="">Data: IJF judobase</span>
+    </div>
+    <!-- Desktop: Methodology link on the right (hidden on mobile) -->
+    <a href="/methodology" class="hidden sm:inline-block text-[12px] text-[#66605C] hover:text-[#33302E] hover:underline">Methodology</a>
+  </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+  (function() {
+    const openBtn = document.getElementById('mobile-open-search-btn');
+    const closeBtn = document.getElementById('mobile-close-search-btn');
+    const defaultView = document.getElementById('mobile-header-default');
+    const searchView = document.getElementById('mobile-header-search');
+    const searchInput = document.getElementById('mobile-search-input');
+    
+    if (openBtn && closeBtn && defaultView && searchView && searchInput) {
+      openBtn.addEventListener('click', function() {
+        defaultView.classList.add('hidden');
+        defaultView.classList.remove('flex');
+        searchView.classList.remove('hidden');
+        searchView.classList.add('flex');
+        searchInput.focus();
+      });
+      
+      closeBtn.addEventListener('click', function() {
+        searchView.classList.add('hidden');
+        searchView.classList.remove('flex');
+        defaultView.classList.remove('hidden');
+        defaultView.classList.add('flex');
+        searchInput.value = '';
+      });
+    }
+  })();
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>

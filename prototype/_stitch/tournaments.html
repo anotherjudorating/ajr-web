@@ -1,0 +1,273 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Judo tournaments and results | Another Judo Rating</title>
+<meta content="Results and upcoming judo tournaments with rating favourites, upsets and entries." name="description">
+<!-- Google Fonts exact opsz link -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'paper-base': '#F3EEE3',
+            'panel-secondary': '#E9E2D3',
+            'hairline-rule': '#D6CFC2',
+            'text-primary': '#33302E',
+            'text-secondary': '#66605C',
+            'accent-claret': '#990F3D',
+            'gain-teal': '#0D7680',
+            'drop-red': '#CC0000',
+            'oxford-blue': '#0F5499',
+            'medal-gold': '#8A6A00',
+            'medal-gold-bg': '#F1E3B3',
+            'medal-silver': '#5F6B73',
+            'medal-silver-bg': '#E3E6E8',
+            'medal-bronze': '#8A4F2A',
+            'medal-bronze-bg': '#EED9C8',
+            'shido-yellow': '#E8B90A',
+            // Material fallback protection
+            background: '#F3EEE3',
+            'on-background': '#33302E',
+            surface: '#F3EEE3',
+            'surface-bright': '#F3EEE3',
+            'surface-dim': '#E9E2D3',
+            'surface-container-lowest': '#F3EEE3',
+            'surface-container-low': '#F3EEE3',
+            'surface-container': '#E9E2D3',
+            'surface-container-high': '#E9E2D3',
+            'surface-container-highest': '#E9E2D3',
+            'surface-variant': '#E9E2D3',
+            'on-surface': '#33302E',
+            'on-surface-variant': '#66605C',
+            outline: '#66605C',
+            'outline-variant': '#D6CFC2',
+            primary: '#990F3D',
+            'on-primary': '#F3EEE3',
+            secondary: '#0D7680',
+            'on-secondary': '#F3EEE3',
+            error: '#CC0000',
+            'on-error': '#F3EEE3',
+          },
+          fontFamily: {
+            serif: ["'Source Serif 4'", "serif"],
+            sans: ["'IBM Plex Sans'", "sans-serif"],
+          },
+          fontSize: {
+            'display-masthead': ['44px', { lineHeight: '48px', letterSpacing: '-0.02em', fontWeight: '700' }],
+            'headline-xl': ['36px', { lineHeight: '40px', letterSpacing: '-0.015em', fontWeight: '700' }],
+            'headline-xl-mobile': ['28px', { lineHeight: '32px', letterSpacing: '-0.01em', fontWeight: '700' }],
+            'headline-lg': ['26px', { lineHeight: '30px', letterSpacing: '-0.025em', fontWeight: '700' }],
+            'headline-section': ['24px', { lineHeight: '28px', letterSpacing: '-0.01em', fontWeight: '700' }],
+            'headline-section-mobile': ['20px', { lineHeight: '24px', fontWeight: '600' }],
+            'headline-sm': ['16px', { lineHeight: '20px', fontWeight: '600' }],
+            'body-lg': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+            'body-md': ['14px', { lineHeight: '20px', fontWeight: '400' }],
+            'body-sm': ['12px', { lineHeight: '16px', fontWeight: '400' }],
+            'label-caps': ['11px', { lineHeight: '14px', letterSpacing: '0.08em', fontWeight: '700' }],
+            'label-caps-sm': ['10px', { lineHeight: '12px', letterSpacing: '0.05em', fontWeight: '700' }],
+            'tabular-data-lg': ['24px', { lineHeight: '28px', fontWeight: '700' }],
+            'tabular-data-md': ['14px', { lineHeight: '18px', fontWeight: '500' }],
+            'tabular-data-sm': ['12px', { lineHeight: '16px', fontWeight: '500' }],
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    html, body {
+      opacity: 1 !important;
+      background-color: #F3EEE3;
+      color: #33302E;
+      font-family: 'IBM Plex Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      border-radius: 0;
+    }
+    * {
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body class="bg-paper-base text-text-primary min-h-screen flex flex-col antialiased">
+<!-- Header: Exact copy from DESIGN.md -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-[#F3EEE3] border-b border-[#D6CFC2]">
+  <!-- Desktop Header (md+) -->
+  <div class="hidden md:flex h-16 max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 items-center justify-between gap-3">
+    <div class="flex items-center h-full">
+      <a class="serif text-[22px] leading-[28px] font-bold tracking-tight whitespace-nowrap text-[#33302E]" href="/" style="font-family: &quot;Source Serif 4&quot;, serif;">Another Judo Rating</a>
+      <nav class="flex items-center gap-6 lg:gap-8 h-full ml-8 lg:ml-12">
+        <a class="h-full inline-flex items-center text-[15px] font-normal text-text-secondary hover:text-text-primary border-b-2 border-transparent -mb-px" href="/rankings">Rankings</a>
+        <a class="h-full inline-flex items-center text-[15px] font-normal text-accent-claret border-b-2 border-accent-claret -mb-px" href="/tournaments">Tournaments</a>
+        <a class="h-full inline-flex items-center text-[15px] font-normal text-text-secondary hover:text-text-primary border-b-2 border-transparent -mb-px" href="/head-to-head">Head-to-head</a>
+        <a class="h-full inline-flex items-center text-[15px] font-normal text-text-secondary hover:text-text-primary border-b-2 border-transparent -mb-px" href="/methodology">Methodology</a>
+      </nav>
+    </div>
+    <div class="flex items-center"><button type="button" aria-label="Search" class="lg:hidden w-10 h-10 -mr-2 flex items-center justify-center text-[#66605C]"><span class="material-symbols-outlined text-[22px]">search</span></button><div class="relative w-[240px] hidden lg:block"><span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-text-secondary"><span class="material-symbols-outlined text-[18px]">search</span></span><input class="w-full h-8 pl-8 pr-2.5 bg-paper-base border border-hairline-rule text-[12px] text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-text-primary" placeholder="Filter athletes / country" style="font-family: 'IBM Plex Sans', sans-serif;" type="text"></div></div>
+  </div>
+
+  <!-- Mobile Header Row 1 (< md) -->
+  <div class="flex md:hidden h-12 px-4 items-center justify-between w-full">
+    <!-- Default Title Bar -->
+    <div id="mobile-title-bar" class="flex items-center justify-between w-full h-full">
+      <a href="/" class="text-[20px] leading-[28px] font-bold tracking-tight text-[#33302E] whitespace-nowrap" style="font-family: 'Source Serif 4', serif;">Another Judo Rating</a>
+      <button aria-label="Search" onclick="document.getElementById('mobile-title-bar').classList.add('hidden'); document.getElementById('mobile-search-bar').classList.remove('hidden'); document.getElementById('mobile-search-input').focus();" class="w-10 h-10 flex items-center justify-center text-text-secondary hover:text-text-primary focus:outline-none">
+        <span class="material-symbols-outlined text-[22px]">search</span>
+      </button>
+    </div>
+    <!-- Expandable Search Bar -->
+    <div id="mobile-search-bar" class="hidden flex items-center gap-2 w-full h-full">
+      <div class="relative flex-1">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-text-secondary">
+          <span class="material-symbols-outlined text-[16px]">search</span>
+        </span>
+        <input id="mobile-search-input" class="w-full h-8 pl-8 pr-2.5 bg-paper-base border border-[#33302E] text-[12px] text-text-primary placeholder:text-text-secondary focus:outline-none" placeholder="Search athletes or tournaments" style="font-family: 'IBM Plex Sans', sans-serif;" type="text">
+      </div>
+      <button aria-label="Close search" onclick="document.getElementById('mobile-search-bar').classList.add('hidden'); document.getElementById('mobile-title-bar').classList.remove('hidden');" class="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary focus:outline-none shrink-0">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+  </div>
+</header>
+<!-- Main Container -->
+<main class="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 pt-12 md:pt-16"><nav class="-mx-4 sm:-mx-6 w-[calc(100%+2rem)] sm:w-[calc(100%+3rem)] px-4 sm:px-6 h-10 flex items-center justify-between border-b border-[#D6CFC2] bg-[#F3EEE3] md:hidden text-[13px]">
+  <a class="text-[#66605C] hover:text-[#33302E] font-normal whitespace-nowrap" href="/rankings">Rankings</a>
+  <a class="text-[#990F3D] font-normal h-full flex items-center border-b-2 border-[#990F3D] -mb-px whitespace-nowrap" href="/tournaments">Tournaments</a>
+  <a class="text-[#66605C] hover:text-[#33302E] font-normal whitespace-nowrap" href="/head-to-head">Head-to-head</a>
+  <a class="text-[#66605C] hover:text-[#33302E] font-normal whitespace-nowrap" href="/methodology">Methodology</a>
+</nav>
+<!-- Page Header (pt-10) -->
+<section class="pt-6 sm:pt-8">
+<nav class="flex items-center" aria-label="Explore"><span class="hidden sm:inline w-16 shrink-0 text-[10px] font-bold uppercase tracking-wider text-[#66605C]">Explore</span><div class="flex items-center gap-4 sm:gap-2"><a href="tournaments.html" class="px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] font-bold text-[#33302E] border-b-2 border-[#990F3D]">Tournaments</a><a href="contests.html" class="px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] text-[#66605C] hover:text-[#33302E]">Contests</a><a href="athletes.html" class="px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] text-[#66605C] hover:text-[#33302E]">Athletes</a><a href="nations.html" class="px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] text-[#66605C] hover:text-[#33302E]">Nations</a></div></nav>
+<h1 class="mt-6 text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold text-text-primary tracking-[-0.015em]" style="font-family: 'Source Serif 4', serif;">Tournaments</h1>
+<p class="mt-1.5 text-[14px] text-[#66605C]">Every rated tournament, past and upcoming.</p>
+</section>
+
+<!-- Toolbar (shared layout, _gen/chrome.toolbar) --><div class="mt-6 border-b-2 border-[#33302E] pb-2 flex flex-col lg:flex-row lg:items-center gap-2"><div class="relative w-full md:w-72 lg:w-56 shrink-0"><span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] text-[#66605C] pointer-events-none">search</span><input id="t-q" type="text" placeholder="Search tournament or city" class="w-full h-8 pl-8 pr-2.5 bg-[#F3EEE3] border border-[#D6CFC2] text-[12px] placeholder:text-[#66605C] focus:outline-none focus:border-[#33302E]"></div><div class="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center"><select id="t-level" class="h-8 py-0 px-2.5 bg-[#F3EEE3] border border-[#D6CFC2] text-[12px] text-[#33302E] focus:outline-none focus:border-[#33302E] cursor-pointer min-w-0"><option value="all">All levels</option><option value="og">Olympic Games</option><option value="wch">World Championships</option><option value="mas">Masters</option><option value="gs">Grand Slam</option><option value="gp">Grand Prix</option><option value="cont">Continental</option></select><select id="t-year" class="h-8 py-0 px-2.5 bg-[#F3EEE3] border border-[#D6CFC2] text-[12px] text-[#33302E] focus:outline-none focus:border-[#33302E] cursor-pointer min-w-0"><option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option></select></div><div class="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto"><div class="min-w-0 grid md:block"><select id="t-sort" class="h-8 py-0 px-2.5 bg-[#F3EEE3] border border-[#D6CFC2] text-[12px] text-[#33302E] focus:outline-none focus:border-[#33302E] cursor-pointer min-w-0"><option value="date-asc">Sort: date ↑</option><option value="date-desc">Sort: date ↓</option><option value="accuracy-desc">Sort: rating accuracy ↓</option><option value="accuracy-asc">Sort: rating accuracy ↑</option><option value="upsets-desc">Sort: upsets ↓</option><option value="upsets-asc">Sort: upsets ↑</option></select></div><button type="button" class="w-full md:w-auto shrink-0 h-8 px-3 inline-flex items-center justify-center gap-1.5 border border-[#D6CFC2] text-[12px] text-[#33302E] hover:border-[#33302E]"><span class="material-symbols-outlined text-[16px] text-[#66605C]">download</span>Export CSV</button></div></div>
+<!-- Tournaments Table (Results View) -->
+<div class="w-full" id="view-results"><table class="w-full text-left border-collapse"><thead><tr class="bg-panel-secondary border-b border-hairline-rule text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-text-secondary h-9"><th class="h-9 py-0 align-middle px-2 sm:px-3 w-[72px] sm:w-32 whitespace-nowrap tabular-nums font-bold">DATES</th><th class="h-9 py-0 align-middle px-2 sm:px-3 font-bold">TOURNAMENT</th><th class="hidden sm:table-cell h-9 py-0 align-middle px-3 font-bold">LOCATION</th><th class="hidden sm:table-cell h-9 py-0 align-middle px-2 sm:px-3 w-14 sm:w-36 text-right font-bold" title="Contests won by the rating favourite"><span class="hidden sm:inline">RATING&nbsp;</span>ACCURACY</th><th class="h-9 py-0 align-middle px-2 sm:px-3 w-12 sm:w-24 text-right font-bold">UPSETS</th><th class="w-6 sm:w-8 h-9 py-0 align-middle pl-1 pr-0 sm:px-2"></th></tr></thead><tbody class="text-[13px] sm:text-[14px]"><tr aria-expanded="true" class="bg-panel-secondary cursor-pointer hover:bg-panel-secondary/80 select-none" data-month-toggle="may-2026" onclick="toggleMonth('may-2026')" onkeydown="handleMonthKey(event, 'may-2026')" role="button" tabindex="0"><td class="h-8 py-0 align-middle px-2 sm:px-3" colspan="6"><div class="flex items-center justify-between"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-text-secondary transition-transform duration-150 month-icon">expand_more</span><span class="text-[12px] font-bold uppercase tracking-wide text-text-primary">May 2026</span></span><span class="text-[12px] text-text-secondary font-normal">1 tournament</span></div></td></tr><tr class="border-b border-hairline-rule hover:bg-panel-secondary/40 cursor-pointer" data-month="may-2026"><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-text-secondary tabular-nums whitespace-nowrap w-[72px] sm:w-32">23–24 May</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 font-semibold text-text-primary"><div class="flex items-center sm:block"><svg class="w-4 h-3 shrink-0 sm:hidden inline-block mr-1.5 align-middle" viewBox="0 0 16 12"><rect fill="#ce2939" height="4" width="16"></rect><rect fill="#ffffff" height="4" width="16" y="4"></rect><rect fill="#477050" height="4" width="16" y="8"></rect></svg><span class="hover:underline line-clamp-2 sm:line-clamp-none">Masters Budapest</span></div></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-3 text-text-secondary"><span class="inline-flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0" viewBox="0 0 16 12"><rect fill="#ce2939" height="4" width="16"></rect><rect fill="#ffffff" height="4" width="16" y="4"></rect><rect fill="#477050" height="4" width="16" y="8"></rect></svg><span class="">Budapest, HUN</span></span></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums" title="Contests won by the rating favourite: 295 of 410">72%</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums">27</td><td class="w-6 sm:w-8 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-text-secondary"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></td></tr><tr aria-expanded="true" class="bg-panel-secondary cursor-pointer hover:bg-panel-secondary/80 select-none" data-month-toggle="june-2026" onclick="toggleMonth('june-2026')" onkeydown="handleMonthKey(event, 'june-2026')" role="button" tabindex="0"><td class="h-8 py-0 align-middle px-2 sm:px-3" colspan="6"><div class="flex items-center justify-between"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-text-secondary transition-transform duration-150 month-icon">expand_more</span><span class="text-[12px] font-bold uppercase tracking-wide text-text-primary">June 2026</span></span><span class="text-[12px] text-text-secondary font-normal">2 tournaments</span></div></td></tr><tr class="border-b border-hairline-rule hover:bg-panel-secondary/40 cursor-pointer" data-month="june-2026"><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-text-secondary tabular-nums whitespace-nowrap w-[72px] sm:w-32">6–8 Jun</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 font-semibold text-text-primary"><div class="flex items-center sm:block"><svg class="w-4 h-3 shrink-0 sm:hidden inline-block mr-1.5 align-middle" viewBox="0 0 16 12"><rect fill="#00afca" height="12" width="16"></rect><circle cx="8" cy="6" fill="#fec50c" r="2.5"></circle></svg><span class="hover:underline line-clamp-2 sm:line-clamp-none"><span class="sm:hidden">Astana GS</span><span class="hidden sm:inline">Astana Grand Slam</span></span></div></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-3 text-text-secondary"><span class="inline-flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0" viewBox="0 0 16 12"><rect fill="#00afca" height="12" width="16"></rect><circle cx="8" cy="6" fill="#fec50c" r="2.5"></circle></svg><span class="">Astana, KAZ</span></span></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums" title="Contests won by the rating favourite: 350 of 522">67%</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums">40</td><td class="w-6 sm:w-8 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-text-secondary"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></td></tr><tr class="border-b border-hairline-rule hover:bg-panel-secondary/40 cursor-pointer" data-month="june-2026"><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-text-secondary tabular-nums whitespace-nowrap w-[72px] sm:w-32">19–21 Jun</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 font-semibold text-text-primary"><div class="flex items-center sm:block"><svg class="w-4 h-3 shrink-0 sm:hidden inline-block mr-1.5 align-middle" viewBox="0 0 16 12"><rect fill="#da2032" height="12" width="5"></rect><rect fill="#0066b3" height="12" width="6" x="5"></rect><rect fill="#da2032" height="12" width="5" x="11"></rect></svg><span class="hover:underline line-clamp-2 sm:line-clamp-none"><span class="sm:hidden">Ulaanbaatar GS</span><span class="hidden sm:inline">Ulaanbaatar Grand Slam</span></span></div></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-3 text-text-secondary"><span class="inline-flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0" viewBox="0 0 16 12"><rect fill="#da2032" height="12" width="5"></rect><rect fill="#0066b3" height="12" width="6" x="5"></rect><rect fill="#da2032" height="12" width="5" x="11"></rect></svg><span class="">Ulaanbaatar, MGL</span></span></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums" title="Contests won by the rating favourite: 388 of 554">70%</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums">39</td><td class="w-6 sm:w-8 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-text-secondary"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></td></tr><tr aria-expanded="true" class="bg-panel-secondary cursor-pointer hover:bg-panel-secondary/80 select-none" data-month-toggle="august-2026" onclick="toggleMonth('august-2026')" onkeydown="handleMonthKey(event, 'august-2026')" role="button" tabindex="0"><td class="h-8 py-0 align-middle px-2 sm:px-3" colspan="6"><div class="flex items-center justify-between"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-text-secondary transition-transform duration-150 month-icon">expand_more</span><span class="text-[12px] font-bold uppercase tracking-wide text-text-primary">August 2026</span></span><span class="text-[12px] text-text-secondary font-normal">1 tournament</span></div></td></tr><tr class="border-b border-hairline-rule hover:bg-panel-secondary/40 cursor-pointer" data-month="august-2026"><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-text-secondary tabular-nums whitespace-nowrap w-[72px] sm:w-32">21–23 Aug</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 font-semibold text-text-primary"><div class="flex items-center sm:block"><svg class="w-4 h-3 shrink-0 sm:hidden inline-block mr-1.5 align-middle" viewBox="0 0 16 12"><rect fill="#ff0000" height="4" width="16"></rect><rect fill="#ffffff" height="4" width="16" y="4"></rect><rect fill="#171796" height="4" width="16" y="8"></rect></svg><span class="hover:underline line-clamp-2 sm:line-clamp-none"><span class="sm:hidden">Zagreb GP</span><span class="hidden sm:inline">Zagreb Grand Prix</span></span></div></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-3 text-text-secondary"><span class="inline-flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0" viewBox="0 0 16 12"><rect fill="#ff0000" height="4" width="16"></rect><rect fill="#ffffff" height="4" width="16" y="4"></rect><rect fill="#171796" height="4" width="16" y="8"></rect></svg><span class="">Zagreb, CRO</span></span></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums" title="Contests won by the rating favourite: 345 of 507">68%</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums">36</td><td class="w-6 sm:w-8 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-text-secondary"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></td></tr><tr aria-expanded="true" class="bg-panel-secondary cursor-pointer hover:bg-panel-secondary/80 select-none" data-month-toggle="september-2026" onclick="toggleMonth('september-2026')" onkeydown="handleMonthKey(event, 'september-2026')" role="button" tabindex="0"><td class="h-8 py-0 align-middle px-2 sm:px-3" colspan="6"><div class="flex items-center justify-between"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-text-secondary transition-transform duration-150 month-icon">expand_more</span><span class="text-[12px] font-bold uppercase tracking-wide text-text-primary">September 2026</span></span><span class="text-[12px] text-text-secondary font-normal">2 tournaments</span></div></td></tr><tr class="border-b border-hairline-rule hover:bg-panel-secondary/40 cursor-pointer" data-month="september-2026"><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-text-secondary tabular-nums whitespace-nowrap w-[72px] sm:w-32">5–7 Sep</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 font-semibold text-text-primary"><div class="flex items-center sm:block"><svg class="w-4 h-3 shrink-0 sm:hidden inline-block mr-1.5 align-middle" viewBox="0 0 16 12"><rect fill="#1eb53a" height="4" width="16"></rect><rect fill="#ffffff" height="4" width="16" y="4"></rect><rect fill="#0099b5" height="4" width="16" y="8"></rect></svg><span class="hover:underline line-clamp-2 sm:line-clamp-none"><span class="sm:hidden">Tashkent GS</span><span class="hidden sm:inline">Tashkent Grand Slam</span></span></div></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-3 text-text-secondary"><span class="inline-flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0" viewBox="0 0 16 12"><rect fill="#1eb53a" height="4" width="16"></rect><rect fill="#ffffff" height="4" width="16" y="4"></rect><rect fill="#0099b5" height="4" width="16" y="8"></rect></svg><span class="">Tashkent, UZB</span></span></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums" title="Contests won by the rating favourite: 372 of 539">69%</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums">44</td><td class="w-6 sm:w-8 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-text-secondary"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></td></tr><tr class="border-b border-hairline-rule hover:bg-panel-secondary/40 cursor-pointer" data-month="september-2026"><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-text-secondary tabular-nums whitespace-nowrap w-[72px] sm:w-32">18–20 Sep</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 font-semibold text-text-primary"><div class="flex items-center sm:block"><svg class="w-4 h-3 shrink-0 sm:hidden inline-block mr-1.5 align-middle" viewBox="0 0 16 12"><rect fill="#de2910" height="12" width="16"></rect><polygon fill="#ffde00" points="3,2 3.6,3.6 2,2.6 4,2.6 2.4,3.6"></polygon></svg><span class="hover:underline line-clamp-2 sm:line-clamp-none"><span class="sm:hidden">Qingdao GP</span><span class="hidden sm:inline">Qingdao Grand Prix</span></span></div></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-3 text-text-secondary"><span class="inline-flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0" viewBox="0 0 16 12"><rect fill="#de2910" height="12" width="16"></rect><polygon fill="#ffde00" points="3,2 3.6,3.6 2,2.6 4,2.6 2.4,3.6"></polygon></svg><span class="">Qingdao, CHN</span></span></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums" title="Contests won by the rating favourite: 320 of 485">66%</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums">41</td><td class="w-6 sm:w-8 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-text-secondary"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></td></tr><tr aria-expanded="true" class="bg-panel-secondary cursor-pointer hover:bg-panel-secondary/80 select-none" data-month-toggle="october-2026" onclick="toggleMonth('october-2026')" onkeydown="handleMonthKey(event, 'october-2026')" role="button" tabindex="0"><td class="h-8 py-0 align-middle px-2 sm:px-3" colspan="6"><div class="flex items-center justify-between"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-text-secondary transition-transform duration-150 month-icon">expand_more</span><span class="text-[12px] font-bold uppercase tracking-wide text-text-primary">October 2026</span></span><span class="text-[12px] text-text-secondary font-normal">2 tournaments</span></div></td></tr><tr class="border-b border-hairline-rule hover:bg-panel-secondary/40 cursor-pointer" data-month="october-2026" onclick="window.location.href='/tournaments/baku-wch-2026'"><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-text-secondary tabular-nums whitespace-nowrap w-[72px] sm:w-32">4–11 Oct</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 font-semibold text-text-primary"><div class="flex items-center sm:block"><svg class="w-4 h-3 shrink-0 sm:hidden inline-block mr-1.5 align-middle" viewBox="0 0 16 12"><rect fill="#00B5E2" height="4" width="16"></rect><rect fill="#EF3340" height="4" width="16" y="4"></rect><rect fill="#509E2F" height="4" width="16" y="8"></rect></svg><a class="hover:underline line-clamp-2 sm:line-clamp-none" href="/tournaments/baku-wch-2026"><span class="sm:hidden">Baku WCH</span><span class="hidden sm:inline">World Championships</span></a></div></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-3 text-text-secondary"><span class="inline-flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0" viewBox="0 0 16 12"><rect fill="#00B5E2" height="4" width="16"></rect><rect fill="#EF3340" height="4" width="16" y="4"></rect><rect fill="#509E2F" height="4" width="16" y="8"></rect></svg><span class="">Baku, AZE</span></span></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums" title="Contests won by the rating favourite: 651 of 880">74%</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums">52</td><td class="w-6 sm:w-8 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-text-secondary"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></td></tr><tr class="border-b border-hairline-rule hover:bg-panel-secondary/40 cursor-pointer" data-month="october-2026" onclick="window.location.href='/tournaments/abu-dhabi-2026'"><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-text-secondary tabular-nums whitespace-nowrap w-[72px] sm:w-32">24–26 Oct</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 font-semibold text-text-primary"><div class="flex items-center sm:block"><svg class="w-4 h-3 shrink-0 sm:hidden inline-block mr-1.5 align-middle" viewBox="0 0 16 12"><rect fill="#00732f" height="4" width="16"></rect><rect fill="#ffffff" height="4" width="16" y="4"></rect><rect fill="#000000" height="4" width="16" y="8"></rect><rect fill="#ff0000" height="12" width="5"></rect></svg><a class="hover:underline line-clamp-2 sm:line-clamp-none" href="/tournaments/abu-dhabi-2026"><span class="sm:hidden">Abu Dhabi GS</span><span class="hidden sm:inline">Abu Dhabi Grand Slam</span></a></div></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-3 text-text-secondary"><span class="inline-flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0" viewBox="0 0 16 12"><rect fill="#00732f" height="4" width="16"></rect><rect fill="#ffffff" height="4" width="16" y="4"></rect><rect fill="#000000" height="4" width="16" y="8"></rect><rect fill="#ff0000" height="12" width="5"></rect></svg><span class="">Abu Dhabi, UAE</span></span></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums" title="Contests won by the rating favourite: 412 of 580">71%</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-primary tabular-nums">38</td><td class="w-6 sm:w-8 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-text-secondary"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></td></tr><tr aria-expanded="true" class="bg-panel-secondary cursor-pointer hover:bg-panel-secondary/80 select-none" data-month-toggle="december-2026" onclick="toggleMonth('december-2026')" onkeydown="handleMonthKey(event, 'december-2026')" role="button" tabindex="0"><td class="h-8 py-0 align-middle px-2 sm:px-3" colspan="6"><div class="flex items-center justify-between"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-text-secondary transition-transform duration-150 month-icon">expand_more</span><span class="text-[12px] font-bold uppercase tracking-wide text-text-primary">December 2026</span></span><span class="text-[12px] text-text-secondary font-normal">1 tournament</span></div></td></tr><tr class="border-b border-hairline-rule hover:bg-panel-secondary/40 cursor-pointer" data-month="december-2026" onclick="window.location.href='/tournaments/tokyo-2026'"><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-text-secondary tabular-nums whitespace-nowrap w-[72px] sm:w-32">7–8 Dec</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 font-semibold text-text-primary"><div class="flex items-center sm:block"><svg class="w-4 h-3 shrink-0 sm:hidden inline-block mr-1.5 align-middle" viewBox="0 0 16 12"><rect width="16" height="12" fill="#FFF"/><circle cx="8" cy="6" r="3.6" fill="#BC002D"/></svg><a class="hover:underline line-clamp-2 sm:line-clamp-none" href="/tournaments/tokyo-2026"><span class="sm:hidden">Tokyo GS</span><span class="hidden sm:inline">Tokyo Grand Slam</span></a></div></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-3 text-text-secondary"><span class="inline-flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0" viewBox="0 0 16 12"><rect width="16" height="12" fill="#FFF"/><circle cx="8" cy="6" r="3.6" fill="#BC002D"/></svg><span class="">Tokyo, JPN</span></span></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-secondary tabular-nums">–</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-secondary tabular-nums">–</td><td class="w-6 sm:w-8 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-text-secondary"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></td></tr><tr aria-expanded="true" class="bg-panel-secondary cursor-pointer hover:bg-panel-secondary/80 select-none" data-month-toggle="january-2027" onclick="toggleMonth('january-2027')" onkeydown="handleMonthKey(event, 'january-2027')" role="button" tabindex="0"><td class="h-8 py-0 align-middle px-2 sm:px-3" colspan="6"><div class="flex items-center justify-between"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-text-secondary transition-transform duration-150 month-icon">expand_more</span><span class="text-[12px] font-bold uppercase tracking-wide text-text-primary">January 2027</span></span><span class="text-[12px] text-text-secondary font-normal">1 tournament</span></div></td></tr><tr class="border-b border-hairline-rule hover:bg-panel-secondary/40 cursor-pointer" data-month="january-2027" onclick="window.location.href='/tournaments/odivelas-2027'"><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-text-secondary tabular-nums whitespace-nowrap w-[72px] sm:w-32">23–25 Jan</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 font-semibold text-text-primary"><div class="flex items-center sm:block"><svg class="w-4 h-3 shrink-0 sm:hidden inline-block mr-1.5 align-middle" viewBox="0 0 16 12"><rect width="16" height="12" fill="#FF0000"/><rect width="6.4" height="12" fill="#006600"/></svg><a class="hover:underline line-clamp-2 sm:line-clamp-none" href="/tournaments/odivelas-2027"><span class="sm:hidden">Odivelas GP</span><span class="hidden sm:inline">Odivelas Grand Prix</span></a></div></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-3 text-text-secondary"><span class="inline-flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0" viewBox="0 0 16 12"><rect width="16" height="12" fill="#FF0000"/><rect width="6.4" height="12" fill="#006600"/></svg><span class="">Odivelas, POR</span></span></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-secondary tabular-nums">–</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-secondary tabular-nums">–</td><td class="w-6 sm:w-8 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-text-secondary"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></td></tr><tr aria-expanded="true" class="bg-panel-secondary cursor-pointer hover:bg-panel-secondary/80 select-none" data-month-toggle="february-2027" onclick="toggleMonth('february-2027')" onkeydown="handleMonthKey(event, 'february-2027')" role="button" tabindex="0"><td class="h-8 py-0 align-middle px-2 sm:px-3" colspan="6"><div class="flex items-center justify-between"><span class="inline-flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-text-secondary transition-transform duration-150 month-icon">expand_more</span><span class="text-[12px] font-bold uppercase tracking-wide text-text-primary">February 2027</span></span><span class="text-[12px] text-text-secondary font-normal">1 tournament</span></div></td></tr><tr class="border-b border-hairline-rule hover:bg-panel-secondary/40 cursor-pointer" data-month="february-2027" onclick="window.location.href='/tournaments/paris-2027'"><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-text-secondary tabular-nums whitespace-nowrap w-[72px] sm:w-32">7–8 Feb</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 font-semibold text-text-primary"><div class="flex items-center sm:block"><svg class="w-4 h-3 shrink-0 sm:hidden inline-block mr-1.5 align-middle" viewBox="0 0 16 12"><rect width="5.33" height="12" fill="#002654"/><rect x="5.33" width="5.34" height="12" fill="#FFF"/><rect x="10.67" width="5.33" height="12" fill="#CE1126"/></svg><a class="hover:underline line-clamp-2 sm:line-clamp-none" href="/tournaments/paris-2027"><span class="sm:hidden">Paris GS</span><span class="hidden sm:inline">Paris Grand Slam</span></a></div></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-3 text-text-secondary"><span class="inline-flex items-center gap-1.5"><svg class="w-4 h-3 shrink-0" viewBox="0 0 16 12"><rect width="5.33" height="12" fill="#002654"/><rect x="5.33" width="5.34" height="12" fill="#FFF"/><rect x="10.67" width="5.33" height="12" fill="#CE1126"/></svg><span class="">Paris, FRA</span></span></td><td class="hidden sm:table-cell h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-secondary tabular-nums">–</td><td class="h-10 sm:h-11 py-0 align-middle px-2 sm:px-3 text-right text-text-secondary tabular-nums">–</td><td class="w-6 sm:w-8 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-text-secondary"><span class="material-symbols-outlined text-[18px] align-middle">chevron_right</span></td></tr></tbody></table></div>
+<!-- Tournaments Table (Upcoming View, hidden by default) -->
+
+<!-- Pagination (mt-4) -->
+<div class="mt-4 flex flex-col sm:flex-row sm:items-center justify-between text-[12px] text-text-secondary">
+<div class="flex items-center justify-between w-full sm:w-auto sm:justify-start gap-4 sm:gap-6">
+<span class="text-[12px] text-text-secondary tabular-nums">1–8 of 64 tournaments</span>
+<div class="inline-flex items-center gap-2 text-[12px]">
+<span class="text-text-secondary">Show</span>
+<button class="font-bold text-text-primary border-b-2 border-accent-claret pb-0.5 focus:outline-none">20</button>
+<button class="text-text-secondary hover:text-text-primary border-b-2 border-transparent pb-0.5 focus:outline-none">50</button>
+<button class="text-text-secondary hover:text-text-primary border-b-2 border-transparent pb-0.5 focus:outline-none">100</button>
+</div>
+</div>
+<div class="flex items-center justify-center w-full sm:w-auto mt-3 sm:mt-0 gap-3">
+<span class="text-text-secondary opacity-50 cursor-default select-none">‹</span>
+<button class="font-bold text-text-primary border-b-2 border-accent-claret pb-0.5 px-0.5 focus:outline-none">1</button>
+<button class="text-text-secondary hover:text-text-primary border-b-2 border-transparent pb-0.5 px-0.5 focus:outline-none">2</button>
+<button class="text-text-secondary hover:text-text-primary border-b-2 border-transparent pb-0.5 px-0.5 focus:outline-none">3</button>
+<span class="text-text-secondary select-none">…</span>
+<button class="text-text-secondary hover:text-text-primary border-b-2 border-transparent pb-0.5 px-0.5 focus:outline-none">8</button>
+<button class="text-text-secondary hover:text-text-primary border-b-2 border-transparent pb-0.5 px-0.5 focus:outline-none">›</button>
+</div>
+</div>
+</main>
+<!-- Footer: Exact copy from DESIGN.md -->
+<footer class="w-full bg-[#F3EEE3] border-t border-[#D6CFC2] mt-10 md:mt-12 lg:mt-16">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-4 sm:py-0 sm:h-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+    <!-- Mobile: First line Methodology link (hidden on sm+) -->
+    <a href="/methodology" class="sm:hidden text-[13px] text-[#33302E] hover:underline">Methodology</a>
+    <!-- Metadata line: on mobile it is second line with mt-2 (or gap), on desktop it is on the left -->
+    <div class="flex items-center text-[12px] text-[#66605C] whitespace-nowrap mt-2 sm:mt-0">
+      <span class="">Ratings updated 20 Nov 2026</span>
+      <span class="inline-block w-px h-3 bg-[#D6CFC2] mx-2 align-middle"></span>
+      <span class="">Data: IJF judobase</span>
+    </div>
+    <!-- Desktop: Methodology link on the right (hidden on mobile) -->
+    <a href="/methodology" class="hidden sm:inline-block text-[12px] text-[#66605C] hover:text-[#33302E] hover:underline">Methodology</a>
+  </div>
+</footer>
+<!-- View Switcher Script -->
+<script>
+    function switchView(view) {
+      const resultsView = document.getElementById('view-results');
+      const upcomingView = document.getElementById('view-upcoming');
+      const tabResults = document.getElementById('tab-results');
+      const tabUpcoming = document.getElementById('tab-upcoming');
+
+      if (view === 'results') {
+        resultsView.classList.remove('hidden');
+        upcomingView.classList.add('hidden');
+        tabResults.className = 'pb-1 text-text-primary font-bold border-b-2 border-accent-claret transition-none focus:outline-none';
+        tabUpcoming.className = 'pb-1 text-text-secondary hover:text-text-primary border-b-2 border-transparent transition-none focus:outline-none';
+      } else {
+        resultsView.classList.add('hidden');
+        upcomingView.classList.remove('hidden');
+        tabResults.className = 'pb-1 text-text-secondary hover:text-text-primary border-b-2 border-transparent transition-none focus:outline-none';
+        tabUpcoming.className = 'pb-1 text-text-primary font-bold border-b-2 border-accent-claret transition-none focus:outline-none';
+      }
+    }
+  </script>
+<script>
+    function toggleMonth(monthKey) {
+      const headerRow = document.querySelector(`[data-month-toggle="${monthKey}"]`);
+      if (!headerRow) return;
+      const isExpanded = headerRow.getAttribute('aria-expanded') === 'true';
+      const newExpanded = !isExpanded;
+      headerRow.setAttribute('aria-expanded', newExpanded.toString());
+      
+      const icon = headerRow.querySelector('.month-icon');
+      if (icon) {
+        if (newExpanded) {
+          icon.classList.remove('-rotate-90');
+        } else {
+          icon.classList.add('-rotate-90');
+        }
+      }
+      
+      const rows = document.querySelectorAll(`tr[data-month="${monthKey}"]`);
+      rows.forEach(r => {
+        if (newExpanded) {
+          r.classList.remove('hidden');
+        } else {
+          r.classList.add('hidden');
+        }
+      });
+    }
+
+    function handleMonthKey(e, monthKey) {
+      if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        toggleMonth(monthKey);
+      }
+    }
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>
