@@ -7,7 +7,7 @@ import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { changeText, ijfDifference } from "@/components/rankings/Changes";
 import type { HistoryRow, LeaderboardRow } from "@/lib/api";
-import { fetchAthleteHistory } from "@/lib/browser-api";
+import { cachedAthleteHistory, fetchAthleteHistory } from "@/lib/browser-api";
 import { roundCode, shortDate, shortName, signed } from "@/lib/format";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -15,10 +15,11 @@ const DAY = 24 * 60 * 60 * 1000;
 // The expanded row: IJF place, the change over 90 days and the contests behind it,
 // grouped by tournament. The contests are loaded when the row is first opened.
 export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string }) {
-  const [history, setHistory] = useState<HistoryRow[] | null>(null);
+  const [history, setHistory] = useState<HistoryRow[] | null>(() => cachedAthleteHistory(row.athlete_id) ?? null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    if (cachedAthleteHistory(row.athlete_id)) return;
     fetchAthleteHistory(row.athlete_id).then(setHistory, () => setFailed(true));
   }, [row.athlete_id]);
 

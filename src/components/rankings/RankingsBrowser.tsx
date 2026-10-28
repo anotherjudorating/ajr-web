@@ -10,6 +10,7 @@ import { AthletePanel } from "@/components/rankings/AthletePanel";
 import { changeText, ijfDifference, placesText } from "@/components/rankings/Changes";
 import { Sparkline } from "@/components/rankings/Sparkline";
 import type { LeaderboardRow } from "@/lib/api";
+import { fetchAthleteHistory } from "@/lib/browser-api";
 import { COUNTRY_NAMES } from "@/lib/countries";
 import { competitionCode, fullName, shortDate, shortName, signed } from "@/lib/format";
 
@@ -351,6 +352,8 @@ export function RankingsBrowser({
                       role="button"
                       tabIndex={0}
                       aria-expanded={isOpen}
+                      // start loading the contests on hover: by the click they are usually here
+                      onPointerEnter={() => fetchAthleteHistory(row.athlete_id).catch(() => {})}
                       onClick={(e) => {
                         e.stopPropagation(); // expand, don't open the athlete
                         toggle(row.athlete_id);
