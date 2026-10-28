@@ -94,7 +94,7 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
                     className={`w-24 shrink-0 inline-flex items-center justify-end gap-3 tabular-nums ${upset ? `${upsetColor} font-semibold` : "text-ink"}`}
                   >
                     {upset && (
-                      <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border leading-none">
+                      <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-[0.05em] px-1 py-0.5 border leading-none">
                         Upset
                       </span>
                     )}
