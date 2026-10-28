@@ -64,9 +64,9 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
 
       {groups.map((group) => (
         <div key={group.id}>
-          <div className="flex justify-between items-baseline mt-3 pb-1 border-b border-rule sm:max-w-[560px]">
+          <div className="flex justify-between items-baseline gap-3 mt-3 pb-1 border-b border-rule sm:max-w-[560px]">
             <span className="text-[11px] font-bold uppercase tracking-wider text-muted">{group.name}</span>
-            <span className="text-[12px] text-muted">{shortDate(group.date)}</span>
+            <span className="text-[12px] text-muted shrink-0 whitespace-nowrap">{shortDate(group.date)}</span>
           </div>
           <div className="flex flex-col text-[13px] w-full sm:max-w-[560px]">
             {group.contests.map((contest) => {
