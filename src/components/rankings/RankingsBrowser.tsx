@@ -238,10 +238,7 @@ export function RankingsBrowser({
               </th>
               <th className={`${TH} text-left truncate`}>Athlete</th>
               <th className={`${TH} hidden sm:table-cell text-left sm:w-28`}>NAT</th>
-              <th className={`${TH} w-14 sm:w-20 text-right tabular-nums relative group cursor-help`}>
-                <span>Rating</span>
-                <Tip>Rating minus 3 × its uncertainty (RD)</Tip>
-              </th>
+              <th className={`${TH} w-14 sm:w-20 text-right tabular-nums`}>Rating</th>
               <th className={`${TH} w-12 sm:w-16 text-right relative group cursor-help hidden sm:table-cell`}>
                 <span>+/-</span>
                 <Tip>Rating change, last 90 days</Tip>
@@ -255,14 +252,13 @@ export function RankingsBrowser({
                 <Tip>Rating change, last 182 days</Tip>
               </th>
               <th className={`${TH} hidden sm:table-cell sm:w-24 text-center`}>Trend</th>
-              <th className="hidden sm:table-cell sm:w-12 h-9 py-0 align-middle text-right text-[11px] font-bold uppercase tracking-[0.08em] text-muted">
-                IJF
+              <th className="hidden sm:table-cell sm:w-12 h-9 py-0 align-middle text-right text-[11px] font-bold uppercase tracking-[0.08em] text-muted relative group cursor-help">
+                <span>IJF</span>
+                <Tip>Place in the IJF World Ranking List</Tip>
               </th>
-              <th
-                title="IJF rank compared with AJR: ↑ higher in IJF than in AJR, ↓ lower"
-                className="hidden sm:table-cell sm:w-12 h-9 py-0 align-middle text-left pl-1 text-[11px] font-bold uppercase tracking-[0.08em] text-muted"
-              >
-                ±
+              <th className="hidden sm:table-cell sm:w-12 h-9 py-0 align-middle text-left pl-1 text-[11px] font-bold uppercase tracking-[0.08em] text-muted relative group cursor-help">
+                <span>±</span>
+                <Tip center>IJF place compared with ours: ↓ lower in IJF, ↑ higher</Tip>
               </th>
               <th className={`${TH} hidden sm:table-cell sm:w-12 text-center`}>Age</th>
               <th className={`${TH} hidden sm:table-cell text-left sm:w-28`}>Last</th>
