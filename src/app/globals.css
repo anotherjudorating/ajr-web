@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/* Design tokens from the Stitch design system ("AJR — Another Judo Rating"):
+   ink on warm newsprint, hairline rules, claret for active links and emphasis. */
+@theme {
+  --color-paper: #f3eee3; /* page background */
+  --color-panel: #e9e2d3; /* table headers, secondary panels */
+  --color-rule: #d6cfc2; /* 1px hairlines */
+  --color-ink: #33302e; /* primary text */
+  --color-muted: #66605c; /* secondary text */
+  --color-claret: #990f3d; /* active nav, links, emphasis */
+  --color-oxford: #0f5499; /* rating lines, the favourite in a contest */
+  --color-gain: #0d7680; /* rises */
+  --color-drop: #cc0000; /* falls */
+}
+
+/* Fonts come from next/font (variables set on <html> in layout.tsx). */
+@theme inline {
+  --font-serif: var(--font-source-serif), Georgia, serif;
+  --font-sans: var(--font-ibm-plex-sans), system-ui, sans-serif;
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
