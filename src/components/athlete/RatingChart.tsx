@@ -63,7 +63,8 @@ const YEAR = 365.25 * 24 * 3600 * 1000;
 type Point = { day: number; rating: number; score: number; edge?: boolean };
 
 // The rating (skill, dashed) and the score (rating minus uncertainty, solid) after
-// every competition, and today's.
+// every competition, and today's. Two points are marked: the peak (claret, as in the
+// header) and today (ink).
 export function RatingChart({
   athlete,
   history,
@@ -101,6 +102,16 @@ export function RatingChart({
       score: contest.score_after,
     });
   }
+  // the athlete's peak (as in the header) is a point of the line too: it is the end
+  // of a day, which can fall inside a competition of several days
+  if (athlete.peak_on) {
+    const peakDay = new Date(athlete.peak_on).getTime();
+    const peakRow = history.find((contest) => contest.fought_on === athlete.peak_on);
+    if (peakRow && !points.some((p) => p.day === peakDay)) {
+      points.push({ day: peakDay, rating: peakRow.rating_after, score: peakRow.score_after });
+      points.sort((a, b) => a.day - b.day);
+    }
+  }
   points.push({ day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 });
 
   const years = RANGES[range];
@@ -119,7 +130,8 @@ export function RatingChart({
 
   const last = shown[shown.length - 1];
   const real = shown.filter((p) => !p.edge);
-  const peak = real.reduce((best, p) => (p.score > best.score ? p : best), real[0]);
+  // the all-time peak of the header, when it is in the window
+  const peak = athlete.peak_on ? real.find((p) => p.day === new Date(athlete.peak_on!).getTime()) : undefined;
   const ticks = monthTicks(start, now, at.maxDates);
 
   return (
@@ -189,19 +201,13 @@ export function RatingChart({
           />
           <polyline fill="none" points={line("rating")} stroke="#66605C" strokeDasharray="4,3" strokeWidth="1.2" />
           <polyline fill="none" points={line("score")} stroke="#33302E" strokeWidth="2.5" />
-          {real.length <= 40 && (
-            <g fill="#33302E">
-              {real.slice(0, -1).map((p) => (
-                <circle key={p.day} cx={x(p.day)} cy={y(p.score)} r="4" />
-              ))}
-            </g>
-          )}
-          <circle cx={x(last.day)} cy={y(last.score)} fill="#990F3D" r="4" />
-          {peak !== last && (
+          {peak && <circle cx={x(peak.day)} cy={y(peak.score)} fill="#990F3D" r="4" />}
+          <circle cx={x(last.day)} cy={y(last.score)} fill="#33302E" r="4" />
+          {peak && peak !== last && (
             <g transform={`translate(${x(peak.day)}, ${y(peak.score)})`}>
               <rect fill="#F3EEE3" height="16" stroke="#D6CFC2" strokeWidth="0.8" width="68" x="-34" y="-24" />
               <text fill="#33302E" fontFamily={FONT} fontSize="11" fontWeight="600" textAnchor="middle" x="0" y="-12">
-                Peak {Math.round(peak.score)}
+                Peak {athlete.peak_score}
               </text>
             </g>
           )}
