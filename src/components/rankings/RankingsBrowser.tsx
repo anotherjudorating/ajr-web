@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
@@ -53,6 +53,24 @@ function pageNumbers(current: number, total: number): (number | "…")[] {
   return [1, "…", current - 1, current, current + 1, "…", total];
 }
 
+// The columns on screen (narrow screens hide some). An expanded row must span exactly
+// these: in a fixed table, a colSpan over hidden columns adds empty ones that squeeze
+// the athlete's name.
+function useVisibleColumns() {
+  const header = useRef<HTMLTableRowElement>(null);
+  const [count, setCount] = useState(COLUMNS);
+  useEffect(() => {
+    const measure = () => {
+      const cells = [...(header.current?.children ?? [])];
+      setCount(cells.filter((cell) => getComputedStyle(cell).display !== "none").length || COLUMNS);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+  return [header, count] as const;
+}
+
 function downloadCsv(rows: LeaderboardRow[], asOf: string, fileName: string) {
   const year = new Date(asOf).getUTCFullYear();
   const header = ["Place", "Athlete", "Country", "Rating", "+/- 90 days", "Places 6 months", "+/- 6 months", "IJF", "Age", "Last tournament", "Last contest"];
@@ -99,6 +117,7 @@ export function RankingsBrowser({
   const [pageSize, setPageSize] = useState(50);
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState<Set<number>>(new Set());
+  const [headerRow, visibleColumns] = useVisibleColumns();
 
   // the countries in this table, by full name
   const countries = useMemo(
@@ -208,7 +227,7 @@ export function RankingsBrowser({
       <div className="w-full border-b border-rule bg-paper">
         <table className="rk-table w-full table-fixed border-collapse text-left">
           <thead>
-            <tr className="bg-panel border-b border-rule">
+            <tr ref={headerRow} className="bg-panel border-b border-rule">
               <th className={`${TH} w-9 sm:w-12 px-1 text-right tabular-nums whitespace-nowrap`}>#</th>
               <th className={`${TH} w-10 sm:w-14 px-1 text-center tabular-nums whitespace-nowrap relative group cursor-help`}>
                 <span>↑↓</span>
@@ -352,7 +371,7 @@ export function RankingsBrowser({
                   </tr>
                   {isOpen && (
                     <tr className="athlete-panel border-b border-rule">
-                      <td className="p-0" colSpan={COLUMNS}>
+                      <td className="p-0" colSpan={visibleColumns}>
                         <AthletePanel row={row} asOf={asOf} />
                       </td>
                     </tr>
@@ -362,7 +381,7 @@ export function RankingsBrowser({
             })}
             {pageRows.length === 0 && (
               <tr>
-                <td colSpan={COLUMNS} className="px-3 text-[13px] text-muted">
+                <td colSpan={visibleColumns} className="px-3 text-[13px] text-muted">
                   No athletes match.
                 </td>
               </tr>
