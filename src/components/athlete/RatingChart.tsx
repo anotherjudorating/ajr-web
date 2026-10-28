@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { Athlete, HistoryRow } from "@/lib/api";
-import { monthYear } from "@/lib/format";
+import { formatDate, monthYear, signed } from "@/lib/format";
 
 // Where things go on the canvas. From md up, the prototype's chart: a 1000×280 canvas
 // scaled to the page (the plot from x 75 to 860, grid from 50, y 25 to 225). Scaled
@@ -60,20 +60,32 @@ type Range = keyof typeof RANGES;
 const FONT = "'IBM Plex Sans', sans-serif";
 const YEAR = 365.25 * 24 * 3600 * 1000;
 
-type Point = { day: number; rating: number; score: number; edge?: boolean };
+export type Competition = {
+  id: number;
+  name: string;
+  weight: string | null;
+  day: string;
+  scoreBefore: number; // before its first contest
+};
+
+type Point = { day: number; rating: number; score: number; competition?: Competition; edge?: boolean };
 
 // The rating (skill, dashed) and the score (rating minus uncertainty, solid) after
-// every competition, and today's. Two points are marked: the peak (claret, as in the
-// header) and today (ink).
+// every competition, and today's. Marked: the peak (claret, as in the header) and
+// today (ink); on a desktop also every competition, which shows itself on hover and
+// on a click picks its contests in the table below.
 export function RatingChart({
   athlete,
   history,
   today,
+  onCompetition,
 }: {
   athlete: Athlete;
   history: HistoryRow[];
   today: string;
+  onCompetition: (competition: Competition) => void;
 }) {
+  const [hovered, setHovered] = useState<Point | null>(null);
   const now = new Date(today).getTime();
   // an athlete idle for years: the whole history rather than an empty window
   const lastContest = history.length ? new Date(history[0].fought_on).getTime() : now;
@@ -90,7 +102,10 @@ export function RatingChart({
   const { left: LEFT, right: RIGHT, top: TOP } = at;
   const BOTTOM = TOP + 5 * at.rowGap;
 
-  // the last contest of every competition (history is latest first)
+  // the score before every competition: its first contest's (history is latest first)
+  const before = new Map<number, number>();
+  for (const contest of history) before.set(contest.competition_id, contest.score_before);
+  // the last contest of every competition
   const seen = new Set<number>();
   const points: Point[] = [];
   for (const contest of history) {
@@ -100,6 +115,13 @@ export function RatingChart({
       day: new Date(contest.fought_on).getTime(),
       rating: contest.rating_after,
       score: contest.score_after,
+      competition: {
+        id: contest.competition_id,
+        name: contest.competition,
+        weight: contest.weight,
+        day: contest.fought_on,
+        scoreBefore: before.get(contest.competition_id) ?? contest.score_before,
+      },
     });
   }
   // the athlete's peak (as in the header) is a point of the line too: it is the end
@@ -118,8 +140,8 @@ export function RatingChart({
   const from = years === null ? points[0].day : now - years * YEAR;
   const shown = points.filter((p) => p.day >= from);
   // the line comes in from the left edge, from the last point before the window
-  const before = points.filter((p) => p.day < from).at(-1);
-  if (before) shown.unshift({ ...before, day: from, edge: true });
+  const outside = points.filter((p) => p.day < from).at(-1);
+  if (outside) shown.unshift({ ...outside, day: from, edge: true });
   const start = Math.min(from, shown[0].day);
 
   const values = shown.flatMap((p) => [p.rating, p.score]);
@@ -201,7 +223,16 @@ export function RatingChart({
           />
           <polyline fill="none" points={line("rating")} stroke="#66605C" strokeDasharray="4,3" strokeWidth="1.2" />
           <polyline fill="none" points={line("score")} stroke="#33302E" strokeWidth="2.5" />
-          {peak && <circle cx={x(peak.day)} cy={y(peak.score)} fill="#990F3D" r="4" />}
+          {at === DESKTOP && (
+            <g fill="#33302E">
+              {real
+                .filter((p) => p.competition && p !== peak)
+                .map((p) => (
+                  <circle key={p.day} cx={x(p.day)} cy={y(p.score)} r={p === hovered ? 6 : 4} />
+                ))}
+            </g>
+          )}
+          {peak && <circle cx={x(peak.day)} cy={y(peak.score)} fill="#990F3D" r={peak === hovered ? 6 : 4} />}
           <circle cx={x(last.day)} cy={y(last.score)} fill="#33302E" r="4" />
           {peak && peak !== last && (
             <g transform={`translate(${x(peak.day)}, ${y(peak.score)})`}>
@@ -240,9 +271,66 @@ export function RatingChart({
               {monthYear(new Date(now).toISOString())}
             </text>
           </g>
+          {at === DESKTOP && (
+            <g fill="transparent" className="cursor-pointer">
+              {real
+                .filter((p) => p.competition)
+                .map((p) => (
+                  <circle
+                    key={p.day}
+                    cx={x(p.day)}
+                    cy={y(p.score)}
+                    r="10"
+                    onMouseEnter={() => setHovered(p)}
+                    onMouseLeave={() => setHovered(null)}
+                    onClick={() => onCompetition(p.competition!)}
+                  />
+                ))}
+            </g>
+          )}
         </svg>
+        {hovered?.competition && (
+          <CompetitionTip
+            competition={hovered.competition}
+            score={hovered.score}
+            left={(x(hovered.day) / at.width) * 100}
+            top={(y(hovered.score) / at.height) * 100}
+          />
+        )}
       </div>
     </section>
+  );
+}
+
+// Over a competition's point: the competition, its day, the score before → after.
+function CompetitionTip({
+  competition,
+  score,
+  left,
+  top,
+}: {
+  competition: Competition;
+  score: number;
+  left: number; // % of the chart
+  top: number;
+}) {
+  const change = score - competition.scoreBefore;
+  return (
+    <div
+      className="absolute z-30 -translate-x-1/2 -translate-y-full bg-paper border border-rule px-2.5 py-1.5 text-[12px] leading-tight whitespace-nowrap pointer-events-none shadow-sm"
+      style={{ left: `${left}%`, top: `calc(${top}% - 12px)` }}
+    >
+      <div className="font-semibold text-ink">{competition.name}</div>
+      <div className="text-muted mt-0.5">{formatDate(competition.day)}</div>
+      <div className="mt-1 tabular-nums">
+        <span className="text-ink">
+          {competition.scoreBefore} → {score}
+        </span>{" "}
+        <span className={`font-bold ${change > 0 ? "text-gain" : change < 0 ? "text-drop" : "text-muted"}`}>
+          {signed(change)}
+        </span>
+      </div>
+    </div>
   );
 }
 

@@ -6,6 +6,7 @@ import { Fragment, useMemo, useState } from "react";
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { isUpset } from "@/components/rankings/Changes";
+import type { Competition } from "@/components/athlete/RatingChart";
 import type { HistoryRow } from "@/lib/api";
 import { roundCode, shortDate, shortName, signed } from "@/lib/format";
 import { pageNumbers } from "@/lib/pages";
@@ -38,8 +39,18 @@ const TH = "px-2 sm:px-3 align-middle h-9 py-0";
 const gain = (contest: HistoryRow) => contest.rating_after - contest.rating_before;
 
 // Every contest of the athlete in the chosen weight, grouped by competition while
-// sorted by date.
-export function Contests({ contests, fileName }: { contests: HistoryRow[]; fileName: string }) {
+// sorted by date; only one competition's when it was picked on the chart.
+export function Contests({
+  contests,
+  competition,
+  onClearCompetition,
+  fileName,
+}: {
+  contests: HistoryRow[];
+  competition: Competition | null;
+  onClearCompetition: () => void;
+  fileName: string;
+}) {
   const [query, setQuery] = useState("");
   const [year, setYear] = useState("");
   const [result, setResult] = useState<Result>("");
@@ -53,6 +64,7 @@ export function Contests({ contests, fileName }: { contests: HistoryRow[]; fileN
     const filtered = contests.filter((c) => {
       const upset = isUpset(c.won, c.win_probability);
       return (
+        (!competition || c.competition_id === competition.id) &&
         (!year || c.fought_on.startsWith(year)) &&
         (result === "" ||
           (result === "w" && c.won) ||
@@ -72,7 +84,7 @@ export function Contests({ contests, fileName }: { contests: HistoryRow[]; fileN
     if (sort === "gain-desc") return [...filtered].sort((a, b) => gain(b) - gain(a));
     if (sort === "gain-asc") return [...filtered].sort((a, b) => gain(a) - gain(b));
     return filtered;
-  }, [contests, query, year, result, sort]);
+  }, [contests, competition, query, year, result, sort]);
 
   const pages = Math.max(1, Math.ceil(shown.length / pageSize));
   const currentPage = Math.min(page, pages);
@@ -89,7 +101,7 @@ export function Contests({ contests, fileName }: { contests: HistoryRow[]; fileN
   };
 
   return (
-    <section className="mt-14 md:mt-16">
+    <section id="contests" className="mt-14 md:mt-16 scroll-mt-24">
       <h2 className="font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight text-ink">
         Contests
       </h2>
@@ -105,6 +117,17 @@ export function Contests({ contests, fileName }: { contests: HistoryRow[]; fileN
           />
         </div>
         <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
+          {competition && (
+            <button
+              type="button"
+              onClick={onClearCompetition}
+              title="Show all contests"
+              className="col-span-2 h-8 px-2.5 inline-flex items-center gap-1.5 bg-panel border border-ink text-[12px] text-ink max-w-full cursor-pointer"
+            >
+              <span className="truncate">{competition.name}</span>
+              <Icon size={14} name="close" className="text-muted shrink-0" />
+            </button>
+          )}
           <select value={year} onChange={(e) => reset(setYear)(e.target.value)} className={CONTROL}>
             <option value="">All years</option>
             {years.map((y) => (
