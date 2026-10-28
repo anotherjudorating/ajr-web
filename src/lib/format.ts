@@ -72,3 +72,20 @@ export function roundCode(round: string | null): string {
   if (pool) return `${pool[1] ? "REP" : "R"}${pool[2]}`;
   return round.slice(0, 3).toUpperCase();
 }
+
+// "2026-03-14" -> "Mar 2026"
+export function monthYear(value: string): string {
+  const date = new Date(value);
+  return `${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+}
+
+// "Paris Grand Slam 2026" -> "Paris GS 2026", as in the design's short lists.
+export function shortCompetition(name: string): string {
+  return name
+    .replace(/Grand Slam/i, "GS")
+    .replace(/Grand Prix/i, "GP")
+    .replace(/World (Senior )?Championships?/i, "World Ch.")
+    .replace(/\s+Individuals?$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}

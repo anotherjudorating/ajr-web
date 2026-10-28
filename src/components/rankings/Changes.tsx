@@ -21,3 +21,9 @@ export function ijfDifference(ourPlace: number, ijfPlace: number | null): string
   if (ijfPlace < ourPlace) return `↑${ourPlace - ijfPlace}`;
   return "–";
 }
+
+// A surprise: a win of a clear underdog (35% or less) or a loss of a clear favourite.
+export function isUpset(won: boolean, winProbability: number): boolean {
+  const chance = Math.round(winProbability * 100);
+  return won ? chance <= 35 : chance >= 65;
+}

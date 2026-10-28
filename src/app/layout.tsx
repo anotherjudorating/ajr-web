@@ -4,7 +4,7 @@ import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 import { Suspense } from "react";
 
 import { Footer } from "@/components/Footer";
-import { Header } from "@/components/Header";
+import { CurrentHeader, Header } from "@/components/Header";
 import "./globals.css";
 
 const serif = Source_Serif_4({ variable: "--font-source-serif", subsets: ["latin"] });
@@ -33,7 +33,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="bg-paper font-sans text-ink antialiased min-h-screen flex flex-col selection:bg-claret selection:text-white">
-        <Header />
+        <Suspense fallback={<Header pathname="" />}>
+          <CurrentHeader />
+        </Suspense>
         <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 pt-[37.75px] md:pt-[53.25px] flex-1">
           {/* below md the sections are a second fixed row (36px) under the header;
               the paddings are the prototype's (its script sets them) */}

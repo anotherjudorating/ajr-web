@@ -17,10 +17,16 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+// The header with the current section marked. The path is runtime data: on pages
+// whose URL is not known ahead (an athlete's), it streams in under a Suspense whose
+// fallback is the same header with no section marked.
+export function CurrentHeader() {
+  return <Header pathname={usePathname()} />;
+}
+
 // Desktop: the name, the sections and a search box. Below md: the name and a
 // search button on the first row, the sections on a fixed second row.
-export function Header() {
-  const pathname = usePathname();
+export function Header({ pathname }: { pathname: string }) {
   const [mobileSearch, setMobileSearch] = useState(false);
 
   return (

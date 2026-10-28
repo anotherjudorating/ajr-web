@@ -28,6 +28,7 @@ export type LeaderboardRow = {
   last_competition_name: string | null;
   last_competition_rank: string | null; // "Grand Slam", "World Championships"…
   last_competition_city: string | null;
+  entry: "new" | "returning" | null; // not in the table 90 days ago: first time in this weight or back
 };
 
 export type Athlete = {
@@ -46,6 +47,14 @@ export type Athlete = {
   last_contest: string | null;
   contests: number;
   wrl_place: number | null;
+  weights: string[]; // fought in, the latest first
+  peak_score: number | null;
+  peak_on: string | null;
+  peak_place: number | null; // the place in that day's table
+  score_change_90d: number | null;
+  score_change_6m: number | null;
+  places_up_90d: number | null;
+  places_up_6m: number | null;
 };
 
 export type HistoryRow = {
@@ -64,6 +73,13 @@ export type HistoryRow = {
   rating_before: number;
   rating_after: number;
   rd_after: number;
+  rd_before: number;
+  score_before: number;
+  score_after: number;
+  opponent_score: number | null; // before the contest
+  // how the athlete ended the competition: gold, silver, bronze, 5th, 7th, the round
+  // they lost in ("Round of 16"), or null (still in, pools, unknown)
+  result: string | null;
 };
 
 async function rpc<T>(name: string, params: Record<string, string | number> = {}): Promise<T> {

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
-import { changeText, ijfDifference } from "@/components/rankings/Changes";
+import { changeText, ijfDifference, isUpset } from "@/components/rankings/Changes";
 import type { HistoryRow, LeaderboardRow } from "@/lib/api";
 import { cachedAthleteHistory, fetchAthleteHistory } from "@/lib/browser-api";
 import { roundCode, shortDate, shortName, signed } from "@/lib/format";
@@ -73,8 +73,8 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
               const chance = Math.round(contest.win_probability * 100);
               const delta = contest.rating_after - contest.rating_before;
               const result = contest.won ? "text-gain" : "text-drop";
-              // Only upsets stand out: a win of a clear underdog, a loss of a clear favourite.
-              const upset = contest.won ? chance <= 35 : chance >= 65;
+              // Only upsets stand out.
+              const upset = isUpset(contest.won, contest.win_probability);
               const upsetColor = contest.won ? "text-gain border-gain" : "text-drop border-drop";
               return (
                 <div
