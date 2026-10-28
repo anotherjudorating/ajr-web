@@ -17,11 +17,23 @@ export async function generateMetadata({ params }: PageProps<"/rankings/[weight]
   return weight ? { title: `${weightTitle(weight)} — judo world ranking` } : {};
 }
 
-export default function RankingsPage({ params, searchParams }: PageProps<"/rankings/[weight]">) {
+export default async function RankingsPage({ params, searchParams }: PageProps<"/rankings/[weight]">) {
+  const weight = weightBySlug((await params).weight);
+  if (!weight) notFound();
+  const path = `/rankings/${weight.slug}`;
+
+  // While the table loads, the switcher, the toolbar and the table's header stay on screen.
+  const loading = (
+    <>
+      <WeightSwitcher current={path} />
+      <RankingsBrowser loading rows={[]} asOf="" latest="" path={path} csvName="" />
+    </>
+  );
+
   return (
     <div className="flex flex-col w-full">
       <div className="w-full bg-paper pt-6 sm:pt-8 pb-8">
-        <Suspense fallback={<div className="min-h-[60vh]" />}>
+        <Suspense fallback={loading}>
           <Rankings params={params} searchParams={searchParams} />
         </Suspense>
       </div>

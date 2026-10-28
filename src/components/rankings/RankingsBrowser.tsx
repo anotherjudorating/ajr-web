@@ -104,12 +104,14 @@ export function RankingsBrowser({
   latest,
   path,
   csvName,
+  loading = false,
 }: {
   rows: LeaderboardRow[];
   asOf: string; // the day of the table, YYYY-MM-DD
   latest: string; // the newest day there is data for
   path: string; // e.g. /rankings/men-73
   csvName: string;
+  loading?: boolean; // the table is on its way: show the page around it, rows as placeholders
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -200,7 +202,7 @@ export function RankingsBrowser({
             max={latest}
             title="Ranking as of this date"
             onChange={(e) => setDay(e.target.value)}
-            className={`${CONTROL} tabular-nums`}
+            className={`${CONTROL} md:w-[111px] tabular-nums`} // its width with a date, also while loading
           />
         </div>
         <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto">
@@ -382,7 +384,15 @@ export function RankingsBrowser({
                 </Fragment>
               );
             })}
-            {pageRows.length === 0 && (
+            {loading &&
+              Array.from({ length: 20 }, (_, i) => (
+                <tr key={i} className="athlete-row border-b border-rule">
+                  <td colSpan={visibleColumns} className="px-3">
+                    <div className="h-3 bg-rule/60 animate-pulse" style={{ width: `${40 + ((i * 37) % 45)}%` }} />
+                  </td>
+                </tr>
+              ))}
+            {!loading && pageRows.length === 0 && (
               <tr>
                 <td colSpan={visibleColumns} className="px-3 text-[13px] text-muted">
                   No athletes match.
@@ -398,7 +408,11 @@ export function RankingsBrowser({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full text-[12px] text-muted">
           <div className="flex items-center justify-between w-full sm:w-auto sm:gap-6">
             <div className="text-muted">
-              {shown.length ? `${first + 1}–${first + pageRows.length} of ${shown.length} athletes` : "0 athletes"}
+              {loading
+                ? "Loading…"
+                : shown.length
+                  ? `${first + 1}–${first + pageRows.length} of ${shown.length} athletes`
+                  : "0 athletes"}
             </div>
             <div className="flex items-center gap-2 text-[12px]">
               <span className="text-muted">Show</span>
