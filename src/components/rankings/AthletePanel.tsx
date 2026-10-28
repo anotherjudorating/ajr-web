@@ -72,11 +72,13 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
               const chance = Math.round(contest.win_probability * 100);
               const delta = contest.rating_after - contest.rating_before;
               const result = contest.won ? "text-gain" : "text-drop";
-              const chanceStyle = !contest.won
-                ? "text-drop font-semibold"
-                : chance < 50
+              // Only upsets are coloured: a win of a clear underdog, a loss of a clear favourite.
+              const chanceStyle =
+                contest.won && chance <= 35
                   ? "text-gain font-semibold"
-                  : "text-ink";
+                  : !contest.won && chance >= 65
+                    ? "text-drop font-semibold"
+                    : "text-ink";
               return (
                 <div
                   key={contest.contest_id}
