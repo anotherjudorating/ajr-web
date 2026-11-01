@@ -1,7 +1,7 @@
 // Reads from the browser (e.g. when a row is expanded): the same Data API, without
 // the server cache. Only public data with the publishable key.
 
-import type { HistoryRow } from "@/lib/api";
+import type { HistoryRow, LeaderboardRow } from "@/lib/api";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
@@ -38,4 +38,22 @@ async function load(athleteId: number): Promise<HistoryRow[]> {
   });
   if (!response.ok) throw new Error(`athlete_history: HTTP ${response.status}`);
   return response.json();
+}
+
+// Today's table of a weight, for the head-to-head picker; kept while the page is open.
+const leaderboards = new Map<string, Promise<LeaderboardRow[]>>();
+
+export function fetchLeaderboard(weight: string): Promise<LeaderboardRow[]> {
+  let request = leaderboards.get(weight);
+  if (!request) {
+    request = fetch(`${URL}/rest/v1/rpc/leaderboard?weight=${encodeURIComponent(weight)}`, {
+      headers: { apikey: KEY },
+    }).then((response) => {
+      if (!response.ok) throw new Error(`leaderboard: HTTP ${response.status}`);
+      return response.json();
+    });
+    request.catch(() => leaderboards.delete(weight)); // try again next time
+    leaderboards.set(weight, request);
+  }
+  return request;
 }

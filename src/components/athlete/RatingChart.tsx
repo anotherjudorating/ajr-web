@@ -335,7 +335,7 @@ function CompetitionTip({
 }
 
 // The bottom grid line and the step: six round lines covering low..high.
-function scale(low: number, high: number): [number, number] {
+export function scale(low: number, high: number): [number, number] {
   for (const step of [25, 50, 100, 200, 250, 500]) {
     const top = Math.ceil(high / step) * step;
     if (top - 5 * step <= low) return [top - 5 * step, step];
