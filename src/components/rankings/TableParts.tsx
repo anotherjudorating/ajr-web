@@ -40,7 +40,7 @@ export function Toolbar<Sort extends string>({
   asOf: string; // YYYY-MM-DD
   latest: string;
   onDay: (day: string) => void;
-  sorts: Record<Sort, string>;
+  sorts: Partial<Record<Sort, string>>; // the sorts to offer
   sort: Sort;
   onSort: (sort: Sort) => void;
   onCsv: () => void;
