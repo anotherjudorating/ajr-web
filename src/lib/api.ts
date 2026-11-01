@@ -225,3 +225,56 @@ export async function popularMatchupRows(fallback: number[]): Promise<PopularMat
   cacheLife("data");
   return rpc<PopularMatchupRow[]>("popular_matchups", { fallback: `{${fallback.join(",")}}` });
 }
+
+export type ContestDetail = {
+  contest_id: number;
+  competition_id: number;
+  competition: string;
+  competition_rank: string | null;
+  city: string | null;
+  day: string;
+  weight: string | null; // the contest's category ("-73", "Open")
+  round: string | null;
+  duration: string | null; // "00:02:41"
+  golden_score: boolean | null;
+  winner_id: number | null;
+  white_id: number | null;
+  white_family_name: string | null;
+  white_given_name: string | null;
+  white_country: string | null;
+  white_place_before: number | null; // in the weight's table the day before
+  white_ippon: number | null;
+  white_waza: number | null;
+  white_yuko: number | null;
+  white_shido: number | null;
+  white_win_probability: number | null; // null: not rated (a bye, not fought yet)
+  white_rating_before: number | null;
+  white_rating_after: number | null;
+  white_rd_before: number | null;
+  white_rd_after: number | null;
+  white_score_before: number | null;
+  white_score_after: number | null;
+  blue_id: number | null;
+  blue_family_name: string | null;
+  blue_given_name: string | null;
+  blue_country: string | null;
+  blue_place_before: number | null; // in the weight's table the day before
+  blue_ippon: number | null;
+  blue_waza: number | null;
+  blue_yuko: number | null;
+  blue_shido: number | null;
+  blue_win_probability: number | null; // null: not rated (a bye, not fought yet)
+  blue_rating_before: number | null;
+  blue_rating_after: number | null;
+  blue_rd_before: number | null;
+  blue_rd_after: number | null;
+  blue_score_before: number | null;
+  blue_score_after: number | null;
+};
+
+export async function contest(id: number): Promise<ContestDetail | null> {
+  "use cache";
+  cacheLife("data");
+  const rows = await rpc<ContestDetail[]>("contest", { contest_id: id });
+  return rows[0] ?? null;
+}

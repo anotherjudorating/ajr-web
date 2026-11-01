@@ -153,7 +153,9 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
                       </span>
                     </td>
                     <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-                      <Icon size={18} name="chevron_right" className="align-middle" />
+                      <Link href={`/contests/${contest.contest_id}`} aria-label="The contest">
+                        <Icon size={18} name="chevron_right" className="align-middle" />
+                      </Link>
                     </td>
                   </tr>
                 );

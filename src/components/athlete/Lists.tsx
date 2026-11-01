@@ -52,7 +52,9 @@ function ContestList({ title, contests }: { title: string; contests: HistoryRow[
                 {c.opponent_score}
               </td>
               <td className={`pl-2 text-right text-muted w-6 ${CELL}`}>
-                <Icon size={18} name="chevron_right" className="align-middle" />
+                <Link href={`/contests/${c.contest_id}`} aria-label="The contest">
+                  <Icon size={18} name="chevron_right" className="align-middle" />
+                </Link>
               </td>
             </tr>
           ))}

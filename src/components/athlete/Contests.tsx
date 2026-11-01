@@ -331,7 +331,9 @@ function ContestRow({ contest }: { contest: HistoryRow }) {
       <td className={`${CELL} text-center font-bold ${color}`}>{contest.won ? "W" : "L"}</td>
       <td className={`${CELL} text-right font-bold ${color}`}>{signed(gain(contest))}</td>
       <td className="px-1 text-right text-muted h-10 sm:h-11 py-0 align-middle">
-        <Icon size={18} name="chevron_right" className="align-middle" />
+        <Link href={`/contests/${contest.contest_id}`} aria-label="The contest">
+          <Icon size={18} name="chevron_right" className="align-middle" />
+        </Link>
       </td>
     </tr>
   );

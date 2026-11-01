@@ -103,7 +103,9 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
                   </span>
                   <span className={`w-6 text-center font-bold shrink-0 ${result}`}>{contest.won ? "W" : "L"}</span>
                   <span className={`w-10 text-right font-bold shrink-0 tabular-nums ${result}`}>{signed(delta)}</span>
-                  <Icon size={18} name="chevron_right" className="text-muted shrink-0 -mr-1" />
+                  <Link href={`/contests/${contest.contest_id}`} aria-label="The contest" className="shrink-0 -mr-1">
+                    <Icon size={18} name="chevron_right" className="text-muted" />
+                  </Link>
                 </div>
               );
             })}
