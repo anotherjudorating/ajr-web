@@ -23,3 +23,42 @@
 @utility tnum {
   font-variant-numeric: tabular-nums;
 }
+
+/* Rankings table, as in the prototype: header 36px, rows 40px (44px from sm), and
+   columns appear as the screen grows. Columns: 1 # 2 ↑↓ 3 Athlete 4 NAT 5 Rating
+   6 +/- 7 6m 8 +/-6m 9 Trend 10 IJF 11 ± 12 Age 13 Last 14 ⌄ */
+.rk-table th {
+  height: 2.25rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  vertical-align: middle !important;
+}
+.rk-table tr.athlete-row > td {
+  height: 2.5rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  vertical-align: middle !important;
+}
+@media (min-width: 640px) {
+  .rk-table tr.athlete-row > td {
+    height: 2.75rem !important;
+  }
+}
+@media (max-width: 1279px) {
+  .rk-table > thead > tr > :is(:nth-child(9), :nth-child(12)),
+  .rk-table > tbody > tr.athlete-row > td:is(:nth-child(9), :nth-child(12)) {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  .rk-table > thead > tr > :is(:nth-child(7), :nth-child(8), :nth-child(10), :nth-child(11)),
+  .rk-table > tbody > tr.athlete-row > td:is(:nth-child(7), :nth-child(8), :nth-child(10), :nth-child(11)) {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  .rk-table > thead > tr > :nth-child(13),
+  .rk-table > tbody > tr.athlete-row > td:nth-child(13) {
+    display: none;
+  }
+}
