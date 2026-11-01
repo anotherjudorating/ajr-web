@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecordBrowser } from "@/components/records/RecordBrowser";
 import { record } from "@/lib/api";
 import { GROUPS, recordBySlug, RECORDS } from "@/lib/records";
@@ -34,17 +35,13 @@ async function Record({ params, searchParams }: PageProps<"/records/[name]">) {
 
   return (
     <>
-      <nav className="flex flex-wrap items-center gap-1.5 text-[12px] text-muted" aria-label="Breadcrumb">
-        <Link href="/records" className="hover:text-ink">
-          Records
-        </Link>
-        <span className="text-rule">›</span>
-        <Link href={`/records#${group.key}`} className="hover:text-ink">
-          {group.title}
-        </Link>
-        <span className="text-rule">›</span>
-        <span className="text-ink">{info.title}</span>
-      </nav>
+      <Breadcrumbs
+        trail={[
+          { href: "/records", label: "Records" },
+          { href: `/records#${group.key}`, label: group.title },
+        ]}
+        current={info.title}
+      />
       <h1 className="font-serif mt-3 text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold tracking-[-0.015em]">
         {info.title}
       </h1>

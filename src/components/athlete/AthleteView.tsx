@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
 import { AthleteHeader } from "@/components/athlete/AthleteHeader";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Contests } from "@/components/athlete/Contests";
 import { FrequentOpponents, NextTournaments, Standouts } from "@/components/athlete/Lists";
 import { type Competition, RatingChart } from "@/components/athlete/RatingChart";
@@ -40,21 +40,16 @@ export function AthleteView({
 
   return (
     <>
-      <nav className="text-[12px] text-muted mb-4 flex items-center gap-1.5 pt-2 sm:pt-0">
-        <Link href="/rankings" className="hover:text-ink transition-colors">
-          Rankings
-        </Link>
-        {current && (
-          <>
-            <span>›</span>
-            <Link href={`/rankings/${current.slug}`} className="hover:text-ink transition-colors">
-              {current.gender === "men" ? "Men" : "Women"} {current.label} kg
-            </Link>
-          </>
-        )}
-        <span>›</span>
-        <span className="text-ink font-medium">{shortName(athlete.family_name, athlete.given_name)}</span>
-      </nav>
+      <Breadcrumbs
+        className="mb-4 pt-2 sm:pt-0"
+        trail={[
+          { href: "/rankings", label: "Rankings" },
+          ...(current
+            ? [{ href: `/rankings/${current.slug}`, label: `${current.gender === "men" ? "Men" : "Women"} ${current.label} kg` }]
+            : []),
+        ]}
+        current={shortName(athlete.family_name, athlete.given_name)}
+      />
 
       <AthleteHeader athlete={athlete} weight={weight} onWeight={pickWeight} today={today} />
       <RatingChart athlete={athlete} history={history} today={today} onCompetition={pickCompetition} />
