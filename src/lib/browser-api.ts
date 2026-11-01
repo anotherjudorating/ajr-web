@@ -57,3 +57,13 @@ export function fetchLeaderboard(weight: string): Promise<LeaderboardRow[]> {
   }
   return request;
 }
+
+// One more opening of a head-to-head pair (orders the popular matchups). Fire and
+// forget: a failed count changes nothing on the page.
+export function countMatchup(a: number, b: number): void {
+  fetch(`${URL}/rest/v1/rpc/count_matchup`, {
+    method: "POST",
+    headers: { apikey: KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ a, b }),
+  }).catch(() => {});
+}

@@ -6,7 +6,7 @@ import { type ReactNode, useEffect, useRef, useState, useTransition } from "reac
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import type { LeaderboardRow } from "@/lib/api";
-import { fetchLeaderboard } from "@/lib/browser-api";
+import { countMatchup, fetchLeaderboard } from "@/lib/browser-api";
 import { monthYear, shortName } from "@/lib/format";
 import { COLORS, h2hPath, type Picked } from "@/lib/h2h";
 import type { Matchup } from "@/lib/matchups";
@@ -47,6 +47,20 @@ export function H2HBrowser({
   const both = picks.a && picks.b;
   // the comparison on screen is the server's for the URL's pair: shown when it is this one
   const current = both && picks.a!.id === initialA?.id && picks.b!.id === initialB?.id;
+
+  // a shown comparison counts for the popular matchups, once per pair and visit
+  useEffect(() => {
+    if (!current) return;
+    const [x, y] = [initialA!.id, initialB!.id].sort((p, q) => p - q);
+    const key = `h2h-counted:${x}-${y}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // no storage (private mode): count anyway
+    }
+    countMatchup(x, y);
+  }, [current, initialA, initialB]);
 
   return (
     <>
@@ -284,7 +298,7 @@ function PopularMatchups({ matchups, onPick }: { matchups: Matchup[]; onPick: (m
               <td className={`${TD} w-14 sm:w-20 text-right font-semibold`}>
                 {m.wins}–{m.losses}
               </td>
-              <td className={`${TD} w-28 text-right text-muted hidden sm:table-cell`}>{monthYear(m.last)}</td>
+              <td className={`${TD} w-28 text-right text-muted hidden sm:table-cell`}>{m.last ? monthYear(m.last) : "–"}</td>
               <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
                 <Icon size={18} name="chevron_right" className="align-middle" />
               </td>

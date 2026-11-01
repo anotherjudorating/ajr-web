@@ -201,3 +201,27 @@ export async function record(name: string, gender?: "male" | "female", weight?: 
     ...(weight && { only_weight: weight }),
   });
 }
+
+export type PopularMatchupRow = {
+  a: number;
+  a_family_name: string | null;
+  a_given_name: string | null;
+  a_country: string | null;
+  a_score: number | null;
+  b: number;
+  b_family_name: string | null;
+  b_given_name: string | null;
+  b_country: string | null;
+  b_score: number | null;
+  weight: string | null;
+  wins: number; // of a against b
+  losses: number;
+  last_meeting: string | null;
+};
+
+// The head-to-head pairs opened most, or `fallback` ([a1, b1, a2, b2, …]) while few were.
+export async function popularMatchupRows(fallback: number[]): Promise<PopularMatchupRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<PopularMatchupRow[]>("popular_matchups", { fallback: `{${fallback.join(",")}}` });
+}
