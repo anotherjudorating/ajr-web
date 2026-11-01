@@ -278,3 +278,124 @@ export async function contest(id: number): Promise<ContestDetail | null> {
   const rows = await rpc<ContestDetail[]>("contest", { contest_id: id });
   return rows[0] ?? null;
 }
+
+export type CompetitionRow = {
+  id: number;
+  name: string;
+  rank_name: string | null;
+  city: string | null;
+  country: string | null;
+  country_name: string | null;
+  date_from: string;
+  date_to: string | null;
+  contests: number;
+  accuracy: number | null; // share of real fights the rating's favourite won
+  upsets: number;
+};
+
+// Tournaments of a year (all with null), latest first.
+export async function competitions(year: number | null): Promise<CompetitionRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<CompetitionRow[]>("competitions", year ? { for_year: year } : {});
+}
+
+export type ContestListRow = {
+  total: number; // all that match the filters
+  contest_id: number;
+  competition_id: number;
+  competition: string;
+  day: string;
+  weight: string | null;
+  round: string | null;
+  winner_id: number;
+  white_id: number;
+  white_family_name: string | null;
+  white_given_name: string | null;
+  white_country: string | null;
+  white_chance: number;
+  white_change: number;
+  blue_id: number;
+  blue_family_name: string | null;
+  blue_given_name: string | null;
+  blue_country: string | null;
+  blue_chance: number;
+  blue_change: number;
+};
+
+export type ContestFilters = {
+  year: number;
+  weight?: string;
+  competition?: number;
+  upsets?: boolean;
+  q?: string;
+  sort?: string;
+  top: number;
+  skip: number;
+};
+
+// A page of a year's decided contests.
+export async function contestsPage(f: ContestFilters): Promise<ContestListRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<ContestListRow[]>("contests", {
+    for_year: f.year,
+    top: f.top,
+    skip: f.skip,
+    ...(f.weight && { only_weight: f.weight }),
+    ...(f.competition && { competition_id: f.competition }),
+    ...(f.upsets && { upsets: "true" }),
+    ...(f.q && { q: f.q }),
+    ...(f.sort && { sort: f.sort }),
+  });
+}
+
+export type AthleteListRow = {
+  total: number;
+  id: number;
+  family_name: string | null;
+  given_name: string | null;
+  gender: string | null;
+  country: string | null;
+  birth_year: number | null;
+  weight: string | null;
+  place: number | null; // today; null when not in a table
+  score: number | null;
+  contests: number;
+  last_contest: string;
+  last_competition_id: number | null;
+  last_competition: string | null;
+};
+
+export type AthleteFilters = {
+  q?: string;
+  country?: string;
+  gender?: string;
+  weight?: string;
+  sort?: string;
+  top: number;
+  skip: number;
+};
+
+// A page of rated athletes.
+export async function athletesPage(f: AthleteFilters): Promise<AthleteListRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<AthleteListRow[]>("athletes", {
+    top: f.top,
+    skip: f.skip,
+    ...(f.q && { q: f.q }),
+    ...(f.country && { country: f.country }),
+    ...(f.gender && { gender: f.gender }),
+    ...(f.weight && { only_weight: f.weight }),
+    ...(f.sort && { sort: f.sort }),
+  });
+}
+
+export type NationRow = { country: string; name: string; athletes: number; active: number };
+
+export async function nations(): Promise<NationRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<NationRow[]>("nations");
+}

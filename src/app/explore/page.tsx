@@ -1,9 +1,5 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { NotBuilt } from "@/components/ErrorPage";
-
-export const metadata: Metadata = { title: "Explore", robots: { index: false } };
-
-export default function Page() {
-  return <NotBuilt section="Explore" />;
+export default function Explore() {
+  redirect("/explore/tournaments");
 }
