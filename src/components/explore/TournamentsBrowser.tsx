@@ -74,7 +74,7 @@ export function TournamentsBrowser({
 
   return (
     <>
-      <ExploreTitle title="Tournaments" lead="Every rated tournament, with how well the rating predicted it." />
+      <ExploreTitle title="Tournaments" lead="Every rated tournament and how often the favourite won." />
       <ToolbarRow>
         <SearchBox value={query} onChange={setQuery} placeholder="Search tournament or city" />
         <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">

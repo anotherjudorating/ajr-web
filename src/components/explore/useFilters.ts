@@ -13,8 +13,3 @@ export function useFilters(path: string, current: Record<string, string>) {
     router.push(query.size ? `${path}?${query}` : path, { scroll: false });
   };
 }
-
-// The filters a server page read from its URL: only plain string values.
-export function plain(params: Record<string, string | string[] | undefined>): Record<string, string> {
-  return Object.fromEntries(Object.entries(params).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
-}

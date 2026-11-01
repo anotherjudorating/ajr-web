@@ -14,7 +14,7 @@ const TABS = [
 export function ExploreTabs({ current }: { current: string }) {
   return (
     <nav className="flex items-center gap-4 sm:gap-2" aria-label="Explore">
-      <span className="w-12 sm:w-16 shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted">Explore</span>
+      <span className="hidden sm:block w-14 shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted">Explore</span>
       <div className="flex items-center gap-4 sm:gap-2">
         {TABS.map(({ href, label }) => (
           <Link

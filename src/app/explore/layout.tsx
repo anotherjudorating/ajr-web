@@ -5,7 +5,7 @@ import { CurrentExploreTabs, ExploreTabs } from "@/components/explore/ExploreTab
 // The Explore tabs stay on screen while moving between the lists.
 export default function ExploreLayout({ children }: LayoutProps<"/explore">) {
   return (
-    <div className="w-full bg-paper pt-6 sm:pt-8 pb-8">
+    <div className="w-full bg-paper pt-[27.25px] sm:pt-8 pb-8">
       <Suspense fallback={<ExploreTabs current="" />}>
         <CurrentExploreTabs />
       </Suspense>

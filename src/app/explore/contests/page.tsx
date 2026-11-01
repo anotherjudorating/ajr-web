@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { ContestsBrowser } from "@/components/explore/ContestsBrowser";
-import { plain } from "@/components/explore/useFilters";
 import { competitions, contestsPage, lastUpdate } from "@/lib/api";
+import { plain } from "@/lib/params";
 import { WEIGHTS } from "@/lib/weights";
 
 export const metadata: Metadata = { title: "Contests — judo results with win chances" };

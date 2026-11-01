@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { AthletesBrowser } from "@/components/explore/AthletesBrowser";
-import { plain } from "@/components/explore/useFilters";
 import { athletesPage, lastUpdate, nations } from "@/lib/api";
+import { plain } from "@/lib/params";
 import { WEIGHTS } from "@/lib/weights";
 
 export const metadata: Metadata = { title: "Athletes — every rated judoka" };
