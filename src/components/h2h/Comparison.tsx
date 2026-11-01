@@ -4,6 +4,7 @@ import { Flag } from "@/components/Flag";
 import { type ChartAthlete, H2HChart } from "@/components/h2h/H2HChart";
 import { Icon } from "@/components/Icon";
 import { changeText, isUpset } from "@/components/rankings/Changes";
+import { RowLink } from "@/components/RowLink";
 import type { Athlete, HistoryRow } from "@/lib/api";
 import { formatDate, monthYear, roundCode, shortCompetition, shortName } from "@/lib/format";
 import { COLORS, winChance } from "@/lib/h2h";
@@ -126,7 +127,7 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
                 const winner = contest.won ? a.athlete : b.athlete;
                 const chance = contest.won ? contest.win_probability : 1 - contest.win_probability;
                 return (
-                  <tr key={contest.contest_id} className="border-b border-rule hover:bg-panel/40">
+                  <RowLink key={contest.contest_id} href={`/contests/${contest.contest_id}`} className="border-b border-rule hover:bg-panel/40">
                     <td className={`${TD} whitespace-nowrap text-muted`}>
                       <span className="sm:hidden">{monthYear(contest.fought_on)}</span>
                       <span className="hidden sm:inline">{formatDate(contest.fought_on)}</span>
@@ -157,7 +158,7 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
                         <Icon size={18} name="chevron_right" className="align-middle" />
                       </Link>
                     </td>
-                  </tr>
+                  </RowLink>
                 );
               })}
             </tbody>

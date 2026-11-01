@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Flag } from "@/components/Flag";
@@ -15,6 +16,7 @@ const DAY = 24 * 60 * 60 * 1000;
 // The expanded row: IJF place, the change over 90 days and the contests behind it,
 // grouped by tournament. The contests are loaded when the row is first opened.
 export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string }) {
+  const router = useRouter();
   const [history, setHistory] = useState<HistoryRow[] | null>(() => cachedAthleteHistory(row.athlete_id) ?? null);
   const [failed, setFailed] = useState(false);
 
@@ -79,7 +81,10 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
               return (
                 <div
                   key={contest.contest_id}
-                  className="border-b border-rule/60 last:border-b-0 py-1.5 flex items-center justify-between gap-1.5"
+                  onClick={(e) => {
+                    if (!(e.target as HTMLElement).closest("a")) router.push(`/contests/${contest.contest_id}`);
+                  }}
+                  className="border-b border-rule/60 last:border-b-0 py-1.5 flex items-center justify-between gap-1.5 cursor-pointer hover:bg-paper/50"
                 >
                   <span className="w-10 text-muted shrink-0">{roundCode(contest.round)}</span>
                   <div className="inline-flex items-center gap-1.5 min-w-0 flex-1 truncate">

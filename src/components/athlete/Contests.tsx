@@ -7,6 +7,7 @@ import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { isUpset } from "@/components/rankings/Changes";
 import type { Competition } from "@/components/athlete/RatingChart";
+import { RowLink } from "@/components/RowLink";
 import type { HistoryRow } from "@/lib/api";
 import { roundCode, shortDate, shortName, signed } from "@/lib/format";
 import { pageNumbers } from "@/lib/pages";
@@ -305,7 +306,7 @@ function ContestRow({ contest }: { contest: HistoryRow }) {
   const upset = isUpset(contest.won, contest.win_probability);
   const color = contest.won ? "text-gain" : "text-drop";
   return (
-    <tr className="h-10 sm:h-11 border-b border-rule hover:bg-panel/40">
+    <RowLink href={`/contests/${contest.contest_id}`} className="h-10 sm:h-11 border-b border-rule hover:bg-panel/40">
       <td className={`${CELL} text-muted`}>{roundCode(contest.round)}</td>
       <td className={CELL}>
         <div className="flex items-center gap-2 min-w-0">
@@ -335,7 +336,7 @@ function ContestRow({ contest }: { contest: HistoryRow }) {
           <Icon size={18} name="chevron_right" className="align-middle" />
         </Link>
       </td>
-    </tr>
+    </RowLink>
   );
 }
 

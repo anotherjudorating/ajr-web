@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
+import { RowLink } from "@/components/RowLink";
 import type { HistoryRow } from "@/lib/api";
 import { shortCompetition, shortName } from "@/lib/format";
 
@@ -34,7 +35,7 @@ function ContestList({ title, contests }: { title: string; contests: HistoryRow[
       <table className="w-full border-collapse text-[13px] sm:text-[14px]">
         <tbody>
           {contests.map((c) => (
-            <tr key={c.contest_id} className={ROW}>
+            <RowLink key={c.contest_id} href={`/contests/${c.contest_id}`} className={ROW}>
               <td className={`pr-2 ${CELL}`}>
                 <div className="flex items-center gap-2 min-w-0">
                   <Flag ioc={c.opponent_country} />
@@ -56,7 +57,7 @@ function ContestList({ title, contests }: { title: string; contests: HistoryRow[
                   <Icon size={18} name="chevron_right" className="align-middle" />
                 </Link>
               </td>
-            </tr>
+            </RowLink>
           ))}
           {contests.length === 0 && (
             <tr className="h-10">

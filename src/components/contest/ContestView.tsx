@@ -4,6 +4,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { isUpset } from "@/components/rankings/Changes";
+import { RowLink } from "@/components/RowLink";
 import type { ContestDetail, HistoryRow } from "@/lib/api";
 import { formatDate, monthYear, roundCode, shortCompetition, shortName, signed } from "@/lib/format";
 import { WEIGHTS, weightTitle } from "@/lib/weights";
@@ -135,7 +136,7 @@ export function ContestView({
                 {meetings.map((row) => {
                   const winner = athleteOf(c, row.won ? "white" : "blue");
                   return (
-                    <tr key={row.contest_id} className={ROW}>
+                    <RowLink key={row.contest_id} href={`/contests/${row.contest_id}`} className={ROW}>
                       <td className={`w-[76px] sm:w-28 ${CELL} whitespace-nowrap text-muted`}>
                         <span className="sm:hidden">{monthYear(row.fought_on)}</span>
                         <span className="hidden sm:inline">{formatDate(row.fought_on)}</span>
@@ -156,7 +157,7 @@ export function ContestView({
                           <Icon size={18} name="chevron_right" className="align-middle" />
                         </Link>
                       </td>
-                    </tr>
+                    </RowLink>
                   );
                 })}
               </tbody>
@@ -368,7 +369,7 @@ function RoadRow({ row }: { row: HistoryRow }) {
   const chance = Math.round(row.win_probability * 100);
   const gain = row.rating_after - row.rating_before;
   return (
-    <tr className={ROW}>
+    <RowLink href={`/contests/${row.contest_id}`} className={ROW}>
       <td className={`w-10 ${CELL} font-semibold text-muted`}>{roundCode(row.round)}</td>
       <td className={CELL}>
         <div className="flex items-center gap-1.5 min-w-0">
@@ -396,7 +397,7 @@ function RoadRow({ row }: { row: HistoryRow }) {
           <Icon size={18} name="chevron_right" className="align-middle" />
         </Link>
       </td>
-    </tr>
+    </RowLink>
   );
 }
 

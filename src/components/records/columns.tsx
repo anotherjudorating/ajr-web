@@ -354,6 +354,11 @@ export function recordColumns(info: RecordInfo, full: boolean): Column[] {
 }
 
 // Where a row leads: the athlete's page. Nations and tournaments have no pages yet.
+// Where a row leads: a contest of an upset, the head-to-head of a rivalry, else the athlete.
 export function rowLink(row: RecordRow): string | null {
+  if (row.record === "biggest_upsets" && row.detail?.contest) return `/contests/${row.detail.contest}`;
+  if (row.record === "most_frequent_rivalry" && row.athlete_id && row.opponent_id) {
+    return `/head-to-head?a=${row.athlete_id}&b=${row.opponent_id}`;
+  }
   return row.athlete_id ? `/athletes/${row.athlete_id}` : null;
 }
