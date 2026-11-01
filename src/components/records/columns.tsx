@@ -217,8 +217,12 @@ export function recordColumns(info: RecordInfo, full: boolean): Column[] {
   switch (info.name) {
     case "highest_rating":
       return [...athlete(full), weight(full), value("Peak", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value)), side("Date", full ? "w-24" : "w-28", (r) => month(r.day))];
-    case "biggest_lead":
-      return [...athlete(full), weight(full), value("Over #2", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => signed(int(r.value))), side("Date", full ? "w-24" : "w-28", (r) => month(r.day))];
+    case "longest_p4p_1":
+      return [...athlete(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Until", full ? "w-24" : "w-28", (r) => month(r.day))];
+    case "youngest_p4p_1":
+      return [...athlete(full), weight(full), value("Age", "w-24 sm:w-28", (r) => <span className="font-semibold">{int(r.value)}</span>), side("Date", full ? "w-24" : "w-28", (r) => month(r.day))];
+    case "biggest_p4p_lead":
+      return [...athlete(full), weight(full), value("Lead", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => signed(int(r.value))), side("Date", full ? "w-24" : "w-28", (r) => month(r.day))];
     case "longest_at_1":
       return [...athlete(full), weight(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Until", full ? "w-24" : "w-28", (r) => month(r.day))];
     case "youngest_1":
