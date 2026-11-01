@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { TeamsBrowser } from "@/components/rankings/TeamsBrowser";
-import { WeightSwitcher } from "@/components/WeightSwitcher";
 import { teams } from "@/lib/api";
 import { tableDay } from "@/lib/days";
 
@@ -19,50 +18,29 @@ export async function generateMetadata({ params }: PageProps<"/rankings/teams/[k
   return kind in KINDS ? { title: `${KINDS[kind as Kind]} nations — judo team ranking` } : {};
 }
 
-export default async function Page({ params, searchParams }: PageProps<"/rankings/teams/[kind]">) {
-  const { kind } = await params;
-  if (!(kind in KINDS)) notFound();
-  const path = `/rankings/teams/${kind}`;
-  const weights = kind === "mixed" ? 14 : 7;
-
-  // while the table loads, the switcher, the toolbar and the table's header stay
-  const loading = (
-    <>
-      <WeightSwitcher current={path} />
-      <TeamsBrowser loading rows={[]} weights={weights} asOf="" latest="" path={path} csvName="" />
-    </>
-  );
-
+export default function Page({ params, searchParams }: PageProps<"/rankings/teams/[kind]">) {
+  // the URL is read inside the Suspense, so the page's shell is static and a move
+  // between tables is instant; meanwhile the toolbar and the table's header show
   return (
-    <div className="w-full bg-paper pt-6 sm:pt-8 pb-8">
-      <Suspense fallback={loading}>
-        <Table kind={kind as Kind} weights={weights} path={path} searchParams={searchParams} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<TeamsBrowser loading rows={[]} weights={7} asOf="" latest="" path="" csvName="" />}>
+      <Table params={params} searchParams={searchParams} />
+    </Suspense>
   );
 }
 
-async function Table({
-  kind,
-  weights,
-  path,
-  searchParams,
-}: {
-  kind: Kind;
-  weights: number;
-  path: string;
-  searchParams: PageProps<"/rankings/teams/[kind]">["searchParams"];
-}) {
-  const { asOf, latest, past, query } = await tableDay((await searchParams).date);
+async function Table({ params, searchParams }: PageProps<"/rankings/teams/[kind]">) {
+  const { kind } = await params;
+  if (!(kind in KINDS)) notFound();
+  const path = `/rankings/teams/${kind}`;
+  const { asOf, latest, past } = await tableDay((await searchParams).date);
   const rows = await teams(kind, past);
   return (
     <>
-      <h1 className="sr-only">{KINDS[kind]} nations — judo team ranking</h1>
-      <WeightSwitcher current={path} query={query} />
+      <h1 className="sr-only">{KINDS[kind as Kind]} nations — judo team ranking</h1>
       <TeamsBrowser
         key={asOf}
         rows={rows}
-        weights={weights}
+        weights={kind === "mixed" ? 14 : 7}
         asOf={asOf}
         latest={latest}
         path={path}

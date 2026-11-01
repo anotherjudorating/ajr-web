@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { P4PBrowser } from "@/components/rankings/P4PBrowser";
-import { WeightSwitcher } from "@/components/WeightSwitcher";
 import { p4p } from "@/lib/api";
 import { tableDay } from "@/lib/days";
 
@@ -19,43 +18,25 @@ export async function generateMetadata({ params }: PageProps<"/rankings/p4p/[gen
   return gender in GENDERS ? { title: `${GENDERS[gender as Gender]} pound for pound — judo ranking` } : {};
 }
 
-export default async function Page({ params, searchParams }: PageProps<"/rankings/p4p/[gender]">) {
-  const { gender } = await params;
-  if (!(gender in GENDERS)) notFound();
-  const path = `/rankings/p4p/${gender}`;
-
-  // while the table loads, the switcher, the toolbar and the table's header stay
-  const loading = (
-    <>
-      <WeightSwitcher current={path} />
-      <P4PBrowser loading rows={[]} asOf="" latest="" path={path} csvName="" />
-    </>
-  );
-
+export default function Page({ params, searchParams }: PageProps<"/rankings/p4p/[gender]">) {
+  // the URL is read inside the Suspense, so the page's shell is static and a move
+  // between tables is instant; meanwhile the toolbar and the table's header show
   return (
-    <div className="w-full bg-paper pt-6 sm:pt-8 pb-8">
-      <Suspense fallback={loading}>
-        <Table gender={gender as Gender} path={path} searchParams={searchParams} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<P4PBrowser loading rows={[]} asOf="" latest="" path="" csvName="" />}>
+      <Table params={params} searchParams={searchParams} />
+    </Suspense>
   );
 }
 
-async function Table({
-  gender,
-  path,
-  searchParams,
-}: {
-  gender: Gender;
-  path: string;
-  searchParams: PageProps<"/rankings/p4p/[gender]">["searchParams"];
-}) {
-  const { asOf, latest, past, query } = await tableDay((await searchParams).date);
+async function Table({ params, searchParams }: PageProps<"/rankings/p4p/[gender]">) {
+  const { gender } = await params;
+  if (!(gender in GENDERS)) notFound();
+  const path = `/rankings/p4p/${gender}`;
+  const { asOf, latest, past } = await tableDay((await searchParams).date);
   const rows = await p4p(gender, past);
   return (
     <>
-      <h1 className="sr-only">{GENDERS[gender]} pound for pound — judo ranking</h1>
-      <WeightSwitcher current={path} query={query} />
+      <h1 className="sr-only">{GENDERS[gender as Gender]} pound for pound — judo ranking</h1>
       <P4PBrowser
         key={asOf}
         rows={rows}
