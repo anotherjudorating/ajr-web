@@ -67,7 +67,7 @@ export function ContestView({
   return (
     <>
       <Breadcrumbs
-        className="pt-6 sm:pt-8 mb-4"
+        className="pt-[33.25px] sm:pt-[41.25px] md:pt-[42.75px] mb-4"
         trail={[{ label: "Tournaments" }, { label: shortCompetition(c.competition) }, { label: weightName }]}
         current={c.round ?? "Contest"}
       />
@@ -130,7 +130,7 @@ export function ContestView({
                 Head-to-head
               </Link>
             </div>
-            <table className="w-full border-collapse text-[13px] sm:text-[14px] tabular-nums">
+            <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
               <tbody>
                 {meetings.map((row) => {
                   const winner = athleteOf(c, row.won ? "white" : "blue");
@@ -140,7 +140,7 @@ export function ContestView({
                         <span className="sm:hidden">{monthYear(row.fought_on)}</span>
                         <span className="hidden sm:inline">{formatDate(row.fought_on)}</span>
                       </td>
-                      <td className={`${CELL} whitespace-nowrap`}>
+                      <td className={`${CELL} truncate`}>
                         <span className="sm:hidden">{shortCompetition(row.competition)}</span>
                         <span className="hidden sm:inline">{row.competition}</span>
                       </td>
@@ -247,8 +247,8 @@ function Result({ contest: c }: { contest: ContestDetail }) {
 
 function RatingChange({ contest: c }: { contest: ContestDetail }) {
   const rows = SIDES.map((side) => ({ side, athlete: athleteOf(c, side) }));
-  const TH = "px-3 h-9 py-0 align-middle text-[11px] font-bold uppercase tracking-wider text-muted text-right";
-  const TD = "px-3 h-10 sm:h-11 py-0 align-middle whitespace-nowrap text-right";
+  const TH = "px-3 h-9 py-0 align-middle text-[11px] font-bold uppercase tracking-wider text-muted";
+  const TD = "px-3 h-10 sm:h-11 py-0 align-middle whitespace-nowrap";
   const LABEL = "pl-1 h-10 py-0 align-middle text-[10px] font-bold uppercase tracking-wider text-muted";
   const MOBILE = "px-2 sm:px-3 h-10 py-0 align-middle text-right whitespace-nowrap";
   return (
@@ -263,10 +263,10 @@ function RatingChange({ contest: c }: { contest: ContestDetail }) {
         <thead>
           <tr className="bg-panel border-b border-rule">
             <th className={`${TH} text-left`}>Athlete</th>
-            <th className={`${TH} w-24`}>Chance</th>
-            <th className={`${TH} w-56`}>Skill</th>
-            <th className={`${TH} w-32`}>RD</th>
-            <th className={`${TH} w-56`}>Rating</th>
+            <th className={`${TH} text-right w-24`}>Chance</th>
+            <th className={`${TH} text-right w-56`}>Skill</th>
+            <th className={`${TH} text-right w-32`}>RD</th>
+            <th className={`${TH} text-right w-56`}>Rating</th>
           </tr>
         </thead>
         <tbody>
@@ -279,14 +279,14 @@ function RatingChange({ contest: c }: { contest: ContestDetail }) {
                   {athlete.name}
                 </span>
               </td>
-              <td className={`${TD} text-muted`}>{percent(athlete.chance)}</td>
-              <td className={TD}>
+              <td className={`${TD} text-right text-muted`}>{percent(athlete.chance)}</td>
+              <td className={`${TD} text-right`}>
                 <Sum pair={athlete.rating} weight="font-semibold" />
               </td>
-              <td className={TD}>
+              <td className={`${TD} text-right`}>
                 {athlete.rd[0]} <span className="text-muted">→</span> {athlete.rd[1]}
               </td>
-              <td className={TD}>
+              <td className={`${TD} text-right`}>
                 <Sum pair={athlete.score} weight="font-bold" bold />
               </td>
             </tr>
