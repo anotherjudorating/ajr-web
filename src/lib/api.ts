@@ -160,3 +160,44 @@ export async function teams(kind: string, day?: string): Promise<TeamRow[]> {
   cacheLife("data");
   return rpc<TeamRow[]>("teams", day ? { kind, day } : { kind });
 }
+
+// One row of an all-time record (api.records / api.record). Records of nations and
+// tournaments have no athlete; what `value` and `detail` hold depends on the record.
+export type RecordRow = {
+  record: string;
+  place: number;
+  athlete_id: number | null;
+  family_name: string | null;
+  given_name: string | null;
+  gender: "male" | "female" | null;
+  opponent_id: number | null;
+  opponent_family_name: string | null;
+  opponent_given_name: string | null;
+  country: string | null;
+  country_name: string | null;
+  competition_id: number | null;
+  competition: string | null;
+  weight: string | null;
+  value: number;
+  detail: Record<string, number | string> | null;
+  day: string | null;
+};
+
+// The first `top` rows of every record, for men or women only when `gender` is set
+// (records of nations and tournaments stay as they are).
+export async function records(top: number, gender?: "male" | "female"): Promise<RecordRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<RecordRow[]>("records", gender ? { top, for_gender: gender } : { top });
+}
+
+// All rows of one record (up to 500).
+export async function record(name: string, gender?: "male" | "female", weight?: string): Promise<RecordRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<RecordRow[]>("record", {
+    name,
+    ...(gender && { for_gender: gender }),
+    ...(weight && { only_weight: weight }),
+  });
+}
