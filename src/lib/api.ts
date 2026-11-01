@@ -82,6 +82,31 @@ export type HistoryRow = {
   result: string | null;
 };
 
+export type P4PRow = {
+  place: number;
+  athlete_id: number;
+  family_name: string | null;
+  given_name: string | null;
+  country: string | null;
+  weight: string;
+  weight_place: number;
+  rating: number;
+  rd: number;
+  score: number;
+  gap: number; // score minus the average of the 7 best others of the weight
+  trend: (number | null)[];
+};
+
+export type TeamRow = {
+  place: number;
+  country: string | null;
+  country_name: string | null;
+  rating: number; // average score of the nation's best athlete in every weight
+  weights_led: number; // weights where its best athlete is the best of all nations
+  weights_top8: number;
+  weights_filled: number;
+};
+
 async function rpc<T>(name: string, params: Record<string, string | number> = {}): Promise<T> {
   if (!URL || !KEY) {
     throw new Error("NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY must be set");
@@ -120,4 +145,18 @@ export async function lastUpdate(): Promise<string | null> {
   "use cache";
   cacheLife("data");
   return rpc<string | null>("last_update");
+}
+
+// Pound for pound: the top 3 of every weight of a gender ("men" / "women").
+export async function p4p(gender: string, day?: string): Promise<P4PRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<P4PRow[]>("p4p", day ? { gender, day } : { gender });
+}
+
+// Nations, kind "men" / "women" / "mixed".
+export async function teams(kind: string, day?: string): Promise<TeamRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<TeamRow[]>("teams", day ? { kind, day } : { kind });
 }

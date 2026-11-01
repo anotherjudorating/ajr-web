@@ -11,6 +11,9 @@ export const CONTROL =
   "h-8 py-0 px-2.5 bg-paper border border-rule text-[12px] text-ink focus:outline-none focus:border-ink cursor-pointer min-w-0";
 export const TH = "px-2 py-2 sm:px-3 sm:py-2.5 text-[10px] sm:text-[11px] text-muted uppercase tracking-wider font-semibold";
 export const CELL = "px-2 py-2 sm:px-3 sm:py-2.5";
+// Fixed heights as in the prototype: header 36px, rows 40px (44px from sm).
+export const HEAD_CELL = "px-2 sm:px-3 h-9 py-0 align-middle text-[10px] sm:text-[11px] text-muted uppercase tracking-wider font-semibold";
+export const ROW_CELL = "px-2 sm:px-3 h-10 sm:h-11 py-0 align-middle";
 
 // Search, country, date, sort and CSV, as in the prototype.
 export function Toolbar<Sort extends string>({
@@ -210,4 +213,24 @@ function PageButton({
       {children}
     </button>
   );
+}
+
+// Grey bars of a row's height while a table loads.
+export function PlaceholderRows({ columns, count = 8 }: { columns: number; count?: number }) {
+  return Array.from({ length: count }, (_, i) => (
+    <tr key={i} className="border-b border-rule h-10 sm:h-11">
+      <td colSpan={columns} className="px-3">
+        <div className="h-3 bg-rule/60 animate-pulse" style={{ width: `${40 + ((i * 37) % 45)}%` }} />
+      </td>
+    </tr>
+  ));
+}
+
+export function saveCsv(lines: (string | number)[][], fileName: string) {
+  const csv = lines.map((line) => line.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
