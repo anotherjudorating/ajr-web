@@ -7,7 +7,7 @@ const ACTIVE = "font-bold text-ink border-b-2 border-claret";
 const INACTIVE = "hover:text-ink transition-colors text-muted";
 const LABEL = "w-12 shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted";
 
-// MEN: P4P −60 … +100 / WOMEN: P4P −48 … +78 / TEAMS: Men Women Mixed.
+// MEN: P4P −60 … +100 / WOMEN: P4P −48 … +78 / TEAMS: Mixed Men Women.
 // `current` is the path of the open table; `query` keeps the date when switching.
 export function WeightSwitcher({ current, query = "" }: { current: string; query?: string }) {
   const tab = (href: string, label: string, numeric = true) => (
@@ -40,9 +40,9 @@ export function WeightSwitcher({ current, query = "" }: { current: string; query
       <div className="flex flex-row flex-nowrap items-center w-full mt-2 sm:mt-2.5">
         <span className={LABEL}>Teams</span>
         <div className="flex flex-row flex-nowrap items-center flex-1 min-w-0 gap-4 sm:gap-2">
+          {tab("/rankings/teams/mixed", "Mixed", false)}
           {tab("/rankings/teams/men", "Men", false)}
           {tab("/rankings/teams/women", "Women", false)}
-          {tab("/rankings/teams/mixed", "Mixed", false)}
         </div>
       </div>
     </div>
