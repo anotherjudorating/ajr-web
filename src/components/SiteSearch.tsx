@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
-import { type SearchHit, searchSite } from "@/lib/browser-api";
+import { loadSearchIndex, type SearchHit, type SearchIndex, searchSite } from "@/lib/search-index";
 import { dateRange, shortName } from "@/lib/format";
 import { WEIGHTS, weightTitle } from "@/lib/weights";
 
@@ -40,22 +40,11 @@ export function SiteSearch({ wide = false, autoFocus = false }: { wide?: boolean
   const router = useRouter();
   const box = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<SearchHit[] | null>(null); // null: nothing asked yet
+  const [index, setIndex] = useState<SearchIndex | null>(null); // loaded on the first focus
   const [open, setOpen] = useState(false);
-
-  // asks once typing pauses, from 2 letters; a newer question cancels the older one
-  useEffect(() => {
-    const q = query.trim();
-    if (q.length < 2) return;
-    const controller = new AbortController();
-    const timer = setTimeout(() => {
-      searchSite(q, controller.signal).then(setHits, () => {});
-    }, 200);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [query]);
+  const load = () => {
+    loadSearchIndex().then(setIndex, () => {});
+  };
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
@@ -66,7 +55,8 @@ export function SiteSearch({ wide = false, autoFocus = false }: { wide?: boolean
   }, []);
 
   const q = query.trim();
-  const shown = open && q.length >= 2 && hits !== null;
+  const hits = useMemo(() => (index && q.length >= 2 ? searchSite(index, q) : null), [index, q]);
+  const shown = open && hits !== null;
   const explore = `/explore/athletes?q=${encodeURIComponent(q)}`;
   const go = (href: string) => {
     setOpen(false);
@@ -85,7 +75,10 @@ export function SiteSearch({ wide = false, autoFocus = false }: { wide?: boolean
           setQuery(e.target.value);
           setOpen(true);
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          load();
+          setOpen(true);
+        }}
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             setOpen(false);

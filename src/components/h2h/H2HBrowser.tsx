@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useRef, useState, useTransition } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
-import { type AthleteHit, countMatchup, searchAthletes } from "@/lib/browser-api";
+import { countMatchup } from "@/lib/browser-api";
 import { monthYear, shortName } from "@/lib/format";
 import { COLORS, h2hPath, type Picked } from "@/lib/h2h";
+import { type AthleteHit, loadSearchIndex, searchAthletes, type SearchIndex } from "@/lib/search-index";
 import type { Matchup } from "@/lib/matchups";
 import { MEN, WEIGHTS, WOMEN, weightTitle } from "@/lib/weights";
 
@@ -135,23 +136,9 @@ function AthleteSlot({
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const [hits, setHits] = useState<AthleteHit[]>([]);
+  const [index, setIndex] = useState<SearchIndex | null>(null); // loaded on the first focus
   const box = useRef<HTMLDivElement>(null);
   const api = WEIGHTS.find((w) => w.slug === weight)?.api ?? null;
-
-  // asks once typing pauses; a newer question cancels the older one
-  useEffect(() => {
-    const q = query.trim();
-    if (!q) return;
-    const controller = new AbortController();
-    const timer = setTimeout(() => {
-      searchAthletes(q, api, controller.signal).then(setHits, () => {});
-    }, 200);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [query, api]);
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
@@ -162,10 +149,10 @@ function AthleteSlot({
   }, []);
 
   const asked = query.trim() !== "";
-  const found = asked ? hits.filter((hit) => hit.id !== other?.id).slice(0, 5) : [];
+  const hits = useMemo(() => (index && asked ? searchAthletes(index, query, api) : []), [index, asked, query, api]);
+  const found = hits.filter((hit) => hit.id !== other?.id).slice(0, 5);
   const pick = (hit: AthleteHit) => {
     setQuery("");
-    setHits([]);
     setOpen(false);
     onPick({
       id: hit.id,
@@ -215,6 +202,9 @@ function AthleteSlot({
             autoComplete="off"
             value={query}
             placeholder="Search athlete"
+            onFocus={() => {
+              loadSearchIndex().then(setIndex, () => {});
+            }}
             onChange={(e) => {
               setQuery(e.target.value);
               setOpen(true);

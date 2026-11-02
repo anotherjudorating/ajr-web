@@ -623,46 +623,10 @@ export async function competitionChances(id: number): Promise<MedalChance[]> {
   return rpc<MedalChance[]>("competition_chances", { competition_id: id });
 }
 
-export type SearchHit = {
-  kind: "athlete" | "tournament" | "nation";
-  id: number | null;
-  name: string | null;
-  family_name: string | null;
-  given_name: string | null;
-  country: string | null;
-  gender: string | null;
-  weight: string | null;
-  date_from: string | null;
-  date_to: string | null;
-};
-
-// A search as the cache keys it: lower case, single spaces, at most 60 letters, so
-// "Abe " and "abe" are one question.
-export function searchKey(q: string): string {
-  return q.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 60);
-}
-
-// The header's search: up to 5 athletes, 3 tournaments and 3 nations.
-export async function search(q: string): Promise<SearchHit[]> {
-  "use cache: remote";
+// Every rated athlete, tournament and nation the search boxes look in, as one
+// document (lib/search-index.ts searches it in the browser).
+export async function searchIndex(): Promise<unknown> {
+  "use cache";
   cacheLife("data");
-  return rpc<SearchHit[]>("search", { q });
-}
-
-export type AthleteHit = {
-  id: number;
-  family_name: string | null;
-  given_name: string | null;
-  country: string | null;
-  gender: string | null;
-  weight: string | null;
-  place: number | null; // today, in the weight's table; null when not in one
-  score: number | null;
-};
-
-// The head-to-head's athlete boxes: every rated athlete, the weight's table first.
-export async function searchAthletes(q: string, weight: string | null): Promise<AthleteHit[]> {
-  "use cache: remote";
-  cacheLife("data");
-  return rpc<AthleteHit[]>("search_athletes", { q, top: 6, ...(weight && { only_weight: weight }) });
+  return rpc<unknown>("search_index");
 }

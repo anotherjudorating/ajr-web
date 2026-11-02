@@ -5,8 +5,18 @@ import { Suspense } from "react";
 import { liveWeights } from "@/components/tournament/Overview";
 import { stateOf, TournamentHeader, tournamentName } from "@/components/tournament/TournamentHeader";
 import { WeightView } from "@/components/tournament/WeightView";
-import { competition, competitionChances, competitionContests, competitionResults, lastUpdate } from "@/lib/api";
-import { weightBySlug, weightTitle } from "@/lib/weights";
+import { competition, competitionChances, competitionContests, competitionResults, competitions, lastUpdate } from "@/lib/api";
+import { WEIGHTS, weightBySlug, weightTitle } from "@/lib/weights";
+
+// One weight of one tournament is built ahead (more would load the database at every
+// deploy); any other is built on its first visit, then served whole from the cache
+// until the data changes (ISR).
+export async function generateStaticParams() {
+  const [latest] = await competitions(null);
+  const found = latest ? await competition(latest.id) : null;
+  const weight = WEIGHTS.find((w) => w.api === found?.weights[0]);
+  return found && weight ? [{ id: String(found.id), weight: weight.slug }] : [];
+}
 
 export async function generateMetadata({ params }: PageProps<"/tournaments/[id]/[weight]">): Promise<Metadata> {
   const { id, weight: slug } = await params;
@@ -44,7 +54,7 @@ async function TournamentWeight({ params }: { params: PageProps<"/tournaments/[i
       <TournamentHeader
         competition={found}
         weight={weight}
-        state={stateOf(found, (updated ?? new Date().toISOString()).slice(0, 10))}
+        state={stateOf(found, (updated ?? "1970-01-01").slice(0, 10))}
         live={liveWeights(results)}
       />
       <WeightView
