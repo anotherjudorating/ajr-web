@@ -18,7 +18,7 @@ export function Breadcrumbs({ trail, current, className = "" }: {
           ) : (
             <span>{label}</span>
           )}
-          <span>›</span>
+          <span className="text-rule">›</span>
         </Fragment>
       ))}
       <span className="text-ink font-medium">{current}</span>

@@ -5,8 +5,7 @@ import { type ReactNode, useEffect, useRef, useState, useTransition } from "reac
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
-import type { LeaderboardRow } from "@/lib/api";
-import { countMatchup, fetchLeaderboard } from "@/lib/browser-api";
+import { type AthleteHit, countMatchup, searchAthletes } from "@/lib/browser-api";
 import { monthYear, shortName } from "@/lib/format";
 import { COLORS, h2hPath, type Picked } from "@/lib/h2h";
 import type { Matchup } from "@/lib/matchups";
@@ -117,7 +116,8 @@ export function H2HBrowser({
   );
 }
 
-// One athlete: a search box over the weight's table, or the picked athlete.
+// One athlete: a search over every rated athlete (the weight's table first), or the
+// picked athlete.
 function AthleteSlot({
   slot,
   weight,
@@ -135,21 +135,23 @@ function AthleteSlot({
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
-  const [rows, setRows] = useState<LeaderboardRow[]>([]);
+  const [hits, setHits] = useState<AthleteHit[]>([]);
   const box = useRef<HTMLDivElement>(null);
-  const api = WEIGHTS.find((w) => w.slug === weight)?.api;
+  const api = WEIGHTS.find((w) => w.slug === weight)?.api ?? null;
 
+  // asks once typing pauses; a newer question cancels the older one
   useEffect(() => {
-    if (!api) return;
-    let live = true;
-    fetchLeaderboard(api).then(
-      (table) => live && setRows(table),
-      () => live && setRows([]),
-    );
+    const q = query.trim();
+    if (!q) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      searchAthletes(q, api, controller.signal).then(setHits, () => {});
+    }, 200);
     return () => {
-      live = false;
+      clearTimeout(timer);
+      controller.abort();
     };
-  }, [api]);
+  }, [query, api]);
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
@@ -159,21 +161,18 @@ function AthleteSlot({
     return () => document.removeEventListener("click", close);
   }, []);
 
-  const needle = fold(query.trim());
-  const found = needle
-    ? rows
-        .filter((row) => row.athlete_id !== other?.id && names(row).some((name) => name.startsWith(needle)))
-        .slice(0, 3)
-    : [];
-  const pick = (row: LeaderboardRow) => {
+  const asked = query.trim() !== "";
+  const found = asked ? hits.filter((hit) => hit.id !== other?.id).slice(0, 5) : [];
+  const pick = (hit: AthleteHit) => {
     setQuery("");
+    setHits([]);
     setOpen(false);
     onPick({
-      id: row.athlete_id,
-      family_name: row.family_name,
-      given_name: row.given_name,
-      country: row.country,
-      score: row.score,
+      id: hit.id,
+      family_name: hit.family_name,
+      given_name: hit.given_name,
+      country: hit.country,
+      score: hit.score,
     });
   };
 
@@ -214,9 +213,8 @@ function AthleteSlot({
             ref={inputRef}
             type="text"
             autoComplete="off"
-            disabled={!weight}
             value={query}
-            placeholder={weight ? "Search athlete" : "Choose weight first"}
+            placeholder="Search athlete"
             onChange={(e) => {
               setQuery(e.target.value);
               setOpen(true);
@@ -229,22 +227,29 @@ function AthleteSlot({
           />
         </div>
       )}
-      {open && needle && !picked && (
+      {open && asked && !picked && (
         <ul className="absolute z-40 left-0 right-0 top-full -mt-px bg-paper border border-ink">
           {found.length ? (
-            found.map((row) => (
-              <li key={row.athlete_id}>
-                <button
-                  type="button"
-                  onClick={() => pick(row)}
-                  className="w-full h-10 px-3 flex items-center gap-2 text-[14px] text-left hover:bg-panel cursor-pointer"
-                >
-                  <Flag ioc={row.country} />
-                  <span className="font-medium truncate">{shortName(row.family_name, row.given_name)}</span>
-                  <span className="ml-auto w-10 text-right font-semibold tnum shrink-0">{row.score}</span>
-                </button>
-              </li>
-            ))
+            found.map((hit) => {
+              const other = hit.weight !== api && WEIGHTS.find((w) => w.api === hit.weight);
+              return (
+                <li key={hit.id}>
+                  <button
+                    type="button"
+                    onClick={() => pick(hit)}
+                    className="w-full h-10 px-3 flex items-center gap-2 text-[14px] text-left hover:bg-panel cursor-pointer"
+                  >
+                    <Flag ioc={hit.country} />
+                    <span className="font-medium truncate">{shortName(hit.family_name, hit.given_name)}</span>
+                    {/* another weight than the one picked: say which */}
+                    {other && <span className="text-[12px] text-muted shrink-0">{weightTitle(other)}</span>}
+                    <span className={`ml-auto w-10 text-right tnum shrink-0 ${hit.place === null ? "text-muted" : "font-semibold"}`}>
+                      {hit.score ?? "—"}
+                    </span>
+                  </button>
+                </li>
+              );
+            })
           ) : (
             <li className="h-10 px-3 flex items-center text-[13px] text-muted">No athletes found</li>
           )}
@@ -252,16 +257,6 @@ function AthleteSlot({
       )}
     </div>
   );
-}
-
-// Lower case without accents: "Đorđe" is found by "dor".
-function fold(text: string): string {
-  return text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-}
-
-// What a search can start with: the family name, the given name, "Heydarov H.".
-function names(row: LeaderboardRow): string[] {
-  return [row.family_name ?? "", row.given_name ?? "", shortName(row.family_name, row.given_name)].map(fold);
 }
 
 function PopularMatchups({ matchups, onPick }: { matchups: Matchup[]; onPick: (matchup: Matchup) => void }) {

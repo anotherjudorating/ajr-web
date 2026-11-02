@@ -69,7 +69,11 @@ export function ContestView({
     <>
       <Breadcrumbs
         className="pt-[33.25px] sm:pt-[41.25px] md:pt-[42.75px] mb-4"
-        trail={[{ label: "Tournaments" }, { label: shortCompetition(c.competition) }, { label: weightName }]}
+        trail={[
+          { href: "/explore/tournaments", label: "Tournaments" },
+          { href: `/tournaments/${c.competition_id}`, label: shortCompetition(c.competition) },
+          { href: weight && `/tournaments/${c.competition_id}/${weight.slug}`, label: weightName },
+        ]}
         current={c.round ?? "Contest"}
       />
       <h1 className="sr-only">

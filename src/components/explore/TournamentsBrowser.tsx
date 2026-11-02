@@ -8,6 +8,7 @@ import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { HEAD_CELL, PlaceholderRows, ROW_CELL, saveCsv } from "@/components/rankings/TableParts";
 import type { CompetitionRow } from "@/lib/api";
+import { dateRange, shortCompetition } from "@/lib/format";
 
 const LEVELS = [
   { value: "", label: "All levels" },
@@ -93,7 +94,8 @@ export function TournamentsBrowser({
         </div>
       </ToolbarRow>
 
-      <table className="w-full table-fixed border-collapse text-left">
+      {/* auto layout: the month rows span all columns, also the ones hidden on phones */}
+      <table className="w-full border-collapse text-left">
         <thead>
           <tr className="bg-panel border-b border-rule">
             <th className={`${HEAD_CELL} w-[72px] sm:w-32 text-left`}>Dates</th>
@@ -139,14 +141,17 @@ export function TournamentsBrowser({
                 )}
                 {!hidden && (
                   <tr
-                    onClick={() => router.push(`/explore/contests?year=${year}&tournament=${row.id}`)}
+                    onClick={() => router.push(`/tournaments/${row.id}`)}
                     className="border-b border-rule hover:bg-panel/40 cursor-pointer"
                   >
-                    <td className={`${ROW_CELL} text-muted tabular-nums whitespace-nowrap`}>{dates(row)}</td>
+                    <td className={`${ROW_CELL} text-muted tabular-nums whitespace-nowrap`}>{dateRange(row.date_from, row.date_to)}</td>
                     <td className={`${ROW_CELL} font-semibold text-ink`}>
                       <div className="flex items-center gap-1.5 sm:block">
                         <Flag ioc={row.country} className="sm:!hidden" />
-                        <span className="hover:underline line-clamp-2 sm:line-clamp-none">{row.name}</span>
+                        <span className="hover:underline line-clamp-2 sm:hidden">
+                          {shortCompetition(row.name).replace(/\s\d{4}$/, "")}
+                        </span>
+                        <span className="hover:underline hidden sm:inline">{row.name}</span>
                       </div>
                     </td>
                     <td className={`${ROW_CELL} hidden sm:table-cell text-muted`}>
@@ -175,19 +180,6 @@ export function TournamentsBrowser({
       {!loading && shown.length === 0 && <p className="py-6 text-[14px] text-muted">No tournaments match.</p>}
     </>
   );
-}
-
-const SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-// "23–24 May", "30 Jun–2 Jul", "23 May"
-function dates(row: CompetitionRow): string {
-  const day = (d: string) => Number(d.slice(8, 10));
-  const mon = (d: string) => SHORT[Number(d.slice(5, 7)) - 1];
-  const from = row.date_from;
-  const to = row.date_to ?? from;
-  if (to === from) return `${day(from)} ${mon(from)}`;
-  if (mon(to) === mon(from)) return `${day(from)}–${day(to)} ${mon(from)}`;
-  return `${day(from)} ${mon(from)}–${day(to)} ${mon(to)}`;
 }
 
 function downloadCsv(rows: CompetitionRow[], year: number) {

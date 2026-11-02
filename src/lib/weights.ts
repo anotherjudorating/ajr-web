@@ -18,8 +18,6 @@ export const MEN = ["-60", "-66", "-73", "-81", "-90", "-100", "+100"].map((w) =
 export const WOMEN = ["-48", "-52", "-57", "-63", "-70", "-78", "+78"].map((w) => weight("women", w));
 export const WEIGHTS = [...MEN, ...WOMEN];
 
-export const DEFAULT_WEIGHT = MEN[2]; // men −73
-
 export function weightBySlug(slug: string): Weight | undefined {
   return WEIGHTS.find((w) => w.slug === slug);
 }

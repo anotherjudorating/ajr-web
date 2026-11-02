@@ -11,7 +11,7 @@ import { isUpset } from "@/components/rankings/Changes";
 import { HEAD_CELL, Pagination, PlaceholderRows, saveCsv } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import type { ContestListRow } from "@/lib/api";
-import { roundCode, shortCompetition, shortDate, shortName, signed } from "@/lib/format";
+import { competitionCode, roundCode, shortCompetition, shortDate, shortName, signed } from "@/lib/format";
 import { WEIGHTS, weightTitle } from "@/lib/weights";
 
 const SORTS = [
@@ -33,7 +33,7 @@ export function ContestsBrowser({
 }: {
   rows: ContestListRow[];
   filters: Record<string, string>;
-  tournaments: { id: number; name: string }[];
+  tournaments: { id: number; name: string; rank: string | null; country: string | null }[];
   years: number[];
   loading?: boolean;
 }) {
@@ -46,6 +46,7 @@ export function ContestsBrowser({
     return () => clearTimeout(timer);
   }, [query, filters.q, set]);
 
+  const byId = new Map(tournaments.map((t) => [t.id, t]));
   const size = Number(filters.size) || 50;
   const page = Number(filters.page) || 1;
   const total = rows[0]?.total ?? 0;
@@ -96,6 +97,7 @@ export function ContestsBrowser({
             <th className={`${HEAD_CELL} hidden md:table-cell w-36 text-left`}>Tournament</th>
             <th className={`${HEAD_CELL} hidden sm:table-cell w-16 text-left`}>Weight</th>
             <th className={`${HEAD_CELL} hidden sm:table-cell w-16 text-left`}>Round</th>
+            <th className={`${HEAD_CELL} sm:hidden w-16 text-left`}>Round</th>
             <th className={`${HEAD_CELL} hidden lg:table-cell w-20`} />
             <th className={`${HEAD_CELL} w-14 sm:w-20 text-right`}>Chance</th>
             <th className={`${HEAD_CELL} w-10 text-center`}>W/L</th>
@@ -104,7 +106,7 @@ export function ContestsBrowser({
           </tr>
         </thead>
         <tbody className="text-[13px] sm:text-[14px]">
-          {loading && <PlaceholderRows columns={9} count={12} />}
+          {loading && <PlaceholderRows columns={10} count={12} />}
           {rows.map((row) => {
             const sides = [
               { id: row.white_id, family: row.white_family_name, given: row.white_given_name, country: row.white_country, chance: row.white_chance, change: row.white_change, judogi: "bg-paper" },
@@ -116,7 +118,7 @@ export function ContestsBrowser({
                 <td className={CELL}>
                   {sides.map((s) => (
                     <div key={s.id} className="flex items-center gap-1.5 min-w-0 h-6">
-                      <span className={`w-[6px] h-4 shrink-0 border border-ink ${s.judogi}`} />
+                      <span className={`hidden sm:inline-block w-[6px] h-4 shrink-0 border border-ink ${s.judogi}`} />
                       <Flag ioc={s.country} />
                       <Link
                         href={`/athletes/${s.id}`}
@@ -133,6 +135,14 @@ export function ContestsBrowser({
                 </td>
                 <td className={`${CELL} hidden sm:table-cell text-muted`}>{row.weight?.replace("-", "−")}</td>
                 <td className={`${CELL} hidden sm:table-cell text-muted`}>{roundCode(row.round)}</td>
+                {/* on phones the tournament (its nation's flag and level) above the round */}
+                <td className={`${CELL} sm:hidden text-muted`}>
+                  <div className="flex items-center gap-1 h-6">
+                    <Flag ioc={byId.get(row.competition_id)?.country ?? null} />
+                    {competitionCode(byId.get(row.competition_id)?.rank ?? null, null)}
+                  </div>
+                  <div className="h-6 leading-6">{roundCode(row.round)}</div>
+                </td>
                 <td className={`${CELL} hidden lg:table-cell text-right`}>
                   {upset && (
                     <span className="text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border border-gain text-gain">

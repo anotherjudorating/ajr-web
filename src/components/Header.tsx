@@ -5,16 +5,19 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { Icon } from "@/components/Icon";
+import { SiteSearch } from "@/components/SiteSearch";
 
 export const SECTIONS = [
   { label: "Rankings", href: "/rankings" },
-  { label: "Explore", href: "/explore" },
+  { label: "Explore", href: "/explore", also: ["/tournaments", "/contests", "/countries"] },
   { label: "Head-to-head", href: "/head-to-head" },
   { label: "Records", href: "/records" },
 ];
 
+// A section's own pages and the pages its lists open (a tournament, a contest).
 function isActive(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(`${href}/`);
+  const section = SECTIONS.find((s) => s.href === href);
+  return [href, ...(section?.also ?? [])].some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
 // The header with the current section marked. The path is runtime data: on pages
@@ -58,24 +61,15 @@ export function Header({ pathname }: { pathname: string }) {
             </nav>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              type="button"
+            <Link
+              href="/explore/athletes"
               aria-label="Search"
-              className="hidden md:flex lg:hidden w-10 h-10 -mr-2 items-center justify-center text-muted"
+              className="hidden md:flex lg:hidden w-10 h-10 -mr-2 items-center justify-center text-muted hover:text-ink"
             >
               <Icon size={22} name="search" />
-            </button>
-            <div className="relative w-60 hidden lg:block">
-              <Icon size={18}
-                name="search"
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
-              />
-              <input
-                type="text"
-                autoComplete="off"
-                placeholder="Athletes, tournaments, nations"
-                className="w-full h-8 pl-8 pr-2.5 bg-paper border border-rule text-ink placeholder:text-muted text-[12px] font-normal rounded-none focus:outline-none focus:border-ink transition-colors"
-              />
+            </Link>
+            <div className="hidden lg:block">
+              <SiteSearch />
             </div>
           </div>
         </div>
@@ -83,19 +77,7 @@ export function Header({ pathname }: { pathname: string }) {
         <div className="flex md:hidden h-12 px-4 items-center justify-between w-full">
           {mobileSearch ? (
             <div className="flex items-center gap-2 w-full">
-              <div className="relative flex-1">
-                <Icon size={18}
-                  name="search"
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
-                />
-                <input
-                  autoFocus
-                  type="text"
-                  autoComplete="off"
-                  placeholder="Athletes, tournaments, nations"
-                  className="w-full h-8 pl-8 pr-2.5 bg-paper border border-ink rounded-none text-[12px] text-ink placeholder:text-muted focus:outline-none"
-                />
-              </div>
+              <SiteSearch wide autoFocus />
               <button
                 type="button"
                 aria-label="Close search"

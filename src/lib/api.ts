@@ -399,3 +399,267 @@ export async function nations(): Promise<NationRow[]> {
   cacheLife("data");
   return rpc<NationRow[]>("nations");
 }
+
+export type Competition = CompetitionRow & {
+  weights: string[]; // fought at the tournament, in the site's order
+};
+
+export async function competition(id: number): Promise<Competition | null> {
+  "use cache";
+  cacheLife("data");
+  const rows = await rpc<Competition[]>("competition", { competition_id: id });
+  return rows[0] ?? null;
+}
+
+export type CompetitionResult = {
+  athlete_id: number;
+  family_name: string | null;
+  given_name: string | null;
+  gender: string | null;
+  country: string | null;
+  weight: string;
+  // gold, silver, bronze, 5th, 7th, the round lost in, or null (pools, no single final)
+  result: string | null;
+  score_before: number; // before the first contest of the tournament
+  score_after: number; // after the last
+  contests: number;
+  wins: number;
+  contests_before: number; // rated contests before this tournament (0: a debut)
+};
+
+// Every athlete of every weight, medallists first.
+export async function competitionResults(id: number): Promise<CompetitionResult[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<CompetitionResult[]>("competition_results", { competition_id: id });
+}
+
+export type CompetitionContest = {
+  contest_id: number;
+  weight: string;
+  round: string | null;
+  winner_id: number;
+  white_id: number;
+  white_family_name: string | null;
+  white_given_name: string | null;
+  white_country: string | null;
+  white_chance: number;
+  white_score_before: number;
+  white_score_after: number;
+  blue_id: number;
+  blue_family_name: string | null;
+  blue_given_name: string | null;
+  blue_country: string | null;
+  blue_chance: number;
+  blue_score_before: number;
+  blue_score_after: number;
+  real_fight: boolean; // not a bye, not a 0:00 walkover
+};
+
+// The decided contests of a tournament (or of one weight), from the final back.
+export async function competitionContests(id: number, weight?: string): Promise<CompetitionContest[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<CompetitionContest[]>("competition_contests", {
+    competition_id: id,
+    ...(weight && { only_weight: weight }),
+  });
+}
+
+export type Country = {
+  country: string;
+  name: string;
+  athletes: number; // rated ever
+  place: number | null; // today, in the mixed nations ranking; null: not in it
+  place_men: number | null;
+  place_women: number | null;
+  rating: number | null; // mixed: the average score of its best athlete in every weight
+  place_90d: number | null; // the latest week 90 days back
+  rating_90d: number | null;
+  place_6m: number | null;
+  rating_6m: number | null;
+  top1: number | null; // its best score today
+  top8: number | null; // the average of its 8 best
+};
+
+export async function country(ioc: string): Promise<Country | null> {
+  "use cache";
+  cacheLife("data");
+  const rows = await rpc<Country[]>("country", { ioc });
+  return rows[0] ?? null;
+}
+
+export type CountryLeader = {
+  weight: string;
+  athlete_id: number;
+  family_name: string | null;
+  given_name: string | null;
+  place: number; // in the weight's table today
+  score: number;
+};
+
+// The nation's best athlete in every weight today, in the site's order.
+export async function countryLeaders(ioc: string): Promise<CountryLeader[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<CountryLeader[]>("country_leaders", { ioc });
+}
+
+export type CountryWeek = { day: string; place: number; rating: number };
+
+// Its mixed rating and place every week (Sundays), the earliest first.
+export async function countryHistory(ioc: string): Promise<CountryWeek[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<CountryWeek[]>("country_history", { ioc });
+}
+
+export type CountryTournament = {
+  id: number;
+  name: string;
+  rank_name: string | null;
+  date_from: string;
+  athletes: number;
+  gold: number;
+  silver: number;
+  bronze: number;
+};
+
+// The latest tournaments its athletes fought at, with their medals.
+export async function countryTournaments(ioc: string): Promise<CountryTournament[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<CountryTournament[]>("country_tournaments", { ioc, top: 5 });
+}
+
+export type HomeRow = {
+  weight: string;
+  place: number;
+  athlete_id: number;
+  family_name: string | null;
+  given_name: string | null;
+  country: string | null;
+  score: number;
+  places_up_90d: number | null; // null: not in the table 90 days ago
+  score_change_90d: number | null;
+};
+
+// The top 7 of every weight today, in the site's order.
+export async function homeLeaders(): Promise<HomeRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<HomeRow[]>("home_leaders", { top: 7 });
+}
+
+// Of the top 20 of every weight, the biggest score changes over 90 days.
+export async function biggestMovers(): Promise<HomeRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<HomeRow[]>("biggest_movers", { top: 5, pool: 20 });
+}
+
+export type RecentUpset = {
+  contest_id: number;
+  competition_id: number;
+  competition: string;
+  weight: string | null;
+  round: string | null;
+  fought_on: string;
+  winner_id: number;
+  winner_family_name: string | null;
+  winner_given_name: string | null;
+  winner_country: string | null;
+  winner_chance: number;
+  winner_score: number; // before the contest
+  loser_id: number;
+  loser_family_name: string | null;
+  loser_given_name: string | null;
+  loser_country: string | null;
+  loser_score: number;
+};
+
+// The least likely wins at the tournaments of the last 30 days.
+export async function recentUpsets(): Promise<RecentUpset[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<RecentUpset[]>("recent_upsets", { days: 30, top: 4 });
+}
+
+export type UpcomingRow = {
+  id: number;
+  name: string;
+  rank_name: string | null;
+  city: string | null;
+  country: string | null;
+  date_from: string;
+  date_to: string | null;
+};
+
+// The coming World Tour tournaments, the soonest first.
+export async function upcoming(): Promise<UpcomingRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<UpcomingRow[]>("upcoming", { top: 3 });
+}
+
+export type MedalChance = {
+  weight: string;
+  athlete_id: number;
+  family_name: string | null;
+  given_name: string | null;
+  country: string | null;
+  gold: number; // 0..1, from playing the draw with today's ratings
+  medal: number;
+};
+
+// At a tournament with a published draw: every athlete's chance of gold and of a
+// medal, the likeliest medallists of every weight first. Empty before the draw.
+export async function competitionChances(id: number): Promise<MedalChance[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<MedalChance[]>("competition_chances", { competition_id: id });
+}
+
+export type SearchHit = {
+  kind: "athlete" | "tournament" | "nation";
+  id: number | null;
+  name: string | null;
+  family_name: string | null;
+  given_name: string | null;
+  country: string | null;
+  gender: string | null;
+  weight: string | null;
+  date_from: string | null;
+  date_to: string | null;
+};
+
+// A search as the cache keys it: lower case, single spaces, at most 60 letters, so
+// "Abe " and "abe" are one question.
+export function searchKey(q: string): string {
+  return q.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 60);
+}
+
+// The header's search: up to 5 athletes, 3 tournaments and 3 nations.
+export async function search(q: string): Promise<SearchHit[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<SearchHit[]>("search", { q });
+}
+
+export type AthleteHit = {
+  id: number;
+  family_name: string | null;
+  given_name: string | null;
+  country: string | null;
+  gender: string | null;
+  weight: string | null;
+  place: number | null; // today, in the weight's table; null when not in one
+  score: number | null;
+};
+
+// The head-to-head's athlete boxes: every rated athlete, the weight's table first.
+export async function searchAthletes(q: string, weight: string | null): Promise<AthleteHit[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<AthleteHit[]>("search_athletes", { q, top: 6, ...(weight && { only_weight: weight }) });
+}

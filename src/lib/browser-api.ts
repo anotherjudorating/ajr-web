@@ -1,10 +1,20 @@
-// Reads from the browser (e.g. when a row is expanded): the same Data API, without
-// the server cache. Only public data with the publishable key.
+// Reads from the browser (a row expanded, a search typed): through the site's own
+// /api routes, which serve them from the server's cache (lib/api.ts), so the same
+// question asked by many reaches the database once in a while. Only the head-to-head
+// count, a write, goes to the Data API itself.
 
-import type { HistoryRow, LeaderboardRow } from "@/lib/api";
+import type { AthleteHit, HistoryRow, SearchHit } from "@/lib/api";
+
+export type { AthleteHit, SearchHit };
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
+
+async function get<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const response = await fetch(path, { signal });
+  if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
+  return response.json();
+}
 
 // Kept while the page is open: a row opened again shows its contests at once.
 const histories = new Map<number, HistoryRow[]>();
@@ -32,30 +42,14 @@ export function fetchAthleteHistory(athleteId: number): Promise<HistoryRow[]> {
   return request;
 }
 
-async function load(athleteId: number): Promise<HistoryRow[]> {
-  const response = await fetch(`${URL}/rest/v1/rpc/athlete_history?athlete_id=${athleteId}`, {
-    headers: { apikey: KEY },
-  });
-  if (!response.ok) throw new Error(`athlete_history: HTTP ${response.status}`);
-  return response.json();
+function load(athleteId: number): Promise<HistoryRow[]> {
+  return get(`/api/athlete-history?id=${athleteId}`);
 }
 
-// Today's table of a weight, for the head-to-head picker; kept while the page is open.
-const leaderboards = new Map<string, Promise<LeaderboardRow[]>>();
-
-export function fetchLeaderboard(weight: string): Promise<LeaderboardRow[]> {
-  let request = leaderboards.get(weight);
-  if (!request) {
-    request = fetch(`${URL}/rest/v1/rpc/leaderboard?weight=${encodeURIComponent(weight)}`, {
-      headers: { apikey: KEY },
-    }).then((response) => {
-      if (!response.ok) throw new Error(`leaderboard: HTTP ${response.status}`);
-      return response.json();
-    });
-    request.catch(() => leaderboards.delete(weight)); // try again next time
-    leaderboards.set(weight, request);
-  }
-  return request;
+// The head-to-head's athlete boxes: every rated athlete, the weight's table first.
+export function searchAthletes(q: string, weight: string | null, signal?: AbortSignal): Promise<AthleteHit[]> {
+  const query = new URLSearchParams({ q, ...(weight && { weight }) });
+  return get(`/api/search-athletes?${query}`, signal);
 }
 
 // One more opening of a head-to-head pair (orders the popular matchups). Fire and
@@ -66,4 +60,9 @@ export function countMatchup(a: number, b: number): void {
     headers: { apikey: KEY, "Content-Type": "application/json" },
     body: JSON.stringify({ a, b }),
   }).catch(() => {});
+}
+
+// The header's search: up to 5 athletes, 3 tournaments and 3 nations.
+export function searchSite(q: string, signal?: AbortSignal): Promise<SearchHit[]> {
+  return get(`/api/search?q=${encodeURIComponent(q)}`, signal);
 }
