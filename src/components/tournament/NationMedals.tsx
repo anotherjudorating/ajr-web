@@ -60,7 +60,7 @@ export function NationMedals({ medallists }: { medallists: CompetitionResult[] }
     <section>
       <div className={HEAD}>
         <h2 className={H2}>Medals by nation</h2>
-        <Link href="/rankings/teams" className={LINK}>
+        <Link href="/rankings/teams/mixed" className={LINK}>
           Nations ranking
         </Link>
       </div>

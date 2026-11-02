@@ -39,7 +39,12 @@ async function TournamentWeight({ params }: { params: PageProps<"/tournaments/[i
   return (
     <>
       <TournamentHeader competition={found} weight={weight} />
-      <WeightView results={results.filter((r) => r.weight === weight.api)} contests={contests} />
+      <WeightView
+        competition={found}
+        weight={weight}
+        results={results.filter((r) => r.weight === weight.api)}
+        contests={contests}
+      />
     </>
   );
 }
