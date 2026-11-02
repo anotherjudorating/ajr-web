@@ -48,7 +48,7 @@ async function Tournament({ params }: { params: PageProps<"/tournaments/[id]">["
   ]);
   if (!found) notFound();
   // "today" is the day of the latest rating run, as on the rankings
-  const state = stateOf(found, (updated ?? new Date().toISOString()).slice(0, 10));
+  const state = stateOf(found, (updated ?? "1970-01-01").slice(0, 10));
   const live = liveWeights(results);
   const drawn = chances.length > 0 || results.length > 0;
   return (

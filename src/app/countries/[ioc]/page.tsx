@@ -49,7 +49,7 @@ async function CountryContent({ params }: { params: PageProps<"/countries/[ioc]"
       leaders={leaders}
       history={history}
       tournaments={tournaments}
-      today={(updated ?? new Date().toISOString()).slice(0, 10)}
+      today={(updated ?? "1970-01-01").slice(0, 10)}
     />
   );
 }
