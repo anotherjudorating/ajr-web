@@ -8,7 +8,7 @@ import { Icon } from "@/components/Icon";
 
 export const SECTIONS = [
   { label: "Rankings", href: "/rankings" },
-  { label: "Explore", href: "/explore", also: ["/tournaments", "/contests"] },
+  { label: "Explore", href: "/explore", also: ["/tournaments", "/contests", "/countries"] },
   { label: "Head-to-head", href: "/head-to-head" },
   { label: "Records", href: "/records" },
 ];

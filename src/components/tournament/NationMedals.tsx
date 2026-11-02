@@ -83,7 +83,7 @@ export function NationMedals({ medallists }: { medallists: CompetitionResult[] }
           {rows.map((n, i) => (
             <RowLink
               key={n.country}
-              href={`/explore/athletes?country=${n.country}`}
+              href={`/countries/${n.country.toLowerCase()}`}
               className={`border-b border-rule hover:bg-panel/40 ${size === null && i >= 10 ? "hidden sm:table-row" : ""}`}
             >
               <td className={ROW_CELL}>

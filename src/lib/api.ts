@@ -424,6 +424,7 @@ export type CompetitionResult = {
   score_after: number; // after the last
   contests: number;
   wins: number;
+  debut: boolean; // their first rated contest was here: the score starts low
 };
 
 // Every athlete of every weight, medallists first.
@@ -463,4 +464,70 @@ export async function competitionContests(id: number, weight?: string): Promise<
     competition_id: id,
     ...(weight && { only_weight: weight }),
   });
+}
+
+export type Country = {
+  country: string;
+  name: string;
+  athletes: number; // rated ever
+  place: number | null; // today, in the mixed nations ranking; null: not in it
+  place_men: number | null;
+  place_women: number | null;
+  rating: number | null; // mixed: the average score of its best athlete in every weight
+  place_90d: number | null; // the latest week 90 days back
+  rating_90d: number | null;
+  place_6m: number | null;
+  rating_6m: number | null;
+  top1: number | null; // its best score today
+  top8: number | null; // the average of its 8 best
+};
+
+export async function country(ioc: string): Promise<Country | null> {
+  "use cache";
+  cacheLife("data");
+  const rows = await rpc<Country[]>("country", { ioc });
+  return rows[0] ?? null;
+}
+
+export type CountryLeader = {
+  weight: string;
+  athlete_id: number;
+  family_name: string | null;
+  given_name: string | null;
+  place: number; // in the weight's table today
+  score: number;
+};
+
+// The nation's best athlete in every weight today, in the site's order.
+export async function countryLeaders(ioc: string): Promise<CountryLeader[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<CountryLeader[]>("country_leaders", { ioc });
+}
+
+export type CountryWeek = { day: string; place: number; rating: number };
+
+// Its mixed rating and place every week (Sundays), the earliest first.
+export async function countryHistory(ioc: string): Promise<CountryWeek[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<CountryWeek[]>("country_history", { ioc });
+}
+
+export type CountryTournament = {
+  id: number;
+  name: string;
+  rank_name: string | null;
+  date_from: string;
+  athletes: number;
+  gold: number;
+  silver: number;
+  bronze: number;
+};
+
+// The latest tournaments its athletes fought at, with their medals.
+export async function countryTournaments(ioc: string): Promise<CountryTournament[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<CountryTournament[]>("country_tournaments", { ioc, top: 10 });
 }

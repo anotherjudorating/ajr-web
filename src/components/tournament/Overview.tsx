@@ -189,9 +189,13 @@ function Upsets({ contests, total, href }: { contests: CompetitionContest[]; tot
   );
 }
 
-// The five athletes whose score rose the most over the tournament.
+// The five athletes whose score rose the most over the tournament; not debuts,
+// whose score starts low.
 function Gains({ results, href }: { results: CompetitionResult[]; href: string }) {
-  const rows = [...results].sort((a, b) => gainOf(b) - gainOf(a)).slice(0, 5);
+  const rows = results
+    .filter((r) => !r.debut)
+    .sort((a, b) => gainOf(b) - gainOf(a))
+    .slice(0, 5);
   if (rows.length === 0) return null;
   return (
     <section>
