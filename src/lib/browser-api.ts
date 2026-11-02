@@ -1,7 +1,7 @@
 // Reads from the browser (e.g. when a row is expanded): the same Data API, without
 // the server cache. Only public data with the publishable key.
 
-import type { HistoryRow, LeaderboardRow } from "@/lib/api";
+import type { HistoryRow } from "@/lib/api";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
@@ -40,22 +40,23 @@ async function load(athleteId: number): Promise<HistoryRow[]> {
   return response.json();
 }
 
-// Today's table of a weight, for the head-to-head picker; kept while the page is open.
-const leaderboards = new Map<string, Promise<LeaderboardRow[]>>();
+export type AthleteHit = {
+  id: number;
+  family_name: string | null;
+  given_name: string | null;
+  country: string | null;
+  gender: string | null;
+  weight: string | null;
+  place: number | null; // today, in the weight's table; null when not in one
+  score: number | null;
+};
 
-export function fetchLeaderboard(weight: string): Promise<LeaderboardRow[]> {
-  let request = leaderboards.get(weight);
-  if (!request) {
-    request = fetch(`${URL}/rest/v1/rpc/leaderboard?weight=${encodeURIComponent(weight)}`, {
-      headers: { apikey: KEY },
-    }).then((response) => {
-      if (!response.ok) throw new Error(`leaderboard: HTTP ${response.status}`);
-      return response.json();
-    });
-    request.catch(() => leaderboards.delete(weight)); // try again next time
-    leaderboards.set(weight, request);
-  }
-  return request;
+// The head-to-head's athlete boxes: every rated athlete, the weight's table first.
+export async function searchAthletes(q: string, weight: string | null, signal?: AbortSignal): Promise<AthleteHit[]> {
+  const query = new URLSearchParams({ q, top: "6", ...(weight && { only_weight: weight }) });
+  const response = await fetch(`${URL}/rest/v1/rpc/search_athletes?${query}`, { headers: { apikey: KEY }, signal });
+  if (!response.ok) throw new Error(`search_athletes: HTTP ${response.status}`);
+  return response.json();
 }
 
 // One more opening of a head-to-head pair (orders the popular matchups). Fire and
