@@ -8,6 +8,7 @@ import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { HEAD_CELL, PlaceholderRows, ROW_CELL, saveCsv } from "@/components/rankings/TableParts";
 import type { CompetitionRow } from "@/lib/api";
+import { shortCompetition } from "@/lib/format";
 
 const LEVELS = [
   { value: "", label: "All levels" },
@@ -93,7 +94,8 @@ export function TournamentsBrowser({
         </div>
       </ToolbarRow>
 
-      <table className="w-full table-fixed border-collapse text-left">
+      {/* auto layout: the month rows span all columns, also the ones hidden on phones */}
+      <table className="w-full border-collapse text-left">
         <thead>
           <tr className="bg-panel border-b border-rule">
             <th className={`${HEAD_CELL} w-[72px] sm:w-32 text-left`}>Dates</th>
@@ -146,7 +148,10 @@ export function TournamentsBrowser({
                     <td className={`${ROW_CELL} font-semibold text-ink`}>
                       <div className="flex items-center gap-1.5 sm:block">
                         <Flag ioc={row.country} className="sm:!hidden" />
-                        <span className="hover:underline line-clamp-2 sm:line-clamp-none">{row.name}</span>
+                        <span className="hover:underline line-clamp-2 sm:hidden">
+                          {shortCompetition(row.name).replace(/\s\d{4}$/, "")}
+                        </span>
+                        <span className="hover:underline hidden sm:inline">{row.name}</span>
                       </div>
                     </td>
                     <td className={`${ROW_CELL} hidden sm:table-cell text-muted`}>

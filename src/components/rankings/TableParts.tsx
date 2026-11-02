@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
 import { Icon } from "@/components/Icon";
 import { pageNumbers } from "@/lib/pages";
 
@@ -215,11 +217,25 @@ function PageButton({
   );
 }
 
-// Grey bars of a row's height while a table loads.
+// Grey bars of a row's height while a table loads. Each spans the columns on screen
+// (counted from the table's header): in a fixed table, a colSpan over columns hidden
+// on phones would add empty ones and squeeze the rest.
 export function PlaceholderRows({ columns, count = 8 }: { columns: number; count?: number }) {
+  const first = useRef<HTMLTableRowElement>(null);
+  const [span, setSpan] = useState(columns);
+  useEffect(() => {
+    const measure = () => {
+      const header = first.current?.closest("table")?.querySelector("thead tr");
+      const cells = [...(header?.children ?? [])];
+      setSpan(cells.filter((cell) => getComputedStyle(cell).display !== "none").length || columns);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [columns]);
   return Array.from({ length: count }, (_, i) => (
-    <tr key={i} className="border-b border-rule h-10 sm:h-11">
-      <td colSpan={columns} className="px-3">
+    <tr key={i} ref={i === 0 ? first : undefined} className="border-b border-rule h-10 sm:h-11">
+      <td colSpan={span} className="px-3">
         <div className="h-3 bg-rule/60 animate-pulse" style={{ width: `${40 + ((i * 37) % 45)}%` }} />
       </td>
     </tr>
