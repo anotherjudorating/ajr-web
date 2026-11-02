@@ -8,6 +8,7 @@ import { Medal, type MedalKind } from "@/components/Medal";
 import { RowLink } from "@/components/RowLink";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
 import type { Country, CountryLeader, CountryTournament, CountryWeek } from "@/lib/api";
+import { CONTINENTS } from "@/lib/continents";
 import { shortCompetition, shortDate, shortName, signed } from "@/lib/format";
 import { MEN, type Weight, WOMEN } from "@/lib/weights";
 
@@ -53,6 +54,12 @@ export function CountryView({
             {c.name}
           </h1>
           <div className="mt-1.5 flex items-center text-[14px] text-muted">
+            {CONTINENTS[c.country] && (
+              <>
+                <span>{CONTINENTS[c.country]}</span>
+                {DIVIDER}
+              </>
+            )}
             <Link href={`/explore/athletes?country=${c.country}`} className="hover:text-ink hover:underline">
               {c.athletes} rated athletes
             </Link>
