@@ -26,7 +26,7 @@ const FALLBACK: [number, number][] = [
 
 // The most opened pairs, or the list above while there are few openings.
 export async function popularMatchups(): Promise<Matchup[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   const rows = await popularMatchupRows(FALLBACK.flat());
   return rows.map((row) => ({

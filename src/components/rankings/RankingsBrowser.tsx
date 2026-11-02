@@ -147,7 +147,7 @@ export function RankingsBrowser({
     });
 
   const setDay = (day: string) => {
-    router.push(day >= latest ? path : `${path}?date=${day}`);
+    router.push(day >= latest ? path : `${path}/${day}`);
   };
 
   return (
