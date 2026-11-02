@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { DEFAULT_WEIGHT } from "@/lib/weights";
-
+// The rankings open on the nations, men and women together.
 export default function Rankings() {
-  redirect(`/rankings/${DEFAULT_WEIGHT.slug}`);
+  redirect("/rankings/teams/mixed");
 }
