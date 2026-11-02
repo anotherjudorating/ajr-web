@@ -141,7 +141,7 @@ export function TournamentsBrowser({
                 )}
                 {!hidden && (
                   <tr
-                    onClick={() => router.push(`/explore/contests?year=${year}&tournament=${row.id}`)}
+                    onClick={() => router.push(`/tournaments/${row.id}`)}
                     className="border-b border-rule hover:bg-panel/40 cursor-pointer"
                   >
                     <td className={`${ROW_CELL} text-muted tabular-nums whitespace-nowrap`}>{dates(row)}</td>

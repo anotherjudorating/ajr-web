@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Flag } from "@/components/Flag";
+import { Medal } from "@/components/Medal";
 import type { RecordRow } from "@/lib/api";
 import { monthYear, shortCompetition, shortName, signed } from "@/lib/format";
 import type { RecordInfo } from "@/lib/records";
@@ -43,18 +44,6 @@ function period(row: RecordRow): string {
 }
 
 const medal = (row: RecordRow, kind: string) => Number(row.detail?.[kind] ?? 0);
-
-export function Medal({ kind }: { kind: "gold" | "silver" | "bronze" }) {
-  const [fill, ring] = { gold: ["#D4AF37", "#8A6A00"], silver: ["#B4BCC2", "#5F6B73"], bronze: ["#C2834F", "#8A4F2A"] }[kind];
-  return (
-    <svg className="w-4 h-5 shrink-0" viewBox="0 0 16 20" role="img" aria-label={kind}>
-      <path d="M3 0h4l2 7H5z" fill="#990F3D" />
-      <path d="M9 0h4l-2 7H7z" fill="#0F5499" />
-      <circle cx="8" cy="13" r="6" fill={fill} />
-      <circle cx="8" cy="13" r="4" fill="none" stroke={ring} strokeWidth="1" />
-    </svg>
-  );
-}
 
 function Name({ ioc, name, muted = false, flag = "" }: { ioc: string | null; name: string; muted?: boolean; flag?: string }) {
   return (

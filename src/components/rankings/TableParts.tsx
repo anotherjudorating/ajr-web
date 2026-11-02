@@ -117,6 +117,7 @@ export function Pagination({
   count,
   noun,
   pageSize,
+  sizes = PAGE_SIZES,
   onPageSize,
   page,
   pages,
@@ -128,6 +129,7 @@ export function Pagination({
   count: number; // rows on the page
   noun: string; // "athletes", "nations"
   pageSize: number;
+  sizes?: number[];
   onPageSize: (size: number) => void;
   page: number;
   pages: number;
@@ -142,7 +144,7 @@ export function Pagination({
           </div>
           <div className="flex items-center gap-2 text-[12px]">
             <span className="text-muted">Show</span>
-            {PAGE_SIZES.map((size) => (
+            {sizes.map((size) => (
               <button
                 key={size}
                 type="button"

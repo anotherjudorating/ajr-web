@@ -399,3 +399,68 @@ export async function nations(): Promise<NationRow[]> {
   cacheLife("data");
   return rpc<NationRow[]>("nations");
 }
+
+export type Competition = CompetitionRow & {
+  weights: string[]; // fought at the tournament, in the site's order
+};
+
+export async function competition(id: number): Promise<Competition | null> {
+  "use cache";
+  cacheLife("data");
+  const rows = await rpc<Competition[]>("competition", { competition_id: id });
+  return rows[0] ?? null;
+}
+
+export type CompetitionResult = {
+  athlete_id: number;
+  family_name: string | null;
+  given_name: string | null;
+  gender: string | null;
+  country: string | null;
+  weight: string;
+  // gold, silver, bronze, 5th, 7th, the round lost in, or null (pools, no single final)
+  result: string | null;
+  score_before: number; // before the first contest of the tournament
+  score_after: number; // after the last
+  contests: number;
+  wins: number;
+};
+
+// Every athlete of every weight, medallists first.
+export async function competitionResults(id: number): Promise<CompetitionResult[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<CompetitionResult[]>("competition_results", { competition_id: id });
+}
+
+export type CompetitionContest = {
+  contest_id: number;
+  weight: string;
+  round: string | null;
+  winner_id: number;
+  white_id: number;
+  white_family_name: string | null;
+  white_given_name: string | null;
+  white_country: string | null;
+  white_chance: number;
+  white_score_before: number;
+  white_score_after: number;
+  blue_id: number;
+  blue_family_name: string | null;
+  blue_given_name: string | null;
+  blue_country: string | null;
+  blue_chance: number;
+  blue_score_before: number;
+  blue_score_after: number;
+  real_fight: boolean; // not a bye, not a 0:00 walkover
+};
+
+// The decided contests of a tournament (or of one weight), from the final back.
+export async function competitionContests(id: number, weight?: string): Promise<CompetitionContest[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<CompetitionContest[]>("competition_contests", {
+    competition_id: id,
+    ...(weight && { only_weight: weight }),
+  });
+}

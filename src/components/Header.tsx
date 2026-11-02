@@ -8,13 +8,15 @@ import { Icon } from "@/components/Icon";
 
 export const SECTIONS = [
   { label: "Rankings", href: "/rankings" },
-  { label: "Explore", href: "/explore" },
+  { label: "Explore", href: "/explore", also: ["/tournaments", "/contests"] },
   { label: "Head-to-head", href: "/head-to-head" },
   { label: "Records", href: "/records" },
 ];
 
+// A section's own pages and the pages its lists open (a tournament, a contest).
 function isActive(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(`${href}/`);
+  const section = SECTIONS.find((s) => s.href === href);
+  return [href, ...(section?.also ?? [])].some((path) => pathname === path || pathname.startsWith(`${path}/`));
 }
 
 // The header with the current section marked. The path is runtime data: on pages
