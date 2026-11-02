@@ -529,5 +529,5 @@ export type CountryTournament = {
 export async function countryTournaments(ioc: string): Promise<CountryTournament[]> {
   "use cache";
   cacheLife("data");
-  return rpc<CountryTournament[]>("country_tournaments", { ioc, top: 10 });
+  return rpc<CountryTournament[]>("country_tournaments", { ioc, top: 5 });
 }

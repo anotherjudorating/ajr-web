@@ -124,6 +124,8 @@ export function CountryView({
       <div className="mt-14 lg:mt-16 grid grid-cols-1 lg:grid-cols-2 gap-y-14 lg:gap-x-24">
         <Leaders title="Men leaders" weights={MEN} leaders={leaders} href={`/explore/athletes?country=${c.country}&weight=men`} />
         <Leaders title="Women leaders" weights={WOMEN} leaders={leaders} href={`/explore/athletes?country=${c.country}&weight=women`} />
+      </div>
+      <div className="mt-14 lg:mt-16">
         <Tournaments rows={tournaments} />
       </div>
     </>
