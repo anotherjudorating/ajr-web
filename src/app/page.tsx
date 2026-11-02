@@ -23,7 +23,7 @@ const HEAD = "flex items-baseline justify-between border-b-2 border-ink pb-2";
 // every weight, the biggest movers, the month's upsets and the coming tournaments.
 export default function Home() {
   return (
-    <div className="w-full bg-paper pt-[25.25px] sm:pt-[41.25px] md:pt-[42.75px] pb-8">
+    <div className="w-full bg-paper pt-[37.25px] sm:pt-[47.25px] md:pt-[48.75px] pb-8">
       <section className="mb-10 md:mb-12 lg:mb-16">
         <h1 className="font-serif text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold tracking-[-0.015em] text-ink mb-2">
           Who is the strongest judoka right now?
@@ -42,8 +42,16 @@ export default function Home() {
   );
 }
 
+// The side lists are extras: one that fails is left empty rather than the page.
+const orNothing = <T,>(list: Promise<T[]>) => list.catch((error) => (console.error(error), [] as T[]));
+
 async function HomeLists() {
-  const [leaders, movers, upsets, coming] = await Promise.all([homeLeaders(), biggestMovers(), recentUpsets(), upcoming()]);
+  const [leaders, movers, upsets, coming] = await Promise.all([
+    homeLeaders(),
+    orNothing(biggestMovers()),
+    orNothing(recentUpsets()),
+    orNothing(upcoming()),
+  ]);
   return (
     <>
       <section className="mb-14 md:mb-16">
