@@ -3,10 +3,18 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { CountryView } from "@/components/country/CountryView";
-import { country, countryHistory, countryLeaders, countryTournaments, lastUpdate } from "@/lib/api";
+import { country, countryHistory, countryLeaders, countryTournaments, lastUpdate, nations } from "@/lib/api";
 
 // /countries/jpn: the IOC code, in lower case as in the prototype's links.
 const codeOf = (ioc: string) => (/^[a-z]{3}$/i.test(ioc) ? ioc.toUpperCase() : null);
+
+// One nation is built ahead (more would load the database at every deploy); any
+// other is built on its first visit, then served whole from the cache until the
+// data changes (ISR).
+export async function generateStaticParams() {
+  const all = await nations();
+  return [...all].sort((a, b) => b.athletes - a.athletes).slice(0, 1).map((n) => ({ ioc: n.country.toLowerCase() }));
+}
 
 export async function generateMetadata({ params }: PageProps<"/countries/[ioc]">): Promise<Metadata> {
   const code = codeOf((await params).ioc);

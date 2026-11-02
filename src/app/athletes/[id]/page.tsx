@@ -3,8 +3,16 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { AthleteView } from "@/components/athlete/AthleteView";
-import { athlete, athleteHistory, lastUpdate } from "@/lib/api";
+import { athlete, athleteHistory, homeLeaders, lastUpdate } from "@/lib/api";
 import { fullName } from "@/lib/format";
+
+// One athlete is built ahead (more would load the database at every deploy); any
+// other is built on its first visit, then served whole from the cache until the
+// data changes (ISR).
+export async function generateStaticParams() {
+  const leaders = await homeLeaders();
+  return leaders.slice(0, 1).map((row) => ({ id: String(row.athlete_id) }));
+}
 
 export async function generateMetadata({ params }: PageProps<"/athletes/[id]">): Promise<Metadata> {
   const id = Number((await params).id);

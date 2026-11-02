@@ -5,7 +5,15 @@ import { Suspense } from "react";
 
 import { liveWeights, Overview } from "@/components/tournament/Overview";
 import { stateOf, TournamentHeader, tournamentName, type TournamentState } from "@/components/tournament/TournamentHeader";
-import { type Competition, competition, competitionChances, competitionContests, competitionResults, lastUpdate } from "@/lib/api";
+import { type Competition, competition, competitionChances, competitionContests, competitionResults, competitions, lastUpdate } from "@/lib/api";
+
+// One tournament is built ahead (more would load the database at every deploy); any
+// other is built on its first visit, then served whole from the cache until the
+// data changes (ISR).
+export async function generateStaticParams() {
+  const latest = await competitions(null);
+  return latest.slice(0, 1).map((c) => ({ id: String(c.id) }));
+}
 
 export async function generateMetadata({ params }: PageProps<"/tournaments/[id]">): Promise<Metadata> {
   const id = Number((await params).id);

@@ -1,6 +1,9 @@
 // Reads the backend's `api` schema through the Supabase Data API (PostgREST).
 // Every function is cached for the "data" profile (see next.config.ts): the
-// backend job refreshes the database every 15 minutes.
+// backend job refreshes the database every 15 minutes. "use cache: remote": one
+// cache for all the server's instances (on Vercel its Runtime Cache); a plain
+// "use cache" lives in one instance's memory, which serverless keeps briefly, so
+// under load each new instance went to the database again.
 
 import { cacheLife } from "next/cache";
 
@@ -123,40 +126,40 @@ async function rpc<T>(name: string, params: Record<string, string | number> = {}
 
 // The whole table of a weight category (a few hundred rows), today's or on `day`.
 export async function leaderboard(weight: string, day?: string): Promise<LeaderboardRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<LeaderboardRow[]>("leaderboard", day ? { weight, day } : { weight });
 }
 
 export async function athlete(id: number): Promise<Athlete | null> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   const rows = await rpc<Athlete[]>("athlete", { athlete_id: id });
   return rows[0] ?? null;
 }
 
 export async function athleteHistory(id: number): Promise<HistoryRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<HistoryRow[]>("athlete_history", { athlete_id: id });
 }
 
 export async function lastUpdate(): Promise<string | null> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<string | null>("last_update");
 }
 
 // Pound for pound: the top 3 of every weight of a gender ("men" / "women").
 export async function p4p(gender: string, day?: string): Promise<P4PRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<P4PRow[]>("p4p", day ? { gender, day } : { gender });
 }
 
 // Nations, kind "men" / "women" / "mixed".
 export async function teams(kind: string, day?: string): Promise<TeamRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<TeamRow[]>("teams", day ? { kind, day } : { kind });
 }
@@ -186,14 +189,14 @@ export type RecordRow = {
 // The first `top` rows of every record, for men or women only when `gender` is set
 // (records of nations and tournaments stay as they are).
 export async function records(top: number, gender?: "male" | "female"): Promise<RecordRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<RecordRow[]>("records", gender ? { top, for_gender: gender } : { top });
 }
 
 // All rows of one record (up to 500).
 export async function record(name: string, gender?: "male" | "female", weight?: string): Promise<RecordRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<RecordRow[]>("record", {
     name,
@@ -221,7 +224,7 @@ export type PopularMatchupRow = {
 
 // The head-to-head pairs opened most, or `fallback` ([a1, b1, a2, b2, …]) while few were.
 export async function popularMatchupRows(fallback: number[]): Promise<PopularMatchupRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<PopularMatchupRow[]>("popular_matchups", { fallback: `{${fallback.join(",")}}` });
 }
@@ -273,7 +276,7 @@ export type ContestDetail = {
 };
 
 export async function contest(id: number): Promise<ContestDetail | null> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   const rows = await rpc<ContestDetail[]>("contest", { contest_id: id });
   return rows[0] ?? null;
@@ -295,7 +298,7 @@ export type CompetitionRow = {
 
 // Tournaments of a year (all with null), latest first.
 export async function competitions(year: number | null): Promise<CompetitionRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<CompetitionRow[]>("competitions", year ? { for_year: year } : {});
 }
@@ -336,7 +339,7 @@ export type ContestFilters = {
 
 // A page of a year's decided contests.
 export async function contestsPage(f: ContestFilters): Promise<ContestListRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<ContestListRow[]>("contests", {
     for_year: f.year,
@@ -379,7 +382,7 @@ export type AthleteFilters = {
 
 // A page of rated athletes.
 export async function athletesPage(f: AthleteFilters): Promise<AthleteListRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<AthleteListRow[]>("athletes", {
     top: f.top,
@@ -395,7 +398,7 @@ export async function athletesPage(f: AthleteFilters): Promise<AthleteListRow[]>
 export type NationRow = { country: string; name: string; athletes: number; active: number };
 
 export async function nations(): Promise<NationRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<NationRow[]>("nations");
 }
@@ -405,7 +408,7 @@ export type Competition = CompetitionRow & {
 };
 
 export async function competition(id: number): Promise<Competition | null> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   const rows = await rpc<Competition[]>("competition", { competition_id: id });
   return rows[0] ?? null;
@@ -429,7 +432,7 @@ export type CompetitionResult = {
 
 // Every athlete of every weight, medallists first.
 export async function competitionResults(id: number): Promise<CompetitionResult[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<CompetitionResult[]>("competition_results", { competition_id: id });
 }
@@ -458,7 +461,7 @@ export type CompetitionContest = {
 
 // The decided contests of a tournament (or of one weight), from the final back.
 export async function competitionContests(id: number, weight?: string): Promise<CompetitionContest[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<CompetitionContest[]>("competition_contests", {
     competition_id: id,
@@ -483,7 +486,7 @@ export type Country = {
 };
 
 export async function country(ioc: string): Promise<Country | null> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   const rows = await rpc<Country[]>("country", { ioc });
   return rows[0] ?? null;
@@ -500,7 +503,7 @@ export type CountryLeader = {
 
 // The nation's best athlete in every weight today, in the site's order.
 export async function countryLeaders(ioc: string): Promise<CountryLeader[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<CountryLeader[]>("country_leaders", { ioc });
 }
@@ -509,7 +512,7 @@ export type CountryWeek = { day: string; place: number; rating: number };
 
 // Its mixed rating and place every week (Sundays), the earliest first.
 export async function countryHistory(ioc: string): Promise<CountryWeek[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<CountryWeek[]>("country_history", { ioc });
 }
@@ -527,7 +530,7 @@ export type CountryTournament = {
 
 // The latest tournaments its athletes fought at, with their medals.
 export async function countryTournaments(ioc: string): Promise<CountryTournament[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<CountryTournament[]>("country_tournaments", { ioc, top: 5 });
 }
@@ -546,14 +549,14 @@ export type HomeRow = {
 
 // The top 7 of every weight today, in the site's order.
 export async function homeLeaders(): Promise<HomeRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<HomeRow[]>("home_leaders", { top: 7 });
 }
 
 // Of the top 20 of every weight, the biggest score changes over 90 days.
 export async function biggestMovers(): Promise<HomeRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<HomeRow[]>("biggest_movers", { top: 5, pool: 20 });
 }
@@ -580,7 +583,7 @@ export type RecentUpset = {
 
 // The least likely wins at the tournaments of the last 30 days.
 export async function recentUpsets(): Promise<RecentUpset[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<RecentUpset[]>("recent_upsets", { days: 30, top: 4 });
 }
@@ -597,7 +600,7 @@ export type UpcomingRow = {
 
 // The coming World Tour tournaments, the soonest first.
 export async function upcoming(): Promise<UpcomingRow[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<UpcomingRow[]>("upcoming", { top: 3 });
 }
@@ -615,7 +618,7 @@ export type MedalChance = {
 // At a tournament with a published draw: every athlete's chance of gold and of a
 // medal, the likeliest medallists of every weight first. Empty before the draw.
 export async function competitionChances(id: number): Promise<MedalChance[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<MedalChance[]>("competition_chances", { competition_id: id });
 }
@@ -641,7 +644,7 @@ export function searchKey(q: string): string {
 
 // The header's search: up to 5 athletes, 3 tournaments and 3 nations.
 export async function search(q: string): Promise<SearchHit[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<SearchHit[]>("search", { q });
 }
@@ -659,7 +662,7 @@ export type AthleteHit = {
 
 // The head-to-head's athlete boxes: every rated athlete, the weight's table first.
 export async function searchAthletes(q: string, weight: string | null): Promise<AthleteHit[]> {
-  "use cache";
+  "use cache: remote";
   cacheLife("data");
   return rpc<AthleteHit[]>("search_athletes", { q, top: 6, ...(weight && { only_weight: weight }) });
 }

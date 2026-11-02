@@ -85,7 +85,7 @@ export function TeamsBrowser({
         onCountry={reset(setCountry)}
         asOf={asOf}
         latest={latest}
-        onDay={(day) => router.push(day >= latest ? path : `${path}?date=${day}`)}
+        onDay={(day) => router.push(day >= latest ? path : `${path}/${day}`)}
         sorts={SORTS}
         sort={sort}
         onSort={setSort}

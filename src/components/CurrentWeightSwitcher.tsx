@@ -1,12 +1,13 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 import { WeightSwitcher } from "@/components/WeightSwitcher";
+import { splitDay } from "@/lib/day-path";
 
-// The switcher with the open table marked and its date kept. The URL is runtime
+// The switcher with the open table marked and its day kept. The URL is runtime
 // data: it streams in under a Suspense whose fallback is the switcher unmarked.
 export function CurrentWeightSwitcher() {
-  const date = useSearchParams().get("date");
-  return <WeightSwitcher current={usePathname()} query={date ? `?date=${date}` : ""} />;
+  const { table, day } = splitDay(usePathname());
+  return <WeightSwitcher current={table} query={day} />;
 }
