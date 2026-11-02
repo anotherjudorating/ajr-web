@@ -1,11 +1,10 @@
-// Reads from the browser (a row expanded, a search typed): through the site's own
-// /api routes, which serve them from the server's cache (lib/api.ts), so the same
-// question asked by many reaches the database once in a while. Only the head-to-head
-// count, a write, goes to the Data API itself.
+// Reads from the browser (a row expanded): through the site's own /api routes, which
+// serve them from the server's cache (lib/api.ts), so the same question asked by
+// many reaches the database once in a while. The searches search an index in the
+// browser (lib/search-index.ts). Only the head-to-head count, a write, goes to the
+// Data API itself.
 
-import type { AthleteHit, HistoryRow, SearchHit } from "@/lib/api";
-
-export type { AthleteHit, SearchHit };
+import type { HistoryRow } from "@/lib/api";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
@@ -46,12 +45,6 @@ function load(athleteId: number): Promise<HistoryRow[]> {
   return get(`/api/athlete-history?id=${athleteId}`);
 }
 
-// The head-to-head's athlete boxes: every rated athlete, the weight's table first.
-export function searchAthletes(q: string, weight: string | null, signal?: AbortSignal): Promise<AthleteHit[]> {
-  const query = new URLSearchParams({ q, ...(weight && { weight }) });
-  return get(`/api/search-athletes?${query}`, signal);
-}
-
 // One more opening of a head-to-head pair (orders the popular matchups). Fire and
 // forget: a failed count changes nothing on the page.
 export function countMatchup(a: number, b: number): void {
@@ -60,9 +53,4 @@ export function countMatchup(a: number, b: number): void {
     headers: { apikey: KEY, "Content-Type": "application/json" },
     body: JSON.stringify({ a, b }),
   }).catch(() => {});
-}
-
-// The header's search: up to 5 athletes, 3 tournaments and 3 nations.
-export function searchSite(q: string, signal?: AbortSignal): Promise<SearchHit[]> {
-  return get(`/api/search?q=${encodeURIComponent(q)}`, signal);
 }
