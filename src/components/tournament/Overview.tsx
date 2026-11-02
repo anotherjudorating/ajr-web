@@ -7,7 +7,7 @@ import { RowLink } from "@/components/RowLink";
 import { UpsetCard } from "@/components/UpsetCard";
 import { NationMedals } from "@/components/tournament/NationMedals";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
-import type { Competition, CompetitionContest, CompetitionResult } from "@/lib/api";
+import type { Competition, CompetitionContest, CompetitionResult, MedalChance } from "@/lib/api";
 import { shortName, signed } from "@/lib/format";
 import { MEN, type Weight, WEIGHTS, weightTitle, WOMEN } from "@/lib/weights";
 
@@ -18,24 +18,73 @@ const EXPERIENCE = 10; // rated contests before the tournament to count in the g
 export const isMedal = (r: CompetitionResult) => r.result !== null && MEDALS.includes(r.result);
 export const gainOf = (r: CompetitionResult) => r.score_after - r.score_before;
 
-// The tournament page: medallists of every weight, medals by nation, the biggest
-// upsets and the biggest gains, as in the prototype.
+// A weight's four lines on the overview: its medallists once it is over, until then
+// the four likeliest medallists of the draw.
+type Line = { athleteId: number; kind: MedalKind; predicted: boolean; country: string | null; name: string; value: React.ReactNode };
+const PLACES: MedalKind[] = ["gold", "silver", "bronze", "bronze"];
+
+// Weights fought at least once but not over: under way.
+export function liveWeights(results: CompetitionResult[]): Set<string> {
+  const over = new Set(results.filter((r) => r.result === "gold").map((r) => r.weight));
+  return new Set(results.map((r) => r.weight).filter((w) => !over.has(w)));
+}
+
+function linesOf(weight: Weight, medallists: CompetitionResult[], chances: MedalChance[]): Line[] {
+  const won = medallists.filter((r) => r.weight === weight.api);
+  if (won.some((r) => r.result === "gold")) {
+    return won.map((r) => ({
+      athleteId: r.athlete_id,
+      kind: r.result as MedalKind,
+      predicted: false,
+      country: r.country,
+      name: shortName(r.family_name, r.given_name),
+      value: <span className={`font-semibold ${gainOf(r) >= 0 ? "text-gain" : "text-drop"}`}>{signed(gainOf(r))}</span>,
+    }));
+  }
+  return chances
+    .filter((c) => c.weight === weight.api)
+    .slice(0, 4)
+    .map((c, i) => ({
+      athleteId: c.athlete_id,
+      kind: PLACES[i],
+      predicted: true,
+      country: c.country,
+      name: shortName(c.family_name, c.given_name),
+      value: <span className="font-semibold">{Math.round(c.medal * 100)}%</span>,
+    }));
+}
+
+// The tournament page: medallists of every weight (the likeliest ones for weights
+// not over yet), medals by nation, the biggest upsets and the biggest gains, as in
+// the prototype.
 export function Overview({
   competition: c,
   results,
   contests,
+  chances = [],
 }: {
   competition: Competition;
   results: CompetitionResult[];
   contests: CompetitionContest[];
+  chances?: MedalChance[];
 }) {
   const medallists = results.filter(isMedal);
+  const live = liveWeights(results);
   const year = c.date_from.slice(0, 4);
   return (
     <>
       <div className="mt-10 lg:mt-12 grid grid-cols-1 lg:grid-cols-2 gap-y-14 lg:gap-x-24">
-        <Medallists id={c.id} title="Men" weights={MEN} medallists={medallists} />
-        <Medallists id={c.id} title="Women" weights={WOMEN} medallists={medallists} />
+        {[
+          { title: "Men", weights: MEN },
+          { title: "Women", weights: WOMEN },
+        ].map(({ title, weights }) => (
+          <Medallists
+            key={title}
+            id={c.id}
+            title={title}
+            groups={weights.map((w) => ({ weight: w, live: live.has(w.api), lines: linesOf(w, medallists, chances) }))}
+          />
+        ))}
       </div>
       <div className="mt-14 lg:mt-16 grid grid-cols-1 lg:grid-cols-2 gap-y-14 lg:gap-x-24 items-start">
         <NationMedals medallists={medallists} />
@@ -52,22 +101,18 @@ export function Overview({
   );
 }
 
-// The four medallists of every weight: the weight and the chevron span their rows.
+// Four lines a weight: the weight (and Live) and the chevron span them.
 function Medallists({
   id,
   title,
-  weights,
-  medallists,
+  groups,
 }: {
   id: number;
   title: string;
-  weights: Weight[];
-  medallists: CompetitionResult[];
+  groups: { weight: Weight; live: boolean; lines: Line[] }[];
 }) {
-  const groups = weights
-    .map((w) => ({ weight: w, rows: medallists.filter((r) => r.weight === w.api) }))
-    .filter((g) => g.rows.length > 0);
-  if (groups.length === 0) return null;
+  const shown = groups.filter((g) => g.lines.length > 0);
+  if (shown.length === 0) return null;
   return (
     <section>
       <div className={HEAD}>
@@ -75,44 +120,42 @@ function Medallists({
       </div>
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <tbody>
-          {groups.map(({ weight, rows }) =>
-            rows.map((r, i) => {
-              const last = i === rows.length - 1;
-              return (
-                <RowLink
-                  key={`${weight.slug}-${r.athlete_id}`}
-                  href={`/tournaments/${id}/${weight.slug}`}
-                  className={last ? "border-b border-rule" : "border-b border-rule/50"}
-                >
-                  {i === 0 && (
-                    <td
-                      rowSpan={rows.length}
-                      className="h-10 py-2.5 px-2 sm:px-3 w-14 sm:w-16 whitespace-nowrap text-muted align-top border-b border-rule"
-                    >
-                      {weight.label}
-                    </td>
-                  )}
-                  <td className="h-9 py-0 px-2 sm:px-3 align-middle">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <Medal kind={r.result as MedalKind} className="w-3.5 h-4" />
-                      <Flag ioc={r.country} />
-                      <span className="truncate">{shortName(r.family_name, r.given_name)}</span>
-                    </div>
+          {shown.map(({ weight, live, lines }) =>
+            lines.map((line, i) => (
+              <RowLink
+                key={`${weight.slug}-${line.athleteId}`}
+                href={`/tournaments/${id}/${weight.slug}`}
+                className={i === lines.length - 1 ? "border-b border-rule" : "border-b border-rule/50"}
+              >
+                {i === 0 && (
+                  <td
+                    rowSpan={lines.length}
+                    className="h-10 py-2.5 px-2 sm:px-3 w-14 sm:w-16 whitespace-nowrap text-muted align-top border-b border-rule"
+                  >
+                    <span className="block">{weight.label}</span>
+                    {live && (
+                      <span className="flex items-center gap-1 text-[11px] leading-[14px] font-semibold text-claret">
+                        <span className="w-1.5 h-1.5 rounded-full bg-claret" />
+                        Live
+                      </span>
+                    )}
                   </td>
-                  <td className="h-9 py-0 px-2 sm:px-3 align-middle text-right whitespace-nowrap w-16">
-                    <span className={`font-semibold ${gainOf(r) >= 0 ? "text-gain" : "text-drop"}`}>{signed(gainOf(r))}</span>
+                )}
+                <td className="h-9 py-0 px-2 sm:px-3 align-middle">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Medal kind={line.kind} predicted={line.predicted} className="w-3.5 h-4" />
+                    <Flag ioc={line.country} />
+                    <span className="truncate">{line.name}</span>
+                  </div>
+                </td>
+                <td className="h-9 py-0 px-2 sm:px-3 align-middle text-right whitespace-nowrap w-16">{line.value}</td>
+                {i === 0 && (
+                  <td rowSpan={lines.length} className="w-6 py-0 align-middle pl-1 pr-0 text-right text-muted border-b border-rule">
+                    <Icon size={18} name="chevron_right" className="align-middle" />
                   </td>
-                  {i === 0 && (
-                    <td
-                      rowSpan={rows.length}
-                      className="w-6 py-0 align-middle pl-1 pr-0 text-right text-muted border-b border-rule"
-                    >
-                      <Icon size={18} name="chevron_right" className="align-middle" />
-                    </td>
-                  )}
-                </RowLink>
-              );
-            }),
+                )}
+              </RowLink>
+            )),
           )}
         </tbody>
       </table>

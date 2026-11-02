@@ -601,3 +601,21 @@ export async function upcoming(): Promise<UpcomingRow[]> {
   cacheLife("data");
   return rpc<UpcomingRow[]>("upcoming", { top: 3 });
 }
+
+export type MedalChance = {
+  weight: string;
+  athlete_id: number;
+  family_name: string | null;
+  given_name: string | null;
+  country: string | null;
+  gold: number; // 0..1, from playing the draw with today's ratings
+  medal: number;
+};
+
+// At a tournament with a published draw: every athlete's chance of gold and of a
+// medal, the likeliest medallists of every weight first. Empty before the draw.
+export async function competitionChances(id: number): Promise<MedalChance[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<MedalChance[]>("competition_chances", { competition_id: id });
+}

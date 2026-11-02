@@ -10,7 +10,7 @@ import { isUpset } from "@/components/rankings/Changes";
 import { Pagination } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
-import type { Competition, CompetitionContest, CompetitionResult } from "@/lib/api";
+import type { Competition, CompetitionContest, CompetitionResult, MedalChance } from "@/lib/api";
 import { roundCode, shortName, signed } from "@/lib/format";
 import type { Weight } from "@/lib/weights";
 
@@ -42,11 +42,13 @@ export function WeightView({
   weight,
   results,
   contests,
+  chances = [],
 }: {
   competition: Competition;
   weight: Weight;
   results: CompetitionResult[];
   contests: CompetitionContest[];
+  chances?: MedalChance[]; // of this weight, the likeliest medallists first
 }) {
   const rounds: { round: string; contests: CompetitionContest[] }[] = [];
   for (const c of contests) {
@@ -100,13 +102,56 @@ export function WeightView({
         </section>
       )}
 
-      <Results rows={table} places={places} contests={contests} />
+      {podium.length === 0 && chances.length > 0 && <Chances rows={chances} />}
 
-      <Contests
-        rounds={rounds}
-        href={`/explore/contests?year=${competition.date_from.slice(0, 4)}&tournament=${competition.id}&weight=${weight.slug}`}
-      />
+      {table.length > 0 && <Results rows={table} places={places} contests={contests} />}
+
+      {rounds.length > 0 && (
+        <Contests
+          rounds={rounds}
+          href={`/explore/contests?year=${competition.date_from.slice(0, 4)}&tournament=${competition.id}&weight=${weight.slug}`}
+        />
+      )}
     </>
+  );
+}
+
+// Before the weight is over: every athlete's chance of gold and of a medal.
+function Chances({ rows }: { rows: MedalChance[] }) {
+  const percent = (value: number) => (value > 0 && value < 0.005 ? "<1%" : `${Math.round(value * 100)}%`);
+  return (
+    <section className="mt-10 lg:mt-12">
+      <div className={HEAD}>
+        <h2 className={H2}>Medal chances</h2>
+      </div>
+      <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
+        <thead>
+          <tr className="bg-panel border-b border-rule">
+            <th className={`${HEAD_CELL} text-left`}>Athlete</th>
+            <th className={`${HEAD_CELL} text-right w-16 sm:w-20`}>Gold</th>
+            <th className={`${HEAD_CELL} text-right w-16 sm:w-20`}>Medal</th>
+            <th className="w-6 h-9 py-0 pl-1 pr-0" />
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <RowLink key={r.athlete_id} href={`/athletes/${r.athlete_id}`} className="border-b border-rule hover:bg-panel/40">
+              <td className={ROW_CELL}>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Flag ioc={r.country} />
+                  <span className="font-medium truncate">{shortName(r.family_name, r.given_name)}</span>
+                </div>
+              </td>
+              <td className={`${ROW_CELL} text-right text-muted`}>{percent(r.gold)}</td>
+              <td className={`${ROW_CELL} text-right font-semibold`}>{percent(r.medal)}</td>
+              <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
+                <Icon size={18} name="chevron_right" className="align-middle" />
+              </td>
+            </RowLink>
+          ))}
+        </tbody>
+      </table>
+    </section>
   );
 }
 
