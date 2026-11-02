@@ -67,3 +67,26 @@ export function countMatchup(a: number, b: number): void {
     body: JSON.stringify({ a, b }),
   }).catch(() => {});
 }
+
+export type SearchHit = {
+  kind: "athlete" | "tournament" | "nation";
+  id: number | null;
+  name: string | null;
+  family_name: string | null;
+  given_name: string | null;
+  country: string | null;
+  gender: string | null;
+  weight: string | null;
+  date_from: string | null;
+  date_to: string | null;
+};
+
+// The header's search: up to 5 athletes, 3 tournaments and 3 nations.
+export async function searchSite(q: string, signal?: AbortSignal): Promise<SearchHit[]> {
+  const response = await fetch(`${URL}/rest/v1/rpc/search?q=${encodeURIComponent(q)}`, {
+    headers: { apikey: KEY },
+    signal,
+  });
+  if (!response.ok) throw new Error(`search: HTTP ${response.status}`);
+  return response.json();
+}
