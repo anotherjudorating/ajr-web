@@ -20,7 +20,7 @@ export type RecordInfo = {
   methodology?: boolean; // link "How ratings work" after the description
   subject: "athlete" | "pair" | "tournament" | "nation"; // what one row is about
   noun: string; // "1–20 of 312 athletes"
-  weights?: boolean; // rows have a weight: the full list can be filtered by it
+  weights?: boolean; // rows have a weight (the athlete's main one where the record has none): the full list can be filtered by it
   ascending?: boolean; // the best value is the smallest (youngest, least likely)
   sortLabel: string; // "Sort: peak ↓"
 };
@@ -73,6 +73,7 @@ export const RECORDS: RecordInfo[] = [
     methodology: true,
     subject: "athlete",
     noun: "athletes",
+    weights: true,
     sortLabel: "weeks",
   },
   {
@@ -121,6 +122,7 @@ export const RECORDS: RecordInfo[] = [
     description: "Medals at IJF World Tour events and the Olympic Games, one row per athlete.",
     subject: "athlete",
     noun: "athletes",
+    weights: true,
     sortLabel: "medals",
   },
   {
@@ -131,6 +133,7 @@ export const RECORDS: RecordInfo[] = [
     description: "IJF World Tour events and Olympic Games in a row finished with a medal.",
     subject: "athlete",
     noun: "athletes",
+    weights: true,
     sortLabel: "in a row",
   },
   {
@@ -154,6 +157,7 @@ export const RECORDS: RecordInfo[] = [
     description: "Contests won in a row.",
     subject: "athlete",
     noun: "athletes",
+    weights: true,
     sortLabel: "wins",
   },
   {
@@ -178,6 +182,7 @@ export const RECORDS: RecordInfo[] = [
     methodology: true,
     subject: "athlete",
     noun: "athletes",
+    weights: true,
     sortLabel: "upset wins",
   },
   {
@@ -188,6 +193,7 @@ export const RECORDS: RecordInfo[] = [
     description: "The pairs of athletes who met most often.",
     subject: "pair",
     noun: "rivalries",
+    weights: true,
     sortLabel: "contests",
   },
   {
