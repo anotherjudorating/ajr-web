@@ -12,6 +12,7 @@ import { MEN, type Weight, WEIGHTS, weightTitle, WOMEN } from "@/lib/weights";
 
 const MEDALS: string[] = ["gold", "silver", "bronze"];
 const UPSET = 0.35; // a winner's chance of 35% or less, as everywhere on the site
+const EXPERIENCE = 10; // rated contests before the tournament to count in the gains
 
 export const isMedal = (r: CompetitionResult) => r.result !== null && MEDALS.includes(r.result);
 export const gainOf = (r: CompetitionResult) => r.score_after - r.score_before;
@@ -189,11 +190,12 @@ function Upsets({ contests, total, href }: { contests: CompetitionContest[]; tot
   );
 }
 
-// The five athletes whose score rose the most over the tournament; not debuts,
-// whose score starts low.
+// The five athletes whose score rose the most over the tournament, among those with
+// EXPERIENCE contests before it: the score of an athlete the rating knows little
+// about starts low and leaps.
 function Gains({ results, href }: { results: CompetitionResult[]; href: string }) {
   const rows = results
-    .filter((r) => !r.debut)
+    .filter((r) => r.contests_before >= EXPERIENCE)
     .sort((a, b) => gainOf(b) - gainOf(a))
     .slice(0, 5);
   if (rows.length === 0) return null;

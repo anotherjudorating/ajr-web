@@ -424,7 +424,7 @@ export type CompetitionResult = {
   score_after: number; // after the last
   contests: number;
   wins: number;
-  debut: boolean; // their first rated contest was here: the score starts low
+  contests_before: number; // rated contests before this tournament (0: a debut)
 };
 
 // Every athlete of every weight, medallists first.
