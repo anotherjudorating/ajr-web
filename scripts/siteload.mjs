@@ -48,7 +48,6 @@ async function pages() {
   const older = competitions.slice(10).map((c) => c.id);
   const old = (await rpc("competitions", { for_year: 2014 })).map((c) => c.id);
   const nations = (await rpc("nations")).map((n) => n.country.toLowerCase());
-  const letters = "abcdefghijklmnopqrstuvwxyz";
   return [
     { kind: "popular", share: 40, url: () => pick([
       "/", "/rankings/teams/mixed", "/rankings/teams/men", "/rankings/p4p/men", "/rankings/p4p/women",
@@ -57,9 +56,8 @@ async function pages() {
     { kind: "athlete, any", share: 10, url: () => `/athletes/${pick(tail)}` },
     { kind: "tournament", share: 7, url: () => `/tournaments/${pick(Math.random() < 0.6 ? recent : [...older, ...old])}` },
     { kind: "tournament weight", share: 3, url: () => `/tournaments/${pick(recent)}/${pick(WEIGHTS)}` },
-    { kind: "search", share: 10, url: () => `/api/search?q=${Math.random() < 0.5
-      ? pick(["abe", "kim", "tan", "heyd", "jap", "fra", "tokyo", "paris"])
-      : pick(letters) + pick(letters) + pick(letters)}` },
+    // the search runs in the browser: the server only hands out its index
+    { kind: "search", share: 10, url: () => "/api/search-index" },
     { kind: "nation", share: 5, url: () => `/countries/${Math.random() < 0.6 ? pick(nations.slice(0, 20)) : pick(nations)}` },
     { kind: "explore", share: 5, url: () => pick([
       `/explore/contests?year=${year}`, `/explore/contests?year=${year}&result=upsets&sort=chance-asc`,
