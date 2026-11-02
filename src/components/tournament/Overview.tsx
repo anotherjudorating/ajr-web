@@ -4,10 +4,11 @@ import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { RowLink } from "@/components/RowLink";
+import { UpsetCard } from "@/components/UpsetCard";
 import { NationMedals } from "@/components/tournament/NationMedals";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
 import type { Competition, CompetitionContest, CompetitionResult } from "@/lib/api";
-import { roundCode, shortName, signed } from "@/lib/format";
+import { shortName, signed } from "@/lib/format";
 import { MEN, type Weight, WEIGHTS, weightTitle, WOMEN } from "@/lib/weights";
 
 const MEDALS: string[] = ["gold", "silver", "bronze"];
@@ -134,7 +135,6 @@ function Upsets({ contests, total, href }: { contests: CompetitionContest[]; tot
     .sort((a, b) => a.winner.chance - b.winner.chance)
     .slice(0, 5);
   if (upsets.length === 0) return null;
-  const name = (family: string | null) => shortName(family, null);
   return (
     <section>
       <div className={HEAD}>
@@ -147,42 +147,14 @@ function Upsets({ contests, total, href }: { contests: CompetitionContest[]; tot
         {upsets.map(({ contest, winner, loser }) => {
           const weight = WEIGHTS.find((w) => w.api === contest.weight);
           return (
-            <Link
+            <UpsetCard
               key={contest.contest_id}
               href={`/contests/${contest.contest_id}`}
-              className="block hover:bg-panel/40 py-3 border-b border-rule transition-colors group"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Flag ioc={winner.country} />
-                  <span className="font-semibold text-ink truncate">{name(winner.family)}</span>
-                  <span className="text-gain font-semibold tabular-nums ml-2">{Math.round(winner.chance * 100)}%</span>
-                </div>
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-muted tabular-nums mr-2">{Math.round(loser.chance * 100)}%</span>
-                  <span className="text-muted truncate">{name(loser.family)}</span>
-                  <Flag ioc={loser.country} />
-                  <Icon
-                    size={18}
-                    name="chevron_right"
-                    className="text-muted ml-1 group-hover:translate-x-0.5 transition-transform"
-                  />
-                </div>
-              </div>
-              <div className="mt-1.5">
-                <div className="h-1.5 w-full flex border border-ink overflow-hidden bg-transparent">
-                  <div className="bg-gain h-full" style={{ width: `${Math.round(winner.chance * 100)}%` }} />
-                </div>
-              </div>
-              <div className="mt-1.5 text-[12px] text-muted flex items-center justify-between gap-3">
-                <span>
-                  {weight ? weightTitle(weight) : contest.weight}
-                  <span className="inline-block w-px h-3 bg-rule mx-2 align-middle" />
-                  {contest.round === "Final" ? "Final" : roundCode(contest.round)}
-                </span>
-                <span className="tabular-nums">Rating gap {Math.abs(loser.score - winner.score)} points</span>
-              </div>
-            </Link>
+              winner={winner}
+              loser={loser}
+              where={weight ? weightTitle(weight) : contest.weight}
+              round={contest.round}
+            />
           );
         })}
       </div>

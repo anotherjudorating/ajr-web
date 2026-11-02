@@ -32,6 +32,14 @@ export function shortDate(value: string): string {
   return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]}`;
 }
 
+// "7–8 Dec", "30 Nov–2 Dec", "5 Oct": a tournament's days
+export function dateRange(from: string, to: string | null): string {
+  const end = to ?? from;
+  if (end === from) return shortDate(from);
+  if (end.slice(0, 7) === from.slice(0, 7)) return `${new Date(from).getUTCDate()}–${shortDate(end)}`;
+  return `${shortDate(from)}–${shortDate(end)}`;
+}
+
 // +18 / −23 / 0, with a real minus sign
 export function signed(value: number): string {
   if (value > 0) return `+${value}`;

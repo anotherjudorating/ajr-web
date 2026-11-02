@@ -531,3 +531,73 @@ export async function countryTournaments(ioc: string): Promise<CountryTournament
   cacheLife("data");
   return rpc<CountryTournament[]>("country_tournaments", { ioc, top: 5 });
 }
+
+export type HomeRow = {
+  weight: string;
+  place: number;
+  athlete_id: number;
+  family_name: string | null;
+  given_name: string | null;
+  country: string | null;
+  score: number;
+  places_up_90d: number | null; // null: not in the table 90 days ago
+  score_change_90d: number | null;
+};
+
+// The top 7 of every weight today, in the site's order.
+export async function homeLeaders(): Promise<HomeRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<HomeRow[]>("home_leaders", { top: 7 });
+}
+
+// Of the top 20 of every weight, the biggest score changes over 90 days.
+export async function biggestMovers(): Promise<HomeRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<HomeRow[]>("biggest_movers", { top: 5, pool: 20 });
+}
+
+export type RecentUpset = {
+  contest_id: number;
+  competition_id: number;
+  competition: string;
+  weight: string | null;
+  round: string | null;
+  fought_on: string;
+  winner_id: number;
+  winner_family_name: string | null;
+  winner_given_name: string | null;
+  winner_country: string | null;
+  winner_chance: number;
+  winner_score: number; // before the contest
+  loser_id: number;
+  loser_family_name: string | null;
+  loser_given_name: string | null;
+  loser_country: string | null;
+  loser_score: number;
+};
+
+// The least likely wins at the tournaments of the last 30 days.
+export async function recentUpsets(): Promise<RecentUpset[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<RecentUpset[]>("recent_upsets", { days: 30, top: 4 });
+}
+
+export type UpcomingRow = {
+  id: number;
+  name: string;
+  rank_name: string | null;
+  city: string | null;
+  country: string | null;
+  date_from: string;
+  date_to: string | null;
+};
+
+// The coming World Tour tournaments, the soonest first.
+export async function upcoming(): Promise<UpcomingRow[]> {
+  "use cache";
+  cacheLife("data");
+  return rpc<UpcomingRow[]>("upcoming", { top: 3 });
+}
