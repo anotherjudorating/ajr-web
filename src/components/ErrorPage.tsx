@@ -1,14 +1,18 @@
+import type { ReactNode } from "react";
+
 // The prototype's 404 layout: a big word, a headline, a lead and a search box.
-// Used for "not found" and for sections that are not built yet.
+// Used for "not found", for errors and for sections that are not built yet.
 export function ErrorPage({
   big,
   title,
   lead,
+  action,
   compact = false,
 }: {
   big: string;
   title: string;
   lead: string;
+  action?: ReactNode; // under the lead, e.g. "Try again"
   compact?: boolean; // under other content (e.g. the weight switcher): less space above
 }) {
   return (
@@ -20,6 +24,7 @@ export function ErrorPage({
         {title}
       </h1>
       <p className="text-base sm:text-lg text-muted leading-relaxed mb-8">{lead}</p>
+      {action && <div className="mb-8">{action}</div>}
       <div className="w-full mb-8">
         <div className="relative w-full">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-muted">
