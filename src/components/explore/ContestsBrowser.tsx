@@ -60,7 +60,7 @@ export function ContestsBrowser({
           <Select
             value={filters.tournament ?? ""}
             onChange={(value) => set({ tournament: value })}
-            options={[{ value: "", label: "All tournaments" }, ...tournaments.map((t) => ({ value: String(t.id), label: shortCompetition(t.name) }))]}
+            options={[{ value: "", label: "All tournaments" }, ...tournamentOptions(tournaments)]}
             className="md:max-w-[180px]"
           />
           <Select
@@ -198,6 +198,13 @@ export function ContestsBrowser({
       />
     </>
   );
+}
+
+// The year's tournaments by name, so one is found by its first letters.
+function tournamentOptions(tournaments: { id: number; name: string }[]) {
+  return tournaments
+    .map((t) => ({ value: String(t.id), label: shortCompetition(t.name) }))
+    .sort((a, b) => a.label.localeCompare(b.label, "en", { sensitivity: "base" }));
 }
 
 function downloadCsv(rows: ContestListRow[], year: string) {
