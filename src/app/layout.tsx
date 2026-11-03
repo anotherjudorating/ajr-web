@@ -1,4 +1,6 @@
 import "flag-icons/css/flag-icons.min.css";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
 import { Suspense } from "react";
@@ -45,6 +47,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={null}>
           <Footer />
         </Suspense>
+        {/* Vercel's visits and real loading times, without cookies (on in the project's settings) */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
