@@ -27,7 +27,7 @@ const FALLBACK: [number, number][] = [
 // The most opened pairs, or the list above while there are few openings.
 export async function popularMatchups(): Promise<Matchup[]> {
   "use cache: remote";
-  cacheLife("data");
+  cacheLife("counts");
   const rows = await popularMatchupRows(FALLBACK.flat());
   return rows.map((row) => ({
     weight: WEIGHTS.find((w) => w.api === row.weight)?.slug ?? null,
