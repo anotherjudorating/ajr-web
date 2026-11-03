@@ -110,18 +110,29 @@ export type TeamRow = {
   weights_filled: number;
 };
 
+// The database is briefly overloaded while the rating job rebuilds its tables (a
+// minute or so): a statement timeout or a gateway error then is tried again, after
+// a pause, before a page (or a build) fails on it.
+const RETRIES = [1000, 3000]; // ms
+const TRANSIENT = (status: number, body: string) =>
+  status === 502 || status === 503 || status === 504 || body.includes('"57014"');
+
 async function rpc<T>(name: string, params: Record<string, string | number> = {}): Promise<T> {
   if (!URL || !KEY) {
     throw new Error("NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY must be set");
   }
   const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]));
-  const response = await fetch(`${URL}/rest/v1/rpc/${name}?${query}`, {
-    headers: { apikey: KEY },
-  });
-  if (!response.ok) {
-    throw new Error(`api.${name}: HTTP ${response.status} ${await response.text()}`);
+  for (let attempt = 0; ; attempt++) {
+    const response = await fetch(`${URL}/rest/v1/rpc/${name}?${query}`, {
+      headers: { apikey: KEY },
+    });
+    if (response.ok) return response.json() as Promise<T>;
+    const body = await response.text();
+    if (attempt >= RETRIES.length || !TRANSIENT(response.status, body)) {
+      throw new Error(`api.${name}: HTTP ${response.status} ${body}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, RETRIES[attempt]));
   }
-  return response.json() as Promise<T>;
 }
 
 // The whole table of a weight category (a few hundred rows), today's or on `day`.
