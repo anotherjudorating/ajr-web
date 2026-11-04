@@ -29,7 +29,7 @@ async function Contests({ searchParams }: { searchParams: PageProps<"/explore/co
       weight,
       competition: Number(filters.tournament) || undefined,
       upsets: filters.result === "upsets",
-      q: filters.q,
+      q: filters.q?.slice(0, 60), // a name, not a text
       sort: filters.sort,
       top: size,
       skip: (page - 1) * size,

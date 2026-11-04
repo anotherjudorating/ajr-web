@@ -16,8 +16,10 @@ function dataCache(): void {
   cacheTag(DATA_TAG);
 }
 
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+// Server-side only (no NEXT_PUBLIC_: never in the browser's bundle): the browser asks
+// the site, the site asks the database, so the Data API's key stays private.
+const URL = process.env.SUPABASE_URL;
+const KEY = process.env.SUPABASE_KEY;
 
 export type LeaderboardRow = {
   place: number;
@@ -119,16 +121,15 @@ export type TeamRow = {
   weights_filled: number;
 };
 
-// The database is briefly overloaded while the rating job rebuilds its tables (a
-// minute or so): a statement timeout or a gateway error then is tried again, after
-// a pause, before a page (or a build) fails on it.
-const RETRIES = [1000, 3000]; // ms
-const TRANSIENT = (status: number, body: string) =>
-  status === 502 || status === 503 || status === 504 || body.includes('"57014"');
+// A gateway error (the Data API restarting, a dropped connection) is tried once more
+// after a pause. A statement timeout is not: the database is then saturated, and the
+// same query again only adds to it.
+const RETRIES = [1000 + Math.random() * 1000]; // ms, spread so retries do not arrive together
+const TRANSIENT = (status: number) => status === 502 || status === 503 || status === 504;
 
 async function rpc<T>(name: string, params: Record<string, string | number> = {}): Promise<T> {
   if (!URL || !KEY) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY must be set");
+    throw new Error("SUPABASE_URL and SUPABASE_KEY must be set");
   }
   const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]));
   for (let attempt = 0; ; attempt++) {
@@ -137,7 +138,7 @@ async function rpc<T>(name: string, params: Record<string, string | number> = {}
     });
     if (response.ok) return response.json() as Promise<T>;
     const body = await response.text();
-    if (attempt >= RETRIES.length || !TRANSIENT(response.status, body)) {
+    if (attempt >= RETRIES.length || !TRANSIENT(response.status)) {
       throw new Error(`api.${name}: HTTP ${response.status} ${body}`);
     }
     await new Promise((resolve) => setTimeout(resolve, RETRIES[attempt]));
@@ -162,6 +163,17 @@ export async function athleteHistory(id: number): Promise<HistoryRow[]> {
   "use cache: remote";
   dataCache();
   return rpc<HistoryRow[]>("athlete_history", { athlete_id: id });
+}
+
+// One more opening of a head-to-head pair (a write: never cached).
+export async function countMatchup(a: number, b: number): Promise<void> {
+  if (!URL || !KEY) throw new Error("SUPABASE_URL and SUPABASE_KEY must be set");
+  const response = await fetch(`${URL}/rest/v1/rpc/count_matchup`, {
+    method: "POST",
+    headers: { apikey: KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ a, b }),
+  });
+  if (!response.ok) throw new Error(`api.count_matchup: HTTP ${response.status} ${await response.text()}`);
 }
 
 export async function lastUpdate(): Promise<string | null> {

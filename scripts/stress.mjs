@@ -7,7 +7,7 @@
 //   node scripts/stress.mjs --site http://localhost:3000 # and the pages
 //   node scripts/stress.mjs --waves 1,5                  # other concurrencies
 //
-// Reads NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY from the
+// Reads SUPABASE_URL / SUPABASE_KEY from the
 // environment or .env.local. Exits with 1 when any request failed.
 
 import { readFileSync } from "node:fs";
@@ -16,11 +16,11 @@ const args = Object.fromEntries(
   process.argv.slice(2).reduce((pairs, arg, i, all) => (arg.startsWith("--") ? [...pairs, [arg.slice(2), all[i + 1]]] : pairs), []),
 );
 const env = { ...readEnv(".env.local"), ...process.env };
-const API = env.NEXT_PUBLIC_SUPABASE_URL;
-const KEY = env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const API = env.SUPABASE_URL;
+const KEY = env.SUPABASE_KEY;
 const SITE = args.site;
 const WAVES = (args.waves ?? "1,5,15,30").split(",").map(Number);
-if (!API || !KEY) throw new Error("NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY must be set");
+if (!API || !KEY) throw new Error("SUPABASE_URL and SUPABASE_KEY must be set");
 
 const WEIGHTS = [
   ["men-60", "-60"], ["men-66", "-66"], ["men-73", "-73"], ["men-81", "-81"], ["men-90", "-90"],

@@ -17,8 +17,8 @@ const SITE = arg("site", "https://www.anotherjudorating.com").replace(/\/$/, "")
 const STEPS = arg("steps", "25,50,100,200").split(",").map(Number);
 const SECONDS = Number(arg("seconds", 45));
 const SKIP = arg("skip", "").split(",").filter(Boolean);
-const API = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc`;
-const KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const API = `${process.env.SUPABASE_URL}/rest/v1/rpc`;
+const KEY = process.env.SUPABASE_KEY;
 const TIMEOUT = 30_000;
 
 const WEIGHTS = ["men-60", "men-66", "men-73", "men-81", "men-90", "men-100", "men-plus-100",

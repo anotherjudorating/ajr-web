@@ -24,7 +24,7 @@ async function Athletes({ searchParams }: { searchParams: PageProps<"/explore/at
   const weight = WEIGHTS.find((w) => w.slug === filters.weight)?.api;
   const gender = filters.weight === "men" ? "male" : filters.weight === "women" ? "female" : undefined;
   const [rows, countries, updated] = await Promise.all([
-    athletesPage({ q: filters.q, country: filters.country, gender, weight, sort: filters.sort, top: size, skip: (page - 1) * size }),
+    athletesPage({ q: filters.q?.slice(0, 60), country: filters.country, gender, weight, sort: filters.sort, top: size, skip: (page - 1) * size }),
     nations(),
     lastUpdate(),
   ]);
