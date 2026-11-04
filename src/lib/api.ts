@@ -16,8 +16,10 @@ function dataCache(): void {
   cacheTag(DATA_TAG);
 }
 
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+// Server-side only (no NEXT_PUBLIC_: never in the browser's bundle): the browser asks
+// the site, the site asks the database, so the Data API's key stays private.
+const URL = process.env.SUPABASE_URL;
+const KEY = process.env.SUPABASE_KEY;
 
 export type LeaderboardRow = {
   place: number;
@@ -128,7 +130,7 @@ const TRANSIENT = (status: number, body: string) =>
 
 async function rpc<T>(name: string, params: Record<string, string | number> = {}): Promise<T> {
   if (!URL || !KEY) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY must be set");
+    throw new Error("SUPABASE_URL and SUPABASE_KEY must be set");
   }
   const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]));
   for (let attempt = 0; ; attempt++) {
@@ -162,6 +164,17 @@ export async function athleteHistory(id: number): Promise<HistoryRow[]> {
   "use cache: remote";
   dataCache();
   return rpc<HistoryRow[]>("athlete_history", { athlete_id: id });
+}
+
+// One more opening of a head-to-head pair (a write: never cached).
+export async function countMatchup(a: number, b: number): Promise<void> {
+  if (!URL || !KEY) throw new Error("SUPABASE_URL and SUPABASE_KEY must be set");
+  const response = await fetch(`${URL}/rest/v1/rpc/count_matchup`, {
+    method: "POST",
+    headers: { apikey: KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ a, b }),
+  });
+  if (!response.ok) throw new Error(`api.count_matchup: HTTP ${response.status} ${await response.text()}`);
 }
 
 export async function lastUpdate(): Promise<string | null> {
