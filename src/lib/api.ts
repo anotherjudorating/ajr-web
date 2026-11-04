@@ -121,12 +121,11 @@ export type TeamRow = {
   weights_filled: number;
 };
 
-// The database is briefly overloaded while the rating job rebuilds its tables (a
-// minute or so): a statement timeout or a gateway error then is tried again, after
-// a pause, before a page (or a build) fails on it.
-const RETRIES = [1000, 3000]; // ms
-const TRANSIENT = (status: number, body: string) =>
-  status === 502 || status === 503 || status === 504 || body.includes('"57014"');
+// A gateway error (the Data API restarting, a dropped connection) is tried once more
+// after a pause. A statement timeout is not: the database is then saturated, and the
+// same query again only adds to it.
+const RETRIES = [1000 + Math.random() * 1000]; // ms, spread so retries do not arrive together
+const TRANSIENT = (status: number) => status === 502 || status === 503 || status === 504;
 
 async function rpc<T>(name: string, params: Record<string, string | number> = {}): Promise<T> {
   if (!URL || !KEY) {
@@ -139,7 +138,7 @@ async function rpc<T>(name: string, params: Record<string, string | number> = {}
     });
     if (response.ok) return response.json() as Promise<T>;
     const body = await response.text();
-    if (attempt >= RETRIES.length || !TRANSIENT(response.status, body)) {
+    if (attempt >= RETRIES.length || !TRANSIENT(response.status)) {
       throw new Error(`api.${name}: HTTP ${response.status} ${body}`);
     }
     await new Promise((resolve) => setTimeout(resolve, RETRIES[attempt]));
