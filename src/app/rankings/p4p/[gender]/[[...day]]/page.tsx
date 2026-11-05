@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { BreadcrumbData } from "@/components/Breadcrumbs";
 import { P4PBrowser } from "@/components/rankings/P4PBrowser";
 import { p4p } from "@/lib/api";
 import { tableDay } from "@/lib/days";
@@ -43,6 +44,7 @@ async function Table({ params }: { params: PageProps<"/rankings/p4p/[gender]/[[.
   return (
     <>
       <h1 className="sr-only">{GENDERS[gender as Gender]} pound for pound — judo ranking</h1>
+      <BreadcrumbData trail={[{ href: "/rankings", label: "Rankings" }]} current={`${GENDERS[gender as Gender]} pound for pound`} />
       <P4PBrowser
         key={asOf}
         rows={rows}
