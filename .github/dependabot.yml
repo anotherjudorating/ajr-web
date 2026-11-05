@@ -9,3 +9,8 @@ updates:
     groups:
       npm:
         patterns: ["*"]
+    ignore:
+      # typescript-eslint (in eslint-config-next) supports TypeScript up to 6.0:
+      # lint fails on 7 (https://github.com/typescript-eslint/typescript-eslint/issues/10940)
+      - dependency-name: typescript
+        versions: [">= 6.1"]
