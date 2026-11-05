@@ -1,14 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // The data cache's version (lib/api.ts). It is in every "use cache" key instead of
-  // the build's id, so a deploy keeps the cached data and does not send every page
-  // to the database again; the data itself is refreshed when the backend says it
-  // changed (/api/revalidate). Raise it when a cached function's output changes
-  // shape without its name or arguments changing. (It also stands for the
-  // deployment in Next's version-skew checks; Vercel's skew protection, a paid
-  // feature, is not used.)
-  deploymentId: "data-1",
   cacheComponents: true,
   partialPrefetching: true,
   cacheLife: {
@@ -26,6 +18,15 @@ const nextConfig: NextConfig = {
       revalidate: 60 * 60,
       expire: 24 * 60 * 60,
     },
+  },
+  experimental: {
+    // "use cache" keys hold a hash of the cached function's code instead of the
+    // build's id, so a deploy keeps the cached data (lib/api.ts) and does not send
+    // every page to the database again; an entry is read anew when its function
+    // changes, and the data itself is refreshed when the backend says it changed
+    // (/api/revalidate). (A fixed deploymentId did the same, but Vercel wants a new
+    // one for each deploy.)
+    durableUseCacheEntries: true,
   },
   turbopack: {
     rules: {
