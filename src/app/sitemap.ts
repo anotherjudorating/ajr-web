@@ -16,9 +16,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   await connection();
   const [data, updated] = await Promise.all([sitemapData(), lastUpdate()]);
   const today = (updated ?? "1970-01-01").slice(0, 10);
+  // no date for the few pages of the 1960s judobase has: search engines reject
+  // dates that old, and they say nothing about a page anyway
   const page = (path: string, lastModified?: string | null) => ({
     url: `${SITE}${path}`,
-    ...(lastModified ? { lastModified } : {}),
+    ...(lastModified && lastModified >= "2000-01-01" ? { lastModified } : {}),
   });
   return [
     page("/", today),
