@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { ContestView } from "@/components/contest/ContestView";
-import { athleteHistory, contest } from "@/lib/api";
+import { contest, contestContext } from "@/lib/api";
 import { shortName } from "@/lib/format";
 
 export async function generateMetadata({ params }: PageProps<"/contests/[id]">): Promise<Metadata> {
@@ -29,9 +29,11 @@ async function Contest({ params }: { params: PageProps<"/contests/[id]">["params
   if (!Number.isInteger(id)) notFound();
   const found = await contest(id);
   if (!found || !found.white_id || !found.blue_id) notFound();
-  const [whiteHistory, blueHistory] = await Promise.all([
-    athleteHistory(found.white_id),
-    athleteHistory(found.blue_id),
-  ]);
-  return <ContestView contest={found} whiteHistory={whiteHistory} blueHistory={blueHistory} />;
+  // the parts of both histories the page shows (not the whole histories)
+  const rows = await contestContext(id);
+  const side = (name: "white" | "blue") => {
+    const seen = new Set<number>();
+    return rows.filter((row) => row.side === name && !seen.has(row.contest_id) && seen.add(row.contest_id));
+  };
+  return <ContestView contest={found} whiteHistory={side("white")} blueHistory={side("blue")} />;
 }
