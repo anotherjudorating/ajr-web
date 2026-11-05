@@ -122,10 +122,14 @@ export type TeamRow = {
 };
 
 // A gateway error (the Data API restarting, a dropped connection) is tried once more
-// after a pause. A statement timeout is not: the database is then saturated, and the
-// same query again only adds to it.
-const RETRIES = [1000 + Math.random() * 1000]; // ms, spread so retries do not arrive together
-const TRANSIENT = (status: number) => status === 502 || status === 503 || status === 504;
+// after a pause. A statement timeout is not, on the live site: the database is then
+// saturated, and the same query again only adds to it. While the site is built it is
+// (and more patiently): the build renders pages in parallel with an empty cache, a
+// cold query can pass the 3 s limit, and no visitor is waiting.
+const BUILDING = process.env.NEXT_PHASE === "phase-production-build";
+const RETRIES = BUILDING ? [2000, 5000, 10000] : [1000 + Math.random() * 1000]; // ms
+const TRANSIENT = (status: number, body: string) =>
+  status === 502 || status === 503 || status === 504 || (BUILDING && body.includes('"57014"'));
 
 async function rpc<T>(name: string, params: Record<string, string | number> = {}): Promise<T> {
   if (!URL || !KEY) {
@@ -138,7 +142,7 @@ async function rpc<T>(name: string, params: Record<string, string | number> = {}
     });
     if (response.ok) return response.json() as Promise<T>;
     const body = await response.text();
-    if (attempt >= RETRIES.length || !TRANSIENT(response.status)) {
+    if (attempt >= RETRIES.length || !TRANSIENT(response.status, body)) {
       throw new Error(`api.${name}: HTTP ${response.status} ${body}`);
     }
     await new Promise((resolve) => setTimeout(resolve, RETRIES[attempt]));
@@ -653,6 +657,20 @@ export async function competitionChances(id: number): Promise<MedalChance[]> {
   "use cache: remote";
   dataCache();
   return rpc<MedalChance[]>("competition_chances", { competition_id: id });
+}
+
+// What the sitemap lists (app/sitemap.ts), as api.sitemap sends it: every rated
+// athlete [id, last contest, rated contests], tournament [id, last day], nation [IOC].
+export type SitemapDocument = {
+  athletes: [number, string | null, number][];
+  tournaments: [number, string | null][];
+  nations: string[];
+};
+
+export async function sitemapData(): Promise<SitemapDocument> {
+  "use cache"; // about 0.6 MB: in the instance's memory, the sitemap route is cached too
+  dataCache();
+  return rpc<SitemapDocument>("sitemap");
 }
 
 // Every rated athlete, tournament and nation the search boxes look in, as one

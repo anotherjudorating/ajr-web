@@ -7,6 +7,9 @@ import { stateOf, TournamentHeader, tournamentName } from "@/components/tourname
 import { WeightView } from "@/components/tournament/WeightView";
 import { competition, competitionChances, competitionContests, competitionResults, competitions, lastUpdate } from "@/lib/api";
 import { WEIGHTS, weightBySlug, weightTitle } from "@/lib/weights";
+import { NOINDEX } from "@/lib/seo";
+
+const MAJOR = ["Olympic Games", "World Championships", "Masters", "Grand Slam"];
 
 // One weight of one tournament is built ahead (more would load the database at every
 // deploy); any other is built on its first visit, then served whole from the cache
@@ -23,7 +26,13 @@ export async function generateMetadata({ params }: PageProps<"/tournaments/[id]/
   const weight = weightBySlug(slug);
   const found = Number.isInteger(Number(id)) && weight ? await competition(Number(id)) : null;
   if (!found || !weight) return {};
-  return { title: `${weightTitle(weight)} — ${tournamentName(found.name)}` };
+  const name = tournamentName(found.name);
+  return {
+    title: `${weightTitle(weight)} at the ${name} — results`,
+    description: `${weightTitle(weight)} at the ${name}: medallists, every contest with win chances, rating changes.`,
+    // the weights of the events people search for; the others reachable, not indexed
+    ...(MAJOR.includes(found.rank_name ?? "") ? {} : { robots: NOINDEX }),
+  };
 }
 
 export default function TournamentWeightPage({ params }: PageProps<"/tournaments/[id]/[weight]">) {

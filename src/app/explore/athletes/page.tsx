@@ -5,8 +5,13 @@ import { AthletesBrowser } from "@/components/explore/AthletesBrowser";
 import { athletesPage, lastUpdate, nations } from "@/lib/api";
 import { plain } from "@/lib/params";
 import { WEIGHTS } from "@/lib/weights";
+import { hasParams, NOINDEX } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Athletes — every rated judoka" };
+// The list is indexed; a filtered or sorted state of it is not.
+export async function generateMetadata({ searchParams }: PageProps<"/explore/athletes">): Promise<Metadata> {
+  const metadata: Metadata = { title: "Athletes — every rated judoka" };
+  return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata;
+}
 
 export default function AthletesPage({ searchParams }: PageProps<"/explore/athletes">) {
   return (

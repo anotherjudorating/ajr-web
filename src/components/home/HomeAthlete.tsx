@@ -1,6 +1,4 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
@@ -21,13 +19,12 @@ export function HomeAthlete({
   nation?: boolean; // the flag and code in a column of their own from sm; before the name below
   score?: boolean;
 }) {
-  const router = useRouter();
   const places = placesText(row.places_up_90d);
   const change = changeText(row.score_change_90d);
   return (
-    <div
-      onClick={() => router.push(`/athletes/${row.athlete_id}`)}
-      role="link"
+    // a real link (not a click handler), so that crawlers find the athletes from here
+    <Link
+      href={`/athletes/${row.athlete_id}`}
       className="h-10 sm:h-11 py-0 border-b border-rule flex items-center justify-between text-[14px] hover:bg-panel/30 transition-colors px-1 cursor-pointer group"
     >
       <div className="min-w-0 pr-2 flex items-baseline">
@@ -47,6 +44,6 @@ export function HomeAthlete({
         {score && <span className="text-ink w-12 text-right">{row.score}</span>}
         <Icon size={18} name="chevron_right" className="text-muted align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform" />
       </div>
-    </div>
+    </Link>
   );
 }

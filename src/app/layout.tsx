@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import { Footer } from "@/components/Footer";
 import { CurrentHeader, Header } from "@/components/Header";
 import "./globals.css";
+import { SITE } from "@/lib/seo";
 
 const serif = Source_Serif_4({ variable: "--font-source-serif", subsets: ["latin"] });
 const sans = IBM_Plex_Sans({
@@ -17,9 +18,14 @@ const sans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE),
   title: { default: "Another Judo Rating", template: "%s | Another Judo Rating" },
   description:
     "Independent Glicko-2 judo rating: the strongest judoka in every weight, built from every IJF contest.",
+  // every page its own canonical address, without the query (filters, pairs)
+  alternates: { canonical: "./" },
+  openGraph: { siteName: "Another Judo Rating", type: "website", locale: "en_GB" },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

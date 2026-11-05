@@ -19,7 +19,12 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/countries/[ioc]">): Promise<Metadata> {
   const code = codeOf((await params).ioc);
   const found = code ? await country(code) : null;
-  return found ? { title: `${found.name} — judo nation rating` } : {};
+  return found
+    ? {
+        title: `${found.name} — judo nation rating, best athletes by weight`,
+        description: `${found.name} in judo: its place among the nations, its strongest judoka in every weight, its tournaments and medals, by Glicko-2 rating.`,
+      }
+    : {};
 }
 
 export default function CountryPage({ params }: PageProps<"/countries/[ioc]">) {

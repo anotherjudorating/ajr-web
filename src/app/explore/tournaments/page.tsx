@@ -3,8 +3,13 @@ import { Suspense } from "react";
 
 import { TournamentsBrowser } from "@/components/explore/TournamentsBrowser";
 import { competitions, lastUpdate } from "@/lib/api";
+import { hasParams, NOINDEX } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Tournaments — judo results and rating accuracy" };
+// The list is indexed; a filtered or sorted state of it is not.
+export async function generateMetadata({ searchParams }: PageProps<"/explore/tournaments">): Promise<Metadata> {
+  const metadata: Metadata = { title: "Tournaments — judo results and rating accuracy" };
+  return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata;
+}
 
 export default function TournamentsPage({ searchParams }: PageProps<"/explore/tournaments">) {
   return (

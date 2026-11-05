@@ -5,13 +5,15 @@ import { Suspense } from "react";
 import { ContestView } from "@/components/contest/ContestView";
 import { athleteHistory, contest } from "@/lib/api";
 import { shortName } from "@/lib/format";
+import { NOINDEX } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/contests/[id]">): Promise<Metadata> {
   const id = Number((await params).id);
   const found = Number.isInteger(id) ? await contest(id) : null;
   if (!found) return {};
   const names = `${shortName(found.white_family_name, found.white_given_name)} vs ${shortName(found.blue_family_name, found.blue_given_name)}`;
-  return { title: `${names} — ${found.round ?? "contest"}, ${found.competition}` };
+  // 230 thousand of them: closed to crawlers (robots.ts), not indexed
+  return { title: `${names} — ${found.round ?? "contest"}, ${found.competition}`, robots: NOINDEX };
 }
 
 export default function ContestPage({ params }: PageProps<"/contests/[id]">) {

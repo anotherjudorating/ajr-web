@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { TeamsBrowser } from "@/components/rankings/TeamsBrowser";
 import { teams } from "@/lib/api";
 import { tableDay } from "@/lib/days";
+import { NOINDEX } from "@/lib/seo";
 
 const KINDS = { men: "Men", women: "Women", mixed: "Mixed" } as const;
 type Kind = keyof typeof KINDS;
@@ -14,8 +15,12 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps<"/rankings/teams/[kind]/[[...day]]">): Promise<Metadata> {
-  const { kind } = await params;
-  return kind in KINDS ? { title: `${KINDS[kind as Kind]} nations — judo team ranking` } : {};
+  const { kind, day } = await params;
+  if (!(kind in KINDS)) return {};
+  const title = `${KINDS[kind as Kind]} nations — judo team ranking`;
+  return day?.length
+    ? { title: `${title} on ${day[0]}`, robots: NOINDEX } // a past day
+    : { title, description: "Which country has the strongest judo team: each nation rated by its best athlete in every weight." };
 }
 
 export default function Page({ params }: PageProps<"/rankings/teams/[kind]/[[...day]]">) {
