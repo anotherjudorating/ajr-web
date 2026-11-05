@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { P4PBrowser } from "@/components/rankings/P4PBrowser";
 import { p4p } from "@/lib/api";
 import { tableDay } from "@/lib/days";
+import { NOINDEX } from "@/lib/seo";
 
 const GENDERS = { men: "Men", women: "Women" } as const;
 type Gender = keyof typeof GENDERS;
@@ -14,8 +15,12 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps<"/rankings/p4p/[gender]/[[...day]]">): Promise<Metadata> {
-  const { gender } = await params;
-  return gender in GENDERS ? { title: `${GENDERS[gender as Gender]} pound for pound — judo ranking` } : {};
+  const { gender, day } = await params;
+  if (!(gender in GENDERS)) return {};
+  const title = `${GENDERS[gender as Gender]} pound for pound — judo ranking`;
+  return day?.length
+    ? { title: `${title} on ${day[0]}`, robots: NOINDEX } // a past day
+    : { title, description: `The best ${GENDERS[gender as Gender].toLowerCase()} judoka across all weights: how far each stands above the rest of their category, by Glicko-2 rating.` };
 }
 
 export default function Page({ params }: PageProps<"/rankings/p4p/[gender]/[[...day]]">) {

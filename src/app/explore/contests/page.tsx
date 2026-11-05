@@ -5,8 +5,13 @@ import { ContestsBrowser } from "@/components/explore/ContestsBrowser";
 import { competitions, contestsPage, lastUpdate } from "@/lib/api";
 import { plain } from "@/lib/params";
 import { WEIGHTS } from "@/lib/weights";
+import { hasParams, NOINDEX } from "@/lib/seo";
 
-export const metadata: Metadata = { title: "Contests — judo results with win chances" };
+// The list is indexed; a filtered or sorted state of it is not.
+export async function generateMetadata({ searchParams }: PageProps<"/explore/contests">): Promise<Metadata> {
+  const metadata: Metadata = { title: "Contests — judo results with win chances" };
+  return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata;
+}
 
 export default function ContestsPage({ searchParams }: PageProps<"/explore/contests">) {
   return (

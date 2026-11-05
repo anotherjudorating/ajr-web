@@ -655,6 +655,20 @@ export async function competitionChances(id: number): Promise<MedalChance[]> {
   return rpc<MedalChance[]>("competition_chances", { competition_id: id });
 }
 
+// What the sitemap lists (app/sitemap.ts), as api.sitemap sends it: every rated
+// athlete [id, last contest, rated contests], tournament [id, last day], nation [IOC].
+export type SitemapDocument = {
+  athletes: [number, string | null, number][];
+  tournaments: [number, string | null][];
+  nations: string[];
+};
+
+export async function sitemapData(): Promise<SitemapDocument> {
+  "use cache"; // about 0.6 MB: in the instance's memory, the sitemap route is cached too
+  dataCache();
+  return rpc<SitemapDocument>("sitemap");
+}
+
 // Every rated athlete, tournament and nation the search boxes look in, as one
 // document (lib/search-index.ts searches it in the browser).
 export async function searchIndex(): Promise<unknown> {

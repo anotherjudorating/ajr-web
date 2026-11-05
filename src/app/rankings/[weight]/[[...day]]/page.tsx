@@ -6,6 +6,8 @@ import { RankingsBrowser } from "@/components/rankings/RankingsBrowser";
 import { leaderboard } from "@/lib/api";
 import { tableDay } from "@/lib/days";
 import { WEIGHTS, weightBySlug, weightTitle } from "@/lib/weights";
+import { shortName } from "@/lib/format";
+import { NOINDEX } from "@/lib/seo";
 
 // All 14 tables are rendered ahead of time and refreshed with the data (next.config.ts).
 export function generateStaticParams() {
@@ -13,8 +15,17 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps<"/rankings/[weight]/[[...day]]">): Promise<Metadata> {
-  const weight = weightBySlug((await params).weight);
-  return weight ? { title: `${weightTitle(weight)} — judo world ranking` } : {};
+  const { weight: slug, day } = await params;
+  const weight = weightBySlug(slug);
+  if (!weight) return {};
+  const title = weightTitle(weight);
+  if (day?.length) return { title: `${title} judo ranking on ${day[0]}`, robots: NOINDEX }; // a past day
+  const top = (await leaderboard(weight.api)).slice(0, 3);
+  const leaders = top.map((r) => `${r.place}. ${shortName(r.family_name, r.given_name)} (${r.country ?? "—"})`).join(", ");
+  return {
+    title: `${title} — judo world ranking`,
+    description: `The strongest ${title} judoka by Glicko-2 rating: ${leaders}. Every IJF contest counts; compared with the IJF World Ranking List.`,
+  };
 }
 
 export default function RankingsPage({ params }: PageProps<"/rankings/[weight]/[[...day]]">) {

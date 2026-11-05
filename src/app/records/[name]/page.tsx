@@ -8,14 +8,17 @@ import { RecordBrowser } from "@/components/records/RecordBrowser";
 import { record } from "@/lib/api";
 import { GROUPS, recordBySlug, RECORDS } from "@/lib/records";
 import { weightBySlug } from "@/lib/weights";
+import { hasParams, NOINDEX } from "@/lib/seo";
 
 export function generateStaticParams() {
   return RECORDS.map((r) => ({ name: r.slug }));
 }
 
-export async function generateMetadata({ params }: PageProps<"/records/[name]">): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps<"/records/[name]">): Promise<Metadata> {
   const info = recordBySlug((await params).name);
-  return info ? { title: `${info.title} — judo records`, description: info.description } : {};
+  if (!info) return {};
+  const metadata = { title: `${info.title} — judo records`, description: `${info.description} Since 2009, from IJF contest data.` };
+  return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata; // a gender or weight picked
 }
 
 export default function RecordPage({ params, searchParams }: PageProps<"/records/[name]">) {

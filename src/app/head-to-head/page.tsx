@@ -7,11 +7,17 @@ import { athlete, athleteHistory, lastUpdate } from "@/lib/api";
 import type { Picked } from "@/lib/h2h";
 import { popularMatchups } from "@/lib/matchups";
 import { WEIGHTS } from "@/lib/weights";
+import { hasParams, NOINDEX } from "@/lib/seo";
 
-export const metadata: Metadata = {
+const METADATA: Metadata = {
   title: "Head-to-head — judo ratings compared",
   description: "Compare two judoka: ratings, win chance and every meeting.",
 };
+
+// The form is indexed; a pair (?a=&b=) is one of millions: not indexed.
+export async function generateMetadata({ searchParams }: PageProps<"/head-to-head">): Promise<Metadata> {
+  return hasParams(await searchParams) ? { ...METADATA, robots: NOINDEX } : METADATA;
+}
 
 export default function Page({ searchParams }: PageProps<"/head-to-head">) {
   return (
