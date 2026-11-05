@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { BreadcrumbData } from "@/components/Breadcrumbs";
 import { TeamsBrowser } from "@/components/rankings/TeamsBrowser";
 import { teams } from "@/lib/api";
 import { tableDay } from "@/lib/days";
@@ -43,6 +44,7 @@ async function Table({ params }: { params: PageProps<"/rankings/teams/[kind]/[[.
   return (
     <>
       <h1 className="sr-only">{KINDS[kind as Kind]} nations — judo team ranking</h1>
+      <BreadcrumbData trail={[{ href: "/rankings", label: "Rankings" }]} current={`${KINDS[kind as Kind]} nations`} />
       <TeamsBrowser
         key={asOf}
         rows={rows}

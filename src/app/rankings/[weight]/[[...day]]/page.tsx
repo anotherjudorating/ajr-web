@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { BreadcrumbData } from "@/components/Breadcrumbs";
 import { RankingsBrowser } from "@/components/rankings/RankingsBrowser";
 import { leaderboard } from "@/lib/api";
 import { tableDay } from "@/lib/days";
@@ -50,6 +51,7 @@ async function Rankings({ params }: { params: PageProps<"/rankings/[weight]/[[..
   return (
     <>
       <h1 className="sr-only">{weightTitle(weight)} — judo world ranking</h1>
+      <BreadcrumbData trail={[{ href: "/rankings", label: "Rankings" }]} current={weightTitle(weight)} />
       <RankingsBrowser
         key={`${path}-${asOf}`}
         rows={rows}
