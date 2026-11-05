@@ -17,7 +17,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/rankings/[weight]/[[...day]]">): Promise<Metadata> {
   const { weight: slug, day } = await params;
   const weight = weightBySlug(slug);
-  if (!weight) return {};
+  if (!weight) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const title = weightTitle(weight);
   if (day?.length) return { title: `${title} judo ranking on ${day[0]}`, robots: NOINDEX }; // a past day
   const top = (await leaderboard(weight.api)).slice(0, 3);

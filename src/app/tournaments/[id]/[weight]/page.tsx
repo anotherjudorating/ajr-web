@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps<"/tournaments/[id]/
   const { id, weight: slug } = await params;
   const weight = weightBySlug(slug);
   const found = Number.isInteger(Number(id)) && weight ? await competition(Number(id)) : null;
-  if (!found || !weight) return {};
+  if (!found || !weight || !found.weights.includes(weight.api)) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const name = tournamentName(found.name);
   return {
     title: `${weightTitle(weight)} at the ${name} — results`,
