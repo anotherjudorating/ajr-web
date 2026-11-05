@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { connection } from "next/server";
 
 import { lastUpdate, sitemapData } from "@/lib/api";
 import { indexableAthlete, SITE } from "@/lib/seo";
@@ -10,6 +11,9 @@ import { WEIGHTS } from "@/lib/weights";
 // every nation, the records and the lists. About 25 thousand URLs: one file (the
 // limit is 50 thousand).
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // built on its first request, not with the site (one more heavy read while the
+  // build renders every page at once); its data is cached until it changes
+  await connection();
   const [data, updated] = await Promise.all([sitemapData(), lastUpdate()]);
   const today = (updated ?? "1970-01-01").slice(0, 10);
   const page = (path: string, lastModified?: string | null) => ({
