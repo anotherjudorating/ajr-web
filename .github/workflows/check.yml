@@ -1,0 +1,27 @@
+name: Check
+
+# Every pull request and push to main: lint and type-check. No build: a build reads
+# the production database, and Vercel builds only main (vercel.json); a merge to main
+# makes a production deployment that is promoted by hand.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx next typegen # the route and cache-profile types tsc checks against
+      - run: npm run lint
+      - run: npx tsc --noEmit
