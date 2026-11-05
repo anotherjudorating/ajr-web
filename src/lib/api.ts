@@ -169,6 +169,17 @@ export async function athleteHistory(id: number): Promise<HistoryRow[]> {
   return rpc<HistoryRow[]>("athlete_history", { athlete_id: id });
 }
 
+// What the contest page shows of the two athletes' histories: each one's contests
+// at the tournament (road) and the white athlete's against the blue one (meeting),
+// rows as athleteHistory's. Far less than both whole histories.
+export type ContextRow = HistoryRow & { side: "white" | "blue"; kind: "road" | "meeting" };
+
+export async function contestContext(contestId: number): Promise<ContextRow[]> {
+  "use cache: remote";
+  dataCache();
+  return rpc<ContextRow[]>("contest_context", { contest_id: contestId });
+}
+
 // One more opening of a head-to-head pair (a write: never cached).
 export async function countMatchup(a: number, b: number): Promise<void> {
   if (!URL || !KEY) throw new Error("SUPABASE_URL and SUPABASE_KEY must be set");
