@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
+// Next's own list of the crawlers it sends the whole <head> before the page
+import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/html-bots";
 
 const nextConfig: NextConfig = {
+  // Googlebot too: it is otherwise sent the page's static shell with a 200 before the
+  // page finds its athlete (tournament, …) missing, and a missing one gets only a
+  // noindex; waiting for the head lets notFound() in generateMetadata send a 404.
+  htmlLimitedBots: new RegExp(`${HTML_LIMITED_BOT_UA_RE.source}|Googlebot`, "i"),
   cacheComponents: true,
   partialPrefetching: true,
   cacheLife: {

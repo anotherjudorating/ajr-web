@@ -16,7 +16,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps<"/rankings/p4p/[gender]/[[...day]]">): Promise<Metadata> {
   const { gender, day } = await params;
-  if (!(gender in GENDERS)) return {};
+  if (!(gender in GENDERS)) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const title = `${GENDERS[gender as Gender]} pound for pound — judo ranking`;
   return day?.length
     ? { title: `${title} on ${day[0]}`, robots: NOINDEX } // a past day

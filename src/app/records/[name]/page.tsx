@@ -16,7 +16,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params, searchParams }: PageProps<"/records/[name]">): Promise<Metadata> {
   const info = recordBySlug((await params).name);
-  if (!info) return {};
+  if (!info) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const metadata = { title: `${info.title} — judo records`, description: `${info.description} Since 2009, from IJF contest data.` };
   return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata; // a gender or weight picked
 }

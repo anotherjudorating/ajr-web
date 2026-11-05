@@ -21,7 +21,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/athletes/[id]">): Promise<Metadata> {
   const id = Number((await params).id);
   const [found, updated] = await Promise.all([Number.isInteger(id) ? athlete(id) : null, lastUpdate()]);
-  if (!found) return {};
+  if (!found || found.rating === null) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const name = fullName(found.family_name, found.given_name);
   const today = (updated ?? "1970-01-01").slice(0, 10);
   return {

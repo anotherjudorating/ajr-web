@@ -18,7 +18,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/tournaments/[id]">): Promise<Metadata> {
   const id = Number((await params).id);
   const found = Number.isInteger(id) ? await competition(id) : null;
-  if (!found) return {};
+  if (!found) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const name = tournamentName(found.name);
   return {
     title: `${name} — results and rating changes`,
