@@ -4,7 +4,7 @@ import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { RowLink } from "@/components/RowLink";
 import type { HistoryRow } from "@/lib/api";
-import { shortCompetition, shortName } from "@/lib/format";
+import { formatChance, shortCompetition, shortName } from "@/lib/format";
 
 const H2 = "font-serif text-[20px] sm:text-[24px] font-bold text-ink border-b-2 border-ink pb-2";
 const ROW = "h-10 sm:h-11 border-b border-rule hover:bg-panel/40";
@@ -45,7 +45,7 @@ function ContestList({ title, contests }: { title: string; contests: HistoryRow[
                 </div>
               </td>
               <td className={`px-2 text-muted hidden sm:table-cell ${CELL}`}>{shortCompetition(c.competition)}</td>
-              <td className={`px-2 text-right text-muted ${CELL}`}>{Math.round(c.win_probability * 100)}%</td>
+              <td className={`px-2 text-right text-muted ${CELL}`}>{formatChance(c.win_probability)}</td>
               <td
                 className={`px-2 text-right font-semibold text-ink tabular-nums ${CELL}`}
                 title="Opponent's rating before the contest"

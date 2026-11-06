@@ -8,7 +8,7 @@ import { UpsetCard } from "@/components/UpsetCard";
 import { NationMedals } from "@/components/tournament/NationMedals";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
 import type { Competition, CompetitionContest, CompetitionResult, MedalChance } from "@/lib/api";
-import { shortName, signed } from "@/lib/format";
+import { formatChance, shortName, signed } from "@/lib/format";
 import { MEN, type Weight, WEIGHTS, weightTitle, WOMEN } from "@/lib/weights";
 
 const MEDALS: string[] = ["gold", "silver", "bronze"];
@@ -50,7 +50,7 @@ function linesOf(weight: Weight, medallists: CompetitionResult[], chances: Medal
       predicted: true,
       country: c.country,
       name: shortName(c.family_name, c.given_name),
-      value: <span className="font-semibold">{Math.round(c.medal * 100)}%</span>,
+      value: <span className="font-semibold">{formatChance(c.medal)}</span>,
     }));
 }
 

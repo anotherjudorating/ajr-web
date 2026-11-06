@@ -11,7 +11,7 @@ import { Pagination } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
 import type { Competition, CompetitionContest, CompetitionResult, MedalChance } from "@/lib/api";
-import { roundCode, shortName, signed } from "@/lib/format";
+import { formatChance, roundCode, shortName, signed } from "@/lib/format";
 import type { Weight } from "@/lib/weights";
 
 const MEDALS: string[] = ["gold", "silver", "bronze"];
@@ -118,7 +118,7 @@ export function WeightView({
 
 // Before the weight is over: every athlete's chance of gold and of a medal.
 function Chances({ rows }: { rows: MedalChance[] }) {
-  const percent = (value: number) => (value > 0 && value < 0.005 ? "<1%" : `${Math.round(value * 100)}%`);
+  const percent = (value: number) => formatChance(value);
   return (
     <section className="mt-10 lg:mt-12">
       <div className={HEAD}>
@@ -210,7 +210,7 @@ function Results({ rows, places, contests }: { rows: CompetitionResult[]; places
                           <span className="truncate font-medium text-ink">{shortName(opponent.family, opponent.given)}</span>
                         </span>
                         <span className="w-24 shrink-0 text-right tabular-nums text-ink">
-                          {c.real_fight ? `${Math.round(self.chance * 100)}%` : ""}
+                          {c.real_fight ? formatChance(self.chance) : ""}
                         </span>
                         <span className={`w-6 shrink-0 text-center font-bold ${won ? "text-gain" : "text-drop"}`}>{won ? "W" : "L"}</span>
                         <span className={`w-10 shrink-0 text-right font-bold tabular-nums ${self.change >= 0 ? "text-gain" : "text-drop"}`}>
@@ -422,7 +422,7 @@ function ContestRow({ contest: c }: { contest: CompetitionContest }) {
           const color = upset ? (won ? "text-gain font-semibold" : "text-drop font-semibold") : "text-ink sm:text-muted";
           return (
             <div key={s.id} className="h-6 flex items-center justify-end">
-              <span className={color}>{c.real_fight ? `${Math.round(s.chance * 100)}%` : ""}</span>
+              <span className={color}>{c.real_fight ? formatChance(s.chance) : ""}</span>
             </div>
           );
         })}
