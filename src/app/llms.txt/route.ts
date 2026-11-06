@@ -35,7 +35,7 @@ ${firsts.join("\n")}
 - [Weight tables](${SITE}/rankings/men-73): the 14 senior categories, men -60 to +100 kg, women -48 to +78 kg (/rankings/<men|women>-<kg>, e.g. /rankings/women-57, /rankings/men-plus-100)
 - [Pound for pound](${SITE}/rankings/p4p/men): the best across weights (/rankings/p4p/men, /rankings/p4p/women)
 - [Nations](${SITE}/rankings/teams/mixed): countries by their best athlete in every weight
-- [Records](${SITE}/records): highest ratings, longest at #1, biggest upsets, streaks
+- [Records](${SITE}/records): highest ratings, longest at #1, biggest upsets, streaks, the greatest rivalries
 
 ## Pages
 

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecordBrowser } from "@/components/records/RecordBrowser";
 import { record } from "@/lib/api";
-import { GROUPS, recordBySlug, RECORDS } from "@/lib/records";
+import { GROUPS, MOVED, recordBySlug, RECORDS, recordView } from "@/lib/records";
 import { weightBySlug } from "@/lib/weights";
 import { hasParams, NOINDEX } from "@/lib/seo";
 
@@ -15,7 +15,9 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params, searchParams }: PageProps<"/records/[name]">): Promise<Metadata> {
-  const info = recordBySlug((await params).name);
+  const slug = (await params).name;
+  if (MOVED[slug]) permanentRedirect(`/records/${MOVED[slug]}`); // a record renamed or dropped
+  const info = recordBySlug(slug);
   if (!info) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const metadata = { title: `${info.title} — judo records`, description: `${info.description} Since 2009, from IJF contest data.` };
   return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata; // a gender or weight picked
@@ -32,8 +34,12 @@ export default function RecordPage({ params, searchParams }: PageProps<"/records
 }
 
 async function Record({ params, searchParams }: PageProps<"/records/[name]">) {
-  const info = recordBySlug((await params).name);
+  const slug = (await params).name;
+  if (MOVED[slug]) permanentRedirect(`/records/${MOVED[slug]}`);
+  const info = recordBySlug(slug);
   if (!info) notFound();
+  const query = await searchParams;
+  const view = recordView(info, typeof query.view === "string" ? query.view : undefined);
   const group = GROUPS.find((g) => g.key === info.group)!;
 
   return (
@@ -49,7 +55,7 @@ async function Record({ params, searchParams }: PageProps<"/records/[name]">) {
         {info.title}
       </h1>
       <p className="mt-1.5 text-[14px] text-muted max-w-3xl">
-        {info.description}
+        {view.description}
         {info.methodology && (
           <>
             {" "}
@@ -59,7 +65,7 @@ async function Record({ params, searchParams }: PageProps<"/records/[name]">) {
           </>
         )}
       </p>
-      <Suspense fallback={<RecordBrowser loading info={info} rows={[]} gender="" weight="" />}>
+      <Suspense fallback={<RecordBrowser loading info={info} view={view} rows={[]} gender="" weight="" />}>
         <Rows slug={info.slug} searchParams={searchParams} />
       </Suspense>
     </>
@@ -70,17 +76,19 @@ async function Record({ params, searchParams }: PageProps<"/records/[name]">) {
 async function Rows({ slug, searchParams }: { slug: string; searchParams: PageProps<"/records/[name]">["searchParams"] }) {
   const info = recordBySlug(slug)!;
   const query = await searchParams;
+  const view = recordView(info, typeof query.view === "string" ? query.view : undefined);
   const weight = typeof query.weight === "string" && info.weights ? weightBySlug(query.weight) : undefined;
   const gender = weight?.gender ?? (query.gender === "men" || query.gender === "women" ? query.gender : "");
   const rows = await record(
-    info.name,
+    view.name,
     gender === "men" ? "male" : gender === "women" ? "female" : undefined,
     weight?.api,
   );
   return (
     <RecordBrowser
-      key={`${gender}-${weight?.slug}`}
+      key={`${view.key}-${gender}-${weight?.slug}`}
       info={info}
+      view={view}
       rows={rows}
       gender={gender}
       weight={weight?.slug ?? ""}
