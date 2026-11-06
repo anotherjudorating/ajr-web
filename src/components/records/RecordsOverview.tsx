@@ -5,8 +5,9 @@ import { useState, useSyncExternalStore } from "react";
 
 import { recordColumns } from "@/components/records/columns";
 import { RecordTable } from "@/components/records/RecordTable";
+import { ViewSwitch } from "@/components/records/ViewSwitch";
 import type { RecordRow } from "@/lib/api";
-import { GROUPS, type Group, places, RECORDS, type RecordInfo } from "@/lib/records";
+import { GROUPS, type Group, places, RECORDS, type RecordInfo, recordView } from "@/lib/records";
 
 const SHOW = 5;
 const ACTIVE = "font-bold text-ink border-claret";
@@ -67,7 +68,7 @@ export function RecordsOverview({ rows }: { rows: Record<Gender, RecordRow[]> })
 
       <div className="mt-10 lg:mt-12 grid grid-cols-1 lg:grid-cols-2 gap-y-14 lg:gap-y-16 lg:gap-x-24 items-start">
         {RECORDS.filter((r) => r.group === group).map((info) => (
-          <TopList key={info.name} info={info} rows={shown.filter((r) => r.record === info.name).slice(0, SHOW)} />
+          <TopList key={info.name} info={info} rows={shown} />
         ))}
       </div>
     </>
@@ -85,6 +86,9 @@ export function RecordTitle({ info }: { info: RecordInfo }) {
 }
 
 function TopList({ info, rows }: { info: RecordInfo; rows: RecordRow[] }) {
+  const [key, setKey] = useState(recordView(info).key);
+  const view = recordView(info, key);
+  const top = rows.filter((r) => r.record === view.name).slice(0, SHOW);
   return (
     <section>
       <div className="flex items-end justify-between gap-3 border-b-2 border-ink pb-2">
@@ -92,13 +96,18 @@ function TopList({ info, rows }: { info: RecordInfo; rows: RecordRow[] }) {
           <RecordTitle info={info} />
         </h2>
         <Link
-          href={`/records/${info.slug}`}
+          href={`/records/${info.slug}${info.views && key !== info.views[0].key ? `?view=${key}` : ""}`}
           className="font-serif shrink-0 whitespace-nowrap text-[14px] font-semibold text-claret hover:underline"
         >
           Full list
         </Link>
       </div>
-      <RecordTable rows={rows} ranks={places(rows)} columns={recordColumns(info, false)} />
+      {info.views && (
+        <div className="mt-2">
+          <ViewSwitch info={info} current={key} onPick={setKey} />
+        </div>
+      )}
+      <RecordTable rows={top} ranks={places(top)} columns={recordColumns(info, false, view.name)} />
     </section>
   );
 }

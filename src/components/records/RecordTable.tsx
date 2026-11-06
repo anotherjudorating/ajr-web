@@ -1,8 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 import { Icon } from "@/components/Icon";
+import { RowLink } from "@/components/RowLink";
 import { type Column, rowLink, TD, TH } from "@/components/records/columns";
 import type { RecordRow } from "@/lib/api";
 
@@ -20,7 +19,6 @@ export function RecordTable({
   full?: boolean; // the full list: a wider place column
   children?: React.ReactNode; // extra rows (placeholders while loading)
 }) {
-  const router = useRouter();
   const rankWidth = full ? "w-10 sm:w-12" : "w-8 sm:w-10";
 
   return (
@@ -39,21 +37,28 @@ export function RecordTable({
       <tbody>
         {rows.map((row, i) => {
           const link = rowLink(row);
-          return (
-            <tr
-              key={`${row.place}-${row.athlete_id}-${row.opponent_id}-${row.country}-${row.competition_id}`}
-              onClick={link ? () => router.push(link) : undefined}
-              className={`border-b border-rule hover:bg-panel/40 ${link ? "cursor-pointer" : ""}`}
-            >
-              <td className={`${TD} text-right text-muted ${rankWidth}`}>{ranks[i]}</td>
-              {columns.map((c) => (
-                <td key={c.label} className={`${c.tall ? "px-2 sm:px-3 py-2 align-middle" : TD} ${c.td}`}>
-                  {c.cell(row)}
-                </td>
-              ))}
-              <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-                {link && <Icon size={18} name="chevron_right" className="align-middle" />}
+          const key = `${row.place}-${row.athlete_id}-${row.opponent_id}-${row.country}-${row.competition_id}`;
+          const cells = [
+            <td key="place" className={`${TD} text-right text-muted ${rankWidth}`}>
+              {ranks[i]}
+            </td>,
+            ...columns.map((c) => (
+              <td key={c.label} className={`${c.tall ? "px-2 sm:px-3 py-2 align-middle" : TD} ${c.td}`}>
+                {c.cell(row)}
               </td>
+            )),
+            <td key="chevron" className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
+              {link && <Icon size={18} name="chevron_right" className="align-middle" />}
+            </td>,
+          ];
+          // a real link in the row (RowLink): crawlers follow it, Cmd/middle click opens a tab
+          return link ? (
+            <RowLink key={key} href={link} className="border-b border-rule hover:bg-panel/40">
+              {cells}
+            </RowLink>
+          ) : (
+            <tr key={key} className="border-b border-rule">
+              {cells}
             </tr>
           );
         })}

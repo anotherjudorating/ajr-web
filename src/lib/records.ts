@@ -5,10 +5,20 @@ export const GROUPS = [
   { key: "ratings", title: "Ratings" },
   { key: "medals", title: "Medals" },
   { key: "contests", title: "Contests" },
+  { key: "rivalries", title: "Rivalries" },
   { key: "tournaments", title: "Tournaments" },
   { key: "nations", title: "Nations" },
 ] as const;
 export type Group = (typeof GROUPS)[number]["key"];
+
+// Another view of a record, switched to on its card and page (?view=in-a-row): a
+// record of the backend of its own, with its own places.
+export type RecordView = {
+  key: string; // in the URL; the first view is the record itself
+  label: string; // the switch, e.g. "In a row"
+  name: string; // the backend's record
+  description: string;
+};
 
 export type RecordInfo = {
   name: string;
@@ -23,7 +33,18 @@ export type RecordInfo = {
   weights?: boolean; // rows have a weight (the athlete's main one where the record has none): the full list can be filtered by it
   ascending?: boolean; // the best value is the smallest (youngest, least likely)
   sortLabel: string; // "Sort: peak ↓"
+  views?: RecordView[]; // the first is the record itself
 };
+
+// "Total" and "In a row" of the records of weeks.
+function weeks(name: string, total: string, run: string): RecordView[] {
+  return [
+    { key: "total", label: "Total", name, description: total },
+    { key: "in-a-row", label: "In a row", name: `${name}_run`, description: run },
+  ];
+}
+
+const STRENGTH = "min(1, max(0, (rating − 1900) / 600))";
 
 export const RECORDS: RecordInfo[] = [
   {
@@ -49,6 +70,59 @@ export const RECORDS: RecordInfo[] = [
     noun: "athletes",
     weights: true,
     sortLabel: "weeks",
+    views: weeks(
+      "longest_at_1",
+      "Weeks at #1 of a weight's ranking since 2011, in total; the weight is the one with the most weeks.",
+      "The longest unbroken run at #1 of a weight's ranking since 2011.",
+    ),
+  },
+  {
+    name: "most_weeks_in_top_10",
+    slug: "most-weeks-in-the-top-10",
+    group: "ratings",
+    title: "Most weeks in the top 10",
+    breakAfter: "Most weeks",
+    description: "Weeks in the top 10 of a weight's ranking since 2011, in total; a week counts once even if the athlete stood in two weights.",
+    methodology: true,
+    subject: "athlete",
+    noun: "athletes",
+    weights: true,
+    sortLabel: "weeks",
+    views: weeks(
+      "most_weeks_in_top_10",
+      "Weeks in the top 10 of a weight's ranking since 2011, in total; a week counts once even if the athlete stood in two weights.",
+      "The longest unbroken run in the top 10 of a weight's ranking since 2011.",
+    ),
+  },
+  {
+    name: "longest_p4p_1",
+    slug: "longest-at-p4p-1",
+    group: "ratings",
+    title: "Longest at P4P #1",
+    breakAfter: "Longest",
+    description: "Weeks at #1 of the pound-for-pound ranking, men and women apart, since 2011, in total.",
+    methodology: true,
+    subject: "athlete",
+    noun: "athletes",
+    weights: true,
+    sortLabel: "weeks",
+    views: weeks(
+      "longest_p4p_1",
+      "Weeks at #1 of the pound-for-pound ranking, men and women apart, since 2011, in total.",
+      "The longest unbroken run at #1 of the pound-for-pound ranking, men and women apart, since 2011.",
+    ),
+  },
+  {
+    name: "biggest_p4p_lead",
+    slug: "biggest-p4p-lead",
+    group: "ratings",
+    title: "Biggest P4P lead",
+    description: "The biggest lead of a pound-for-pound #1 over the 7 best others of their weight, since 2011.",
+    methodology: true,
+    subject: "athlete",
+    noun: "athletes",
+    weights: true,
+    sortLabel: "lead",
   },
   {
     name: "youngest_1",
@@ -64,56 +138,6 @@ export const RECORDS: RecordInfo[] = [
     sortLabel: "age",
   },
   {
-    name: "longest_p4p_1",
-    slug: "longest-at-p4p-1",
-    group: "ratings",
-    title: "Longest at P4P #1",
-    breakAfter: "Longest",
-    description: "Weeks at #1 of the pound-for-pound ranking, men and women apart, since 2011.",
-    methodology: true,
-    subject: "athlete",
-    noun: "athletes",
-    weights: true,
-    sortLabel: "weeks",
-  },
-  {
-    name: "youngest_p4p_1",
-    slug: "youngest-p4p-1",
-    group: "ratings",
-    title: "Youngest P4P #1",
-    description: "The youngest athletes to top the pound-for-pound ranking, since 2011. Age by the year of birth.",
-    methodology: true,
-    subject: "athlete",
-    noun: "athletes",
-    weights: true,
-    ascending: true,
-    sortLabel: "age",
-  },
-  {
-    name: "biggest_p4p_lead",
-    slug: "biggest-p4p-lead",
-    group: "ratings",
-    title: "Biggest P4P lead",
-    description: "The biggest lead of a pound-for-pound #1 over the 7 best others of their weight, since 2011.",
-    methodology: true,
-    subject: "athlete",
-    noun: "athletes",
-    weights: true,
-    sortLabel: "lead",
-  },
-  {
-    name: "biggest_tournament_gain",
-    slug: "biggest-gain-at-one-tournament",
-    group: "ratings",
-    title: "Biggest gain at one tournament",
-    description: "The most rating points an athlete gained at one tournament, since 2011.",
-    methodology: true,
-    subject: "athlete",
-    noun: "results",
-    weights: true,
-    sortLabel: "gain",
-  },
-  {
     name: "most_world_tour_medals",
     slug: "most-world-tour-medals",
     group: "medals",
@@ -124,6 +148,10 @@ export const RECORDS: RecordInfo[] = [
     noun: "athletes",
     weights: true,
     sortLabel: "medals",
+    views: [
+      { key: "total", label: "Total", name: "most_world_tour_medals", description: "Medals at IJF World Tour events and the Olympic Games, one row per athlete." },
+      { key: "gold", label: "Gold", name: "most_world_tour_golds", description: "Gold medals at IJF World Tour events and the Olympic Games, one row per athlete." },
+    ],
   },
   {
     name: "most_medals_in_row",
@@ -135,6 +163,10 @@ export const RECORDS: RecordInfo[] = [
     noun: "athletes",
     weights: true,
     sortLabel: "in a row",
+    views: [
+      { key: "total", label: "Total", name: "most_medals_in_row", description: "IJF World Tour events and Olympic Games in a row finished with a medal." },
+      { key: "gold", label: "Gold", name: "most_golds_in_row", description: "IJF World Tour events and Olympic Games won in a row." },
+    ],
   },
   {
     name: "youngest_grand_slam_medal",
@@ -148,6 +180,46 @@ export const RECORDS: RecordInfo[] = [
     weights: true,
     ascending: true,
     sortLabel: "age",
+    views: [
+      { key: "any", label: "Any medal", name: "youngest_grand_slam_medal", description: "The youngest athletes to win a Grand Slam medal. Age by the year of birth." },
+      { key: "gold", label: "Gold", name: "youngest_grand_slam_gold", description: "The youngest Grand Slam champions. Age by the year of birth." },
+    ],
+  },
+  {
+    name: "longest_medal_span",
+    slug: "longest-medal-span",
+    group: "medals",
+    title: "Longest medal span",
+    description: "The most years between an athlete's first and last medal at IJF World Tour events and the Olympic Games.",
+    subject: "athlete",
+    noun: "athletes",
+    weights: true,
+    sortLabel: "years",
+  },
+  {
+    name: "best_finals_record",
+    slug: "best-finals-record",
+    group: "medals",
+    title: "Best finals record",
+    description: "The share of finals won at IJF World Tour events and the Olympic Games, for athletes with at least 10 finals.",
+    subject: "athlete",
+    noun: "athletes",
+    weights: true,
+    sortLabel: "won",
+  },
+  {
+    name: "least_likely_champion",
+    slug: "least-likely-champion",
+    group: "medals",
+    title: "Least likely champion",
+    breakAfter: "Least likely",
+    description: "World Tour champions the rating gave the smallest chance of winning every contest of their bracket, since 2011.",
+    methodology: true,
+    subject: "athlete",
+    noun: "titles",
+    weights: true,
+    ascending: true,
+    sortLabel: "chance",
   },
   {
     name: "longest_winning_streak",
@@ -165,7 +237,7 @@ export const RECORDS: RecordInfo[] = [
     slug: "biggest-upsets",
     group: "contests",
     title: "Biggest upsets",
-    description: "Wins the rating gave the smallest chance before the contest, since 2011.",
+    description: "Wins over an athlete in the top 10 of the weight that the rating gave the smallest chance before the contest, since 2011.",
     methodology: true,
     subject: "pair",
     noun: "contests",
@@ -178,7 +250,7 @@ export const RECORDS: RecordInfo[] = [
     slug: "giant-killer",
     group: "contests",
     title: "Giant killer",
-    description: "Wins with a chance of 30% or less before the contest, since 2011.",
+    description: "Wins as the underdog over athletes in the top 10 of the weight at the time, since 2011.",
     methodology: true,
     subject: "athlete",
     noun: "athletes",
@@ -186,15 +258,61 @@ export const RECORDS: RecordInfo[] = [
     sortLabel: "upset wins",
   },
   {
-    name: "most_frequent_rivalry",
-    slug: "most-frequent-rivalry",
+    name: "golden_score_king",
+    slug: "golden-score-king",
     group: "contests",
-    title: "Most frequent rivalry",
-    description: "The pairs of athletes who met most often.",
+    title: "Golden score king",
+    description: "Contests won in golden score, since 2017.",
+    subject: "athlete",
+    noun: "athletes",
+    weights: true,
+    sortLabel: "golden score wins",
+  },
+  {
+    name: "longest_contest",
+    slug: "longest-contest",
+    group: "contests",
+    title: "Longest contest",
+    description: "The longest World Tour contests, golden score included.",
+    subject: "pair",
+    noun: "contests",
+    weights: true,
+    sortLabel: "time",
+  },
+  {
+    name: "greatest_rivalry",
+    slug: "greatest-rivalry",
+    group: "rivalries",
+    title: "Greatest rivalry",
+    description: `The pairs who met most often at the top and most evenly. Each meeting scores by the weaker athlete's rating before it, from 0 at 1900 to 1 at 2500; the sum is reduced for a one-sided head-to-head: Σ ${STRENGTH} × (1 − ((wins − losses) / meetings)²).`,
+    methodology: true,
     subject: "pair",
     noun: "rivalries",
     weights: true,
-    sortLabel: "contests",
+    sortLabel: "score",
+  },
+  {
+    name: "longest_rivalry",
+    slug: "longest-rivalry",
+    group: "rivalries",
+    title: "Longest rivalry",
+    description: "The most years between a pair's first and last meeting. A pair that met only a few times counts for less: years × (meetings − 1) / (meetings + 1).",
+    subject: "pair",
+    noun: "rivalries",
+    weights: true,
+    sortLabel: "score",
+  },
+  {
+    name: "nemesis",
+    slug: "nemesis",
+    group: "rivalries",
+    title: "Nemesis",
+    description: `Athletes who kept beating a stronger opponent. Only the meetings where the rating made them the underdog count: each adds the win beyond the chance they were given, more the stronger the opponent was: Σ (won − chance) × ${STRENGTH.replace("rating", "opponent's rating")}.`,
+    methodology: true,
+    subject: "pair",
+    noun: "pairs",
+    weights: true,
+    sortLabel: "score",
   },
   {
     name: "strongest_tournament",
@@ -230,18 +348,6 @@ export const RECORDS: RecordInfo[] = [
     sortLabel: "log loss",
   },
   {
-    name: "most_predictable_tournament",
-    slug: "most-predictable-tournament",
-    group: "tournaments",
-    title: "Most predictable tournament",
-    description: "Tournaments whose contests the rating predicted best (the lowest log loss), since 2011.",
-    methodology: true,
-    subject: "tournament",
-    noun: "tournaments",
-    ascending: true,
-    sortLabel: "log loss",
-  },
-  {
     name: "highest_team_rating",
     slug: "highest-team-rating",
     group: "nations",
@@ -251,18 +357,6 @@ export const RECORDS: RecordInfo[] = [
     subject: "nation",
     noun: "nations",
     sortLabel: "rating",
-  },
-  {
-    name: "longest_at_1_nation",
-    slug: "longest-at-1-nation",
-    group: "nations",
-    title: "Longest at #1 nation",
-    breakAfter: "Longest",
-    description: "Weeks at #1 of the team ranking since 2011, in total.",
-    methodology: true,
-    subject: "nation",
-    noun: "nations",
-    sortLabel: "weeks",
   },
   {
     name: "most_medals_nation",
@@ -275,17 +369,33 @@ export const RECORDS: RecordInfo[] = [
     sortLabel: "medals",
   },
   {
-    name: "most_medals_one_tournament",
-    slug: "most-medals-at-one-tournament",
+    name: "deepest_team",
+    slug: "deepest-team",
     group: "nations",
-    title: "Most medals at one tournament",
-    breakAfter: "Most medals",
-    description: "The most medals one nation won at one tournament.",
+    title: "Deepest team",
+    description: "The most athletes of one nation in the top 10 of their weights on one day, since 2011.",
+    methodology: true,
     subject: "nation",
-    noun: "results",
-    sortLabel: "medals",
+    noun: "nations",
+    sortLabel: "athletes",
   },
 ];
+
+// The full lists of records that were renamed or dropped: their old addresses lead here.
+export const MOVED: Record<string, string> = {
+  "most-frequent-rivalry": "greatest-rivalry",
+  "youngest-p4p-1": "youngest-1",
+  "biggest-gain-at-one-tournament": "least-likely-champion",
+  "most-predictable-tournament": "most-unpredictable-tournament",
+  "longest-at-1-nation": "highest-team-rating",
+  "most-medals-at-one-tournament": "most-medals",
+};
+
+// The view of a record picked by ?view= (the first when none or unknown).
+export function recordView(info: RecordInfo, key?: string): RecordView {
+  const views = info.views ?? [{ key: "", label: "", name: info.name, description: info.description }];
+  return views.find((v) => v.key === key) ?? views[0];
+}
 
 export function recordBySlug(slug: string): RecordInfo | undefined {
   return RECORDS.find((r) => r.slug === slug);

@@ -26,6 +26,8 @@ export const TD = "h-10 sm:h-11 py-0 align-middle px-2 sm:px-3";
 
 const int = (value: number) => Math.round(value);
 const percent = (share: number, digits = 0) => `${(share * 100).toFixed(digits)}%`;
+const mmss = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, "0")}`;
+const detail = (r: RecordRow, key: string) => Number(r.detail?.[key] ?? 0);
 const year = (day: string | null | undefined) => (day ? new Date(day).getUTCFullYear() : "");
 const month = (day: string | null) => (day ? monthYear(day) : "");
 
@@ -200,29 +202,55 @@ function upsets(): Column[] {
   ];
 }
 
+// Two athletes in one cell (winner and loser, a rivalry's pair, nemesis and victim).
+function pair(label: string, mutedSecond: boolean): Column {
+  return {
+    label,
+    th: "text-left",
+    td: "",
+    tall: true,
+    cell: (r) => (
+      <div className="flex flex-col gap-1">
+        <Name ioc={r.country} name={athleteName(r)} />
+        <Name ioc={null} name={opponentName(r)} muted={mutedSecond} />
+      </div>
+    ),
+    csv: (r) => `${athleteName(r)} / ${opponentName(r)}`,
+  };
+}
+
+// A pair's head-to-head: the first one's wins over the second one's.
+function score(): Column {
+  return {
+    label: "Wins",
+    th: "text-right w-14 sm:w-16",
+    td: "text-right",
+    tall: true,
+    cell: (r) => (
+      <div className="flex flex-col gap-1 font-semibold">
+        <span>{detail(r, "wins")}</span>
+        <span>{detail(r, "losses")}</span>
+      </div>
+    ),
+    csv: (r) => `${detail(r, "wins")}-${detail(r, "losses")}`,
+  };
+}
+
 // --- the columns of each record ---
 
-export function recordColumns(info: RecordInfo, full: boolean): Column[] {
-  switch (info.name) {
+// `name`: the record of the view shown (Total / In a row, …), the record itself by default.
+export function recordColumns(info: RecordInfo, full: boolean, name: string = info.name): Column[] {
+  switch (name) {
     case "highest_rating":
       return [...athlete(full), weight(full), value("Peak", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value)), side("Date", full ? "w-24" : "w-28", (r) => month(r.day))];
     case "longest_p4p_1":
       return [...athlete(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Until", full ? "w-24" : "w-28", (r) => month(r.day))];
-    case "youngest_p4p_1":
-      return [...athlete(full), weight(full), value("Age", "w-24 sm:w-28", (r) => <span className="font-semibold">{int(r.value)}</span>), side("Date", full ? "w-24" : "w-28", (r) => month(r.day))];
     case "biggest_p4p_lead":
       return [...athlete(full), weight(full), value("Lead", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => signed(int(r.value))), side("Date", full ? "w-24" : "w-28", (r) => month(r.day))];
     case "longest_at_1":
       return [...athlete(full), weight(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Until", full ? "w-24" : "w-28", (r) => month(r.day))];
     case "youngest_1":
       return [...athlete(full), weight(full), value("Age", "w-24 sm:w-28", (r) => <span className="font-semibold">{int(r.value)}</span>), side("Date", full ? "w-24" : "w-28", (r) => month(r.day))];
-    case "biggest_tournament_gain":
-      return [
-        ...athlete(full),
-        ...(full ? [weight(full)] : []),
-        side("Tournament", "w-40", competition, true),
-        value("+/−", "w-14 sm:w-16", (r) => signed(int(r.value)), "text-gain"),
-      ];
     case "most_world_tour_medals":
       return [...athlete(full), ...medals(false), value("Total", "w-14 sm:w-16", (r) => int(r.value))];
     case "most_medals_in_row":
@@ -232,7 +260,12 @@ export function recordColumns(info: RecordInfo, full: boolean): Column[] {
     case "longest_winning_streak":
       return [...athlete(full), value("Wins", "w-20 sm:w-24", (r) => int(r.value)), side("Period", "w-28", period)];
     case "giant_killer":
-      return [...athlete(full), value("Upset wins", "w-24 sm:w-28", (r) => int(r.value))];
+      return [
+        ...athlete(full),
+        side("Avg chance", "w-24", (r) => percent(detail(r, "avg_chance"), 1)),
+        side("Over #1", "w-20", (r) => String(detail(r, "over_no1"))),
+        value("Upset wins", "w-24 sm:w-28", (r) => int(r.value)),
+      ];
     case "biggest_upsets":
       return [
         {
@@ -243,7 +276,7 @@ export function recordColumns(info: RecordInfo, full: boolean): Column[] {
           cell: (r) => (
             <div className="flex flex-col gap-1">
               <Name ioc={r.country} name={athleteName(r)} />
-              <Name ioc={null} name={opponentName(r)} muted />
+              <Name ioc={null} name={`${opponentName(r)} · #${detail(r, "opponent_place")}`} muted />
             </div>
           ),
           csv: (r) => `${athleteName(r)} / ${opponentName(r)}`,
@@ -262,36 +295,6 @@ export function recordColumns(info: RecordInfo, full: boolean): Column[] {
           csv: (r) => r.competition ?? "",
         },
         value("Chance", "w-16 sm:w-20", (r) => percent(r.value, 3), "text-gain"),
-      ];
-    case "most_frequent_rivalry":
-      return [
-        {
-          label: "Athletes",
-          th: "text-left",
-          td: "",
-          tall: true,
-          cell: (r) => (
-            <div className="flex flex-col gap-1">
-              <Name ioc={r.country} name={athleteName(r)} />
-              <Name ioc={null} name={opponentName(r)} />
-            </div>
-          ),
-          csv: (r) => `${athleteName(r)} / ${opponentName(r)}`,
-        },
-        {
-          label: "Wins",
-          th: "text-right w-14 sm:w-16",
-          td: "text-right",
-          tall: true,
-          cell: (r) => (
-            <div className="flex flex-col gap-1 font-semibold">
-              <span>{medal(r, "wins")}</span>
-              <span>{medal(r, "losses")}</span>
-            </div>
-          ),
-          csv: (r) => `${medal(r, "wins")}-${medal(r, "losses")}`,
-        },
-        value("Contests", "w-20 sm:w-24", (r) => int(r.value)),
       ];
     case "strongest_tournament":
       return [
@@ -315,7 +318,6 @@ export function recordColumns(info: RecordInfo, full: boolean): Column[] {
         { ...value("Nations", "w-20 sm:w-24", (r) => int(r.value)), title: "Nations with at least one medal" },
       ];
     case "most_unpredictable_tournament":
-    case "most_predictable_tournament":
       return [tournament(), ...(full ? [side("Date", "w-24", (r) => month(r.day))] : []), ...upsets()];
     case "highest_team_rating":
       return [
@@ -323,31 +325,82 @@ export function recordColumns(info: RecordInfo, full: boolean): Column[] {
         { label: "Date", th: "text-left", td: "text-muted whitespace-nowrap", cell: (r) => <div className="truncate">{month(r.day)}</div>, csv: (r) => month(r.day) },
         value("Rating", "w-20 sm:w-24", (r) => int(r.value)),
       ];
-    case "longest_at_1_nation":
-      return [
-        nation("w-20 sm:w-24"),
-        { label: "Until", th: "text-left", td: "text-muted whitespace-nowrap", cell: (r) => <div className="truncate">{month(r.day)}</div>, csv: (r) => month(r.day) },
-        value("Weeks", "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")),
-      ];
     case "most_medals_nation":
       return [nation(), ...medals(true), value("Total", "w-14 sm:w-16", (r) => int(r.value))];
-    case "most_medals_one_tournament":
+    case "longest_at_1_run":
+    case "longest_p4p_1_run":
+    case "most_weeks_in_top_10_run":
+      return [...athlete(full), weight(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Period", "w-28", period)];
+    case "most_weeks_in_top_10":
+      return [...athlete(full), weight(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Until", full ? "w-24" : "w-28", (r) => month(r.day))];
+    case "most_world_tour_golds":
+      return [...athlete(full), ...medals(false), value("Golds", "w-14 sm:w-16", (r) => int(r.value))];
+    case "most_golds_in_row":
+      return [...athlete(full), value("In a row", "w-20 sm:w-24", (r) => int(r.value)), side("Period", "w-28", period)];
+    case "youngest_grand_slam_gold":
+      return [...athlete(full), weight(full), value("Age", "w-24 sm:w-28", (r) => <span className="font-semibold">{int(r.value)}</span>), side("Tournament", "w-36", competition)];
+    case "longest_medal_span":
+      return [...athlete(full), side("Medals", "w-20", (r) => String(detail(r, "medals"))), side("Period", "w-28", period), value("Years", "w-16 sm:w-20", (r) => r.value.toFixed(1))];
+    case "best_finals_record":
+      return [...athlete(full), side("Finals", "w-16", (r) => String(detail(r, "finals"))), side("Won", "w-16", (r) => String(detail(r, "golds"))), value("Won %", "w-16 sm:w-20", (r) => percent(r.value, 1))];
+    case "least_likely_champion":
+      return [...athlete(full), ...(full ? [weight(full)] : []), side("Tournament", "w-40", competition, true), value("Chance", "w-16 sm:w-20", (r) => percent(r.value, 3), "text-gain")];
+    case "golden_score_king":
+      return [...athlete(full), side("Contests", "w-20", (r) => String(detail(r, "contests"))), side("Won %", "w-16", (r) => percent(detail(r, "share"), 1)), value("Wins", "w-16 sm:w-20", (r) => int(r.value))];
+    case "longest_contest":
+      return [
+        pair("Winner / loser", true),
+        ...(full ? [weight(full)] : []),
+        {
+          label: "Tournament",
+          th: "text-left hidden sm:table-cell w-40",
+          td: "text-muted hidden sm:table-cell",
+          cell: (r) => (
+            <>
+              <div className="truncate">{competition(r)}</div>
+              <div className="text-[12px]">{String(r.detail?.round ?? "")}</div>
+            </>
+          ),
+          csv: (r) => r.competition ?? "",
+        },
+        value("Time", "w-16 sm:w-20", (r) => mmss(r.value)),
+      ];
+    case "greatest_rivalry":
+      return [pair("Athletes", false), score(), side("Meetings", "w-20", (r) => String(detail(r, "contests"))), side("Period", "w-28", period), value("Score", "w-16 sm:w-20", (r) => r.value.toFixed(2))];
+    case "longest_rivalry":
+      return [pair("Athletes", false), score(), side("Meetings", "w-20", (r) => String(detail(r, "contests"))), side("Period", "w-28", period), value("Years", "w-16 sm:w-20", (r) => detail(r, "years").toFixed(1))];
+    case "nemesis":
+      return [pair("Nemesis / opponent", true), score(), side("Avg chance", "w-24", (r) => percent(detail(r, "chance"), 1)), value("Score", "w-16 sm:w-20", (r) => `+${r.value.toFixed(2)}`, "text-gain")];
+    case "deepest_team":
       return [
         nation("w-20 sm:w-24"),
-        { label: "Tournament", th: "text-left", td: "text-muted whitespace-nowrap", cell: (r) => <div className="truncate">{competition(r)}</div>, csv: (r) => r.competition ?? "" },
-        value("Medals", "w-20 sm:w-24", (r) => int(r.value)),
+        { label: "Date", th: "text-left", td: "text-muted whitespace-nowrap", cell: (r) => <div className="truncate">{month(r.day)}</div>, csv: (r) => month(r.day) },
+        side("Weights", "w-20", (r) => String(detail(r, "weights"))),
+        value("In top 10", "w-20 sm:w-24", (r) => int(r.value)),
       ];
     default:
       return [];
   }
 }
 
-// Where a row leads: the athlete's page. Nations and tournaments have no pages yet.
-// Where a row leads: a contest of an upset, the head-to-head of a rivalry, else the athlete.
+// Where a row leads: a pair to their head-to-head, one contest to its page, a
+// tournament (and the weight, for a result in it) to its page, a nation to its page,
+// else the athlete.
+const PAIRS = new Set(["greatest_rivalry", "longest_rivalry", "nemesis"]);
+const CONTESTS = new Set(["biggest_upsets", "longest_contest"]);
+const IN_A_WEIGHT = new Set(["least_likely_champion", "youngest_grand_slam_medal", "youngest_grand_slam_gold"]);
+
 export function rowLink(row: RecordRow): string | null {
-  if (row.record === "biggest_upsets" && row.detail?.contest) return `/contests/${row.detail.contest}`;
-  if (row.record === "most_frequent_rivalry" && row.athlete_id && row.opponent_id) {
+  if (PAIRS.has(row.record) && row.athlete_id && row.opponent_id) {
     return `/head-to-head?a=${row.athlete_id}&b=${row.opponent_id}`;
   }
-  return row.athlete_id ? `/athletes/${row.athlete_id}` : null;
+  if (CONTESTS.has(row.record) && row.detail?.contest) return `/contests/${row.detail.contest}`;
+  if (IN_A_WEIGHT.has(row.record) && row.competition_id) {
+    const weight = WEIGHTS.find((w) => w.api === row.weight && w.gender === (row.gender === "female" ? "women" : "men"));
+    return weight ? `/tournaments/${row.competition_id}/${weight.slug}` : `/tournaments/${row.competition_id}`;
+  }
+  if (row.athlete_id) return `/athletes/${row.athlete_id}`;
+  if (row.competition_id) return `/tournaments/${row.competition_id}`;
+  if (row.country) return `/countries/${row.country.toLowerCase()}`;
+  return null;
 }
