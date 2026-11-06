@@ -97,3 +97,9 @@ export function shortCompetition(name: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+// A chance as a percentage, to `digits` decimals (2 across the site; the records of
+// chances show 3, their places being that close): 0.0174 -> "1.74%".
+export function formatChance(value: number, digits = 2): string {
+  return `${(value * 100).toFixed(digits)}%`;
+}

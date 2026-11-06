@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
-import { roundCode, shortName } from "@/lib/format";
+import { formatChance, roundCode, shortName } from "@/lib/format";
 
 export type UpsetSide = { family: string | null; country: string | null; chance: number; score: number };
 
@@ -31,10 +31,10 @@ export function UpsetCard({
         <div className="flex items-center gap-1.5 min-w-0">
           <Flag ioc={winner.country} />
           <span className="font-semibold text-ink truncate">{shortName(winner.family, null)}</span>
-          <span className="text-gain font-semibold tabular-nums ml-2">{Math.round(winner.chance * 100)}%</span>
+          <span className="text-gain font-semibold tabular-nums ml-2">{formatChance(winner.chance)}</span>
         </div>
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-muted tabular-nums mr-2">{Math.round(loser.chance * 100)}%</span>
+          <span className="text-muted tabular-nums mr-2">{formatChance(loser.chance)}</span>
           <span className="text-muted truncate">{shortName(loser.family, null)}</span>
           <Flag ioc={loser.country} />
           <Icon size={18} name="chevron_right" className="text-muted ml-1 group-hover:translate-x-0.5 transition-transform" />

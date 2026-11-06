@@ -6,7 +6,7 @@ import { Icon } from "@/components/Icon";
 import { isUpset } from "@/components/rankings/Changes";
 import { RowLink } from "@/components/RowLink";
 import type { ContestDetail, HistoryRow } from "@/lib/api";
-import { formatDate, monthYear, roundCode, shortCompetition, shortName, signed } from "@/lib/format";
+import { formatChance, formatDate, monthYear, roundCode, shortCompetition, shortName, signed } from "@/lib/format";
 import { WEIGHTS, weightTitle } from "@/lib/weights";
 
 const H2 = "font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight";
@@ -370,7 +370,7 @@ function Sum({ pair: [before, after], weight, bold = false }: { pair: (number | 
 
 // An earlier contest of the athlete at the tournament.
 function RoadRow({ row }: { row: HistoryRow }) {
-  const chance = Math.round(row.win_probability * 100);
+  const chance = formatChance(row.win_probability);
   const gain = row.rating_after - row.rating_before;
   return (
     <RowLink href={`/contests/${row.contest_id}`} className={ROW}>
@@ -392,7 +392,7 @@ function RoadRow({ row }: { row: HistoryRow }) {
               Upset
             </span>
           )}
-          {chance}%
+          {chance}
         </span>
       </td>
       <td className={`w-12 ${CELL} text-right font-bold ${row.won ? "text-gain" : "text-drop"}`}>{signed(gain)}</td>
@@ -421,5 +421,5 @@ function clock(duration: string): string {
 }
 
 function percent(value: number | null): string {
-  return value === null ? "–" : `${Math.round(value * 100)}%`;
+  return value === null ? "–" : formatChance(value);
 }

@@ -6,7 +6,7 @@ import { Icon } from "@/components/Icon";
 import { changeText, isUpset } from "@/components/rankings/Changes";
 import { RowLink } from "@/components/RowLink";
 import type { Athlete, HistoryRow } from "@/lib/api";
-import { formatDate, monthYear, roundCode, shortCompetition, shortName } from "@/lib/format";
+import { formatChance, formatDate, monthYear, roundCode, shortCompetition, shortName } from "@/lib/format";
 import { COLORS, winChance } from "@/lib/h2h";
 
 const TH = "h-9 py-0 align-middle px-2 sm:px-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted";
@@ -83,7 +83,7 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
                   <td className={`${TD} text-right hidden sm:table-cell`}>
                     {wins}–{year.length - wins}
                   </td>
-                  <td className={`${TD} text-right text-muted`}>{Math.round(chance * 100)}%</td>
+                  <td className={`${TD} text-right text-muted`}>{formatChance(chance)}</td>
                 </tr>
               );
             })}
@@ -150,7 +150,7 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
                             Upset
                           </span>
                         )}
-                        {Math.round(chance * 100)}%
+                        {formatChance(chance)}
                       </span>
                     </td>
                     <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">

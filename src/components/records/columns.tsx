@@ -261,7 +261,7 @@ export function recordColumns(info: RecordInfo, full: boolean): Column[] {
           ),
           csv: (r) => r.competition ?? "",
         },
-        value("Chance", "w-16 sm:w-20", (r) => percent(r.value, r.value < 0.01 ? 1 : 0), "text-gain"),
+        value("Chance", "w-16 sm:w-20", (r) => percent(r.value, 3), "text-gain"),
       ];
     case "most_frequent_rivalry":
       return [

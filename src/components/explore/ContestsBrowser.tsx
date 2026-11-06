@@ -11,7 +11,7 @@ import { isUpset } from "@/components/rankings/Changes";
 import { HEAD_CELL, Pagination, PlaceholderRows, saveCsv } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import type { ContestListRow } from "@/lib/api";
-import { competitionCode, roundCode, shortCompetition, shortDate, shortName, signed } from "@/lib/format";
+import { competitionCode, formatChance, roundCode, shortCompetition, shortDate, shortName, signed } from "@/lib/format";
 import { WEIGHTS, weightTitle } from "@/lib/weights";
 
 const SORTS = [
@@ -156,7 +156,7 @@ export function ContestsBrowser({
                     const surprise = upset && (won ? "text-gain font-semibold" : "text-drop font-semibold");
                     return (
                       <div key={s.id} className={`h-6 leading-6 ${surprise || "text-muted"}`}>
-                        {Math.round(s.chance * 100)}%
+                        {formatChance(s.chance)}
                       </div>
                     );
                   })}
@@ -216,9 +216,9 @@ function downloadCsv(rows: ContestListRow[], year: string) {
     r.weight ?? "",
     r.round ?? "",
     name(r.white_family_name, r.white_given_name),
-    Math.round(r.white_chance * 100),
+    (r.white_chance * 100).toFixed(2),
     name(r.blue_family_name, r.blue_given_name),
-    Math.round(r.blue_chance * 100),
+    (r.blue_chance * 100).toFixed(2),
     r.winner_id === r.white_id ? "White" : "Blue",
   ]);
   saveCsv([header, ...lines], `ajr-contests-${year}.csv`);

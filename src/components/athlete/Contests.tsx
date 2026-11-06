@@ -9,7 +9,7 @@ import { isUpset } from "@/components/rankings/Changes";
 import type { Competition } from "@/components/athlete/RatingChart";
 import { RowLink } from "@/components/RowLink";
 import type { HistoryRow } from "@/lib/api";
-import { roundCode, shortDate, shortName, signed } from "@/lib/format";
+import { formatChance, roundCode, shortDate, shortName, signed } from "@/lib/format";
 import { pageNumbers } from "@/lib/pages";
 
 const SORTS = {
@@ -302,7 +302,7 @@ function CompetitionRow({ contest, total }: { contest: HistoryRow; total: number
 }
 
 function ContestRow({ contest }: { contest: HistoryRow }) {
-  const chance = Math.round(contest.win_probability * 100);
+  const chance = formatChance(contest.win_probability);
   const upset = isUpset(contest.won, contest.win_probability);
   const color = contest.won ? "text-gain" : "text-drop";
   return (
@@ -326,7 +326,7 @@ function ContestRow({ contest }: { contest: HistoryRow }) {
               Upset
             </span>
           )}
-          <span className="text-muted">{chance}%</span>
+          <span className="text-muted">{chance}</span>
         </span>
       </td>
       <td className={`${CELL} text-center font-bold ${color}`}>{contest.won ? "W" : "L"}</td>
@@ -349,7 +349,7 @@ function downloadCsv(contests: HistoryRow[], fileName: string) {
     `${c.opponent_family_name ?? ""} ${c.opponent_given_name ?? ""}`.trim(),
     c.opponent_country ?? "",
     c.opponent_score ?? "",
-    Math.round(c.win_probability * 100),
+    (c.win_probability * 100).toFixed(2),
     c.won ? "W" : "L",
     gain(c),
   ]);

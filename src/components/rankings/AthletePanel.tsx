@@ -9,7 +9,7 @@ import { Icon } from "@/components/Icon";
 import { changeText, ijfDifference, isUpset } from "@/components/rankings/Changes";
 import type { HistoryRow, LeaderboardRow } from "@/lib/api";
 import { cachedAthleteHistory, fetchAthleteHistory } from "@/lib/browser-api";
-import { roundCode, shortDate, shortName, signed } from "@/lib/format";
+import { formatChance, roundCode, shortDate, shortName, signed } from "@/lib/format";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -72,7 +72,7 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
           </div>
           <div className="flex flex-col text-[13px] w-full sm:max-w-[560px]">
             {group.contests.map((contest) => {
-              const chance = Math.round(contest.win_probability * 100);
+              const chance = formatChance(contest.win_probability);
               const delta = contest.rating_after - contest.rating_before;
               const result = contest.won ? "text-gain" : "text-drop";
               // Only upsets stand out.
@@ -104,7 +104,7 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
                         Upset
                       </span>
                     )}
-                    {chance}%
+                    {chance}
                   </span>
                   <span className={`w-6 text-center font-bold shrink-0 ${result}`}>{contest.won ? "W" : "L"}</span>
                   <span className={`w-10 text-right font-bold shrink-0 tabular-nums ${result}`}>{signed(delta)}</span>
