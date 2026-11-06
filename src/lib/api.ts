@@ -163,6 +163,14 @@ export async function athlete(id: number): Promise<Athlete | null> {
   return rows[0] ?? null;
 }
 
+// The main id of an athlete's second judobase id (a profile opened when they changed
+// nations), null for any other id: the backend rates them under the main one.
+export async function canonicalAthlete(id: number): Promise<number | null> {
+  "use cache: remote";
+  dataCache();
+  return rpc<number | null>("canonical_athlete", { athlete_id: id });
+}
+
 export async function athleteHistory(id: number): Promise<HistoryRow[]> {
   "use cache: remote";
   dataCache();
