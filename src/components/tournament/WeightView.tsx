@@ -28,12 +28,15 @@ const CELL = "px-2 sm:px-3 py-2 align-middle";
 const gainOf = (r: CompetitionResult) => r.score_after - r.score_before;
 const shortRound = (round: string | null) => (round === "Final" ? "Final" : roundCode(round));
 
-// One side of a contest: the athlete and what the contest gave them.
+// One side of a contest: the athlete and what the contest gave them (a walkover: nothing).
 function sideOf(c: CompetitionContest, white: boolean) {
+  const change = (before: number | null, after: number | null) => (before === null || after === null ? null : after - before);
   return white
-    ? { id: c.white_id, family: c.white_family_name, given: c.white_given_name, country: c.white_country, chance: c.white_chance, change: c.white_score_after - c.white_score_before }
-    : { id: c.blue_id, family: c.blue_family_name, given: c.blue_given_name, country: c.blue_country, chance: c.blue_chance, change: c.blue_score_after - c.blue_score_before };
+    ? { id: c.white_id, family: c.white_family_name, given: c.white_given_name, country: c.white_country, chance: c.white_chance, change: change(c.white_score_before, c.white_score_after) }
+    : { id: c.blue_id, family: c.blue_family_name, given: c.blue_given_name, country: c.blue_country, chance: c.blue_chance, change: change(c.blue_score_before, c.blue_score_after) };
 }
+
+const WALKOVER = <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-muted">Walkover</span>;
 
 // One weight of a tournament, as in the prototype (weight.html): the podium, every
 // athlete's place with their contests a click away, and the contests by round.
@@ -210,11 +213,11 @@ function Results({ rows, places, contests }: { rows: CompetitionResult[]; places
                           <span className="truncate font-medium text-ink">{shortName(opponent.family, opponent.given)}</span>
                         </span>
                         <span className="w-24 shrink-0 text-right tabular-nums text-ink">
-                          {c.real_fight ? formatChance(self.chance) : ""}
+                          {c.real_fight && self.chance !== null ? formatChance(self.chance) : WALKOVER}
                         </span>
                         <span className={`w-6 shrink-0 text-center font-bold ${won ? "text-gain" : "text-drop"}`}>{won ? "W" : "L"}</span>
-                        <span className={`w-10 shrink-0 text-right font-bold tabular-nums ${self.change >= 0 ? "text-gain" : "text-drop"}`}>
-                          {signed(self.change)}
+                        <span className={`w-10 shrink-0 text-right font-bold tabular-nums ${(self.change ?? 0) >= 0 ? "text-gain" : "text-drop"}`}>
+                          {self.change === null ? "" : signed(self.change)}
                         </span>
                         <Icon size={18} name="chevron_right" className="text-muted shrink-0 -mr-1" />
                       </Link>
@@ -393,7 +396,7 @@ function ContestRow({ contest: c }: { contest: CompetitionContest }) {
     { ...sideOf(c, true), judogi: "bg-paper" },
     { ...sideOf(c, false), judogi: "bg-oxford" },
   ];
-  const upset = c.real_fight && sides.some((s) => s.id === c.winner_id && isUpset(true, s.chance));
+  const upset = c.real_fight && sides.some((s) => s.id === c.winner_id && s.chance !== null && isUpset(true, s.chance));
   return (
     <RowLink href={`/contests/${c.contest_id}`} className="border-b border-rule hover:bg-panel/40">
       <td className={CELL}>
@@ -416,13 +419,13 @@ function ContestRow({ contest: c }: { contest: CompetitionContest }) {
         )}
       </td>
       <td className={`${CELL} whitespace-nowrap`}>
-        {sides.map((s) => {
+        {sides.map((s, i) => {
           const won = s.id === c.winner_id;
           // phones: an upset's chances in colour; wider screens: grey, with the chip
           const color = upset ? (won ? "text-gain font-semibold" : "text-drop font-semibold") : "text-ink sm:text-muted";
           return (
             <div key={s.id} className="h-6 flex items-center justify-end">
-              <span className={color}>{c.real_fight ? formatChance(s.chance) : ""}</span>
+              {c.real_fight && s.chance !== null ? <span className={color}>{formatChance(s.chance)}</span> : i === 0 && WALKOVER}
             </div>
           );
         })}
@@ -438,9 +441,9 @@ function ContestRow({ contest: c }: { contest: CompetitionContest }) {
         {sides.map((s) => (
           <div
             key={s.id}
-            className={`h-6 flex items-center justify-end ${s.id === c.winner_id ? "font-bold" : "font-semibold"} ${s.change >= 0 ? "text-gain" : "text-drop"}`}
+            className={`h-6 flex items-center justify-end ${s.id === c.winner_id ? "font-bold" : "font-semibold"} ${(s.change ?? 0) >= 0 ? "text-gain" : "text-drop"}`}
           >
-            {signed(s.change)}
+            {s.change === null ? "" : signed(s.change)}
           </div>
         ))}
       </td>

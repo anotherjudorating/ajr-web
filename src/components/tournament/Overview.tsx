@@ -166,15 +166,16 @@ function Medallists({
 // The five least likely wins: the winner and their chance on the left, the bar of it.
 function Upsets({ contests, total, href }: { contests: CompetitionContest[]; total: number; href: string }) {
   const upsets = contests
+    .filter((c) => c.real_fight) // rated: a chance and scores on both sides
     .map((c) => {
       const white = c.winner_id === c.white_id;
       const side = (won: boolean) =>
         won === white
-          ? { id: c.white_id, family: c.white_family_name, country: c.white_country, chance: c.white_chance, score: c.white_score_before }
-          : { id: c.blue_id, family: c.blue_family_name, country: c.blue_country, chance: c.blue_chance, score: c.blue_score_before };
+          ? { id: c.white_id, family: c.white_family_name, country: c.white_country, chance: c.white_chance ?? 0, score: c.white_score_before ?? 0 }
+          : { id: c.blue_id, family: c.blue_family_name, country: c.blue_country, chance: c.blue_chance ?? 0, score: c.blue_score_before ?? 0 };
       return { contest: c, winner: side(true), loser: side(false) };
     })
-    .filter((u) => u.contest.real_fight && u.winner.chance <= UPSET)
+    .filter((u) => u.winner.chance <= UPSET)
     .sort((a, b) => a.winner.chance - b.winner.chance)
     .slice(0, 5);
   if (upsets.length === 0) return null;

@@ -328,6 +328,8 @@ export type ContestDetail = {
   blue_rd_after: number | null;
   blue_score_before: number | null;
   blue_score_after: number | null;
+  // a walkover, not rated: tagged Fusen-Gachi by judobase, or nothing was fought
+  walkover: "fusen" | "likely" | null;
 };
 
 export async function contest(id: number): Promise<ContestDetail | null> {
@@ -501,17 +503,18 @@ export type CompetitionContest = {
   white_family_name: string | null;
   white_given_name: string | null;
   white_country: string | null;
-  white_chance: number;
-  white_score_before: number;
-  white_score_after: number;
+  // null for a walkover (not rated)
+  white_chance: number | null;
+  white_score_before: number | null;
+  white_score_after: number | null;
   blue_id: number;
   blue_family_name: string | null;
   blue_given_name: string | null;
   blue_country: string | null;
-  blue_chance: number;
-  blue_score_before: number;
-  blue_score_after: number;
-  real_fight: boolean; // not a bye, not a 0:00 walkover
+  blue_chance: number | null;
+  blue_score_before: number | null;
+  blue_score_after: number | null;
+  real_fight: boolean; // rated; false: a walkover
 };
 
 // The decided contests of a tournament (or of one weight), from the final back.
