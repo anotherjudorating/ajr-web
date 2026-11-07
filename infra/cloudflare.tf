@@ -24,8 +24,8 @@ data "cloudflare_zone" "site" {
 resource "cloudflare_dns_record" "www" {
   zone_id = data.cloudflare_zone.site.zone_id
   name    = "www.${var.domain}"
-  type    = "CNAME"                # FILL IN from the API
-  content = "ajr-web.onrender.com" # FILL IN from the API
+  type    = "CNAME"
+  content = "ajr-web.onrender.com"
   proxied = true
   ttl     = 1 # automatic (required with proxied = true)
 }
@@ -33,8 +33,8 @@ resource "cloudflare_dns_record" "www" {
 resource "cloudflare_dns_record" "apex" {
   zone_id = data.cloudflare_zone.site.zone_id
   name    = var.domain
-  type    = "A"           # FILL IN from the API ("A" 216.24.57.1 or "CNAME" to the Render host)
-  content = "216.24.57.1" # FILL IN from the API
+  type    = "CNAME" # flattened at the apex by Cloudflare
+  content = "ajr-web.onrender.com"
   proxied = true
   ttl     = 1
 }
@@ -45,7 +45,7 @@ resource "cloudflare_dns_record" "google_verification" {
   name    = var.domain
   type    = "TXT"
   content = "\"google-site-verification=Sxy6FaQhOYOfMY4O1-7--U4Iaw9n--NZx5pQvdyVcpo\""
-  ttl     = 1
+  ttl     = 3600
 }
 
 resource "cloudflare_dns_record" "yandex_verification" {
