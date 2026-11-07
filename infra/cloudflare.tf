@@ -79,16 +79,15 @@ resource "cloudflare_zone_setting" "site" {
   value      = each.value
 }
 
-# ---- Web Analytics --------------------------------------------------------------
-# New (not imported): replaces Vercel Analytics. auto_install injects the beacon on
-# proxied responses, so the site's code needs nothing. The dashboard: Analytics &
-# Logs → Web Analytics. If a site was already added by hand, import it instead:
-# `<account_id>/<site_tag>` (GET /accounts/{account_id}/rum/site_info/list).
-resource "cloudflare_web_analytics_site" "site" {
-  account_id   = var.cloudflare_account_id
-  zone_tag     = data.cloudflare_zone.site.zone_id
-  auto_install = true
-}
+# ---- Web Analytics ----------------------------------------------------------------
+# Not managed here (yet): the site exists since 2026-10-28, made in the dashboard
+# (site tag 465c04a73bea46fa82f1b205aab34b3d, automatic setup), and the API answers
+# "Authentication error" to /accounts/{id}/rum/site_info even with Account Settings
+# Write + Account Analytics Read (2026-11-07). When it answers, import it:
+#   import { to = cloudflare_web_analytics_site.site
+#            id = "<account_id>/465c04a73bea46fa82f1b205aab34b3d" }
+# with account_id, zone_tag = the zone, auto_install = true. Never create one: the
+# dashboard already has it (a second was made by mistake on 2026-11-07 and deleted).
 
 # ---- Cache rule -----------------------------------------------------------------
 # New (not imported). Hosting audit 11-07, §5/§10.2: the only safe win from the

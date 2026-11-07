@@ -11,7 +11,7 @@
 | Система | Ресурсы | Файл |
 |---|---|---|
 | Render, команда `anotherjudorating` | проект `ajr-web` (environment Production), web service `ajr-web` (`srv-dbnfcae7bikc73cdfkmg`): Frankfurt, план Starter (`0.5c-512mb`), ветка `main`, `npm install && npm run build` / `npm run start`, env `PORT`, `SUPABASE_URL`, `SUPABASE_KEY`, `REVALIDATE_SECRET`, домен `www.anotherjudorating.com` (apex → www редирект Render делает сам) | `render.tf` |
-| Cloudflare, зона `anotherjudorating.com` | DNS: apex, www (proxied → Render), 2×TXT (Google, Yandex); zone settings: SSL Full (strict), Always Use HTTPS, TLS ≥ 1.2, Rocket Loader и Email Obfuscation off; **Web Analytics** (новый, вместо Vercel Analytics, `auto_install`); **cache rule**: `/api/search-index`, `/sitemap.xml`, `/llms.txt` — час на edge (новый) | `cloudflare.tf` |
+| Cloudflare, зона `anotherjudorating.com` | DNS: apex, www (proxied → Render), 2×TXT (Google, Yandex); zone settings: SSL Full (strict), Always Use HTTPS, TLS ≥ 1.2, Rocket Loader и Email Obfuscation off; Web Analytics — **не здесь** (сайт с 28.10, сделан в дашборде, automatic setup; API отвечает Authentication error — см. `cloudflare.tf`); **cache rule**: `/api/search-index`, `/sitemap.xml`, `/llms.txt` — час на edge (новый) | `cloudflare.tf` |
 | GitHub, репо `ajr-web` | настройки репо (homepage → сайт вместо старого `*.vercel.app`), **ruleset на `main`** (новый: required check `check`), Dependabot security updates, allowed actions, secret scanning | `github.tf` |
 
 **Вне Terraform:** сборка и деплой (git push в `main` → Render), `next.config.ts`,
@@ -75,7 +75,7 @@ terraform plan -out=import.plan             # только чтение
   код. **`1 to add`**: ruleset `main`.
 - Cloudflare: `9 to import` (4 записи + 5 настроек зоны); у настроек возможны
   `update` до желаемых значений (Full (strict), Rocket Loader off…) — это и есть
-  цель, но прочитать глазами. **`2 to add`**: Web Analytics, cache ruleset.
+  цель, но прочитать глазами. **`1 to add`**: cache ruleset.
 - Итого destroy/replace: **0**. Если план предлагает заменить DNS-запись — тип или
   имя в коде не те, что в зоне; исправить, не применять (секунды без сайта).
 
@@ -85,7 +85,7 @@ terraform plan -out=import.plan             # только чтение
 terraform apply -target=render_project.web -target=render_web_service.web
 terraform apply -target=github_repository.web -target=github_repository_ruleset.main \
   -target=github_repository_dependabot_security_updates.web -target=github_actions_repository_permissions.web
-terraform apply                              # Cloudflare: DNS, настройки, Web Analytics, cache rule
+terraform apply                              # Cloudflare: DNS, настройки, cache rule
 ```
 
 ## Проверка после apply
@@ -97,7 +97,6 @@ terraform apply                              # Cloudflare: DNS, настройк
 - `curl -fsS -X POST -H "Authorization: Bearer $REVALIDATE_SECRET" https://www.anotherjudorating.com/api/revalidate`
   → `{"revalidated":"data"}`.
 - Второй `curl -sI https://www.anotherjudorating.com/sitemap.xml` → `cf-cache-status: HIT`.
-- Cloudflare → Analytics & Logs → Web Analytics: сайт есть, через час — визиты.
 - GitHub → Settings → Rules: ruleset `main`; следующий PR требует `check`.
 
 ## Откат
@@ -105,5 +104,5 @@ terraform apply                              # Cloudflare: DNS, настройк
 - Render/GitHub: `terraform state rm <адрес>` — ничего не удаляется. Env Render’а и
   домены — в дашборде, значения известны.
 - DNS: записи в дашборде (значения — в `cloudflare.tf`); `state rm`.
-- Cache rule / Web Analytics: `terraform destroy -target=cloudflare_ruleset.cache`
-  (или `…web_analytics_site.site`) — трогает только их.
+- Cache rule: `terraform destroy -target=cloudflare_ruleset.cache`
+  — трогает только его.

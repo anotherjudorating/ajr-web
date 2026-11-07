@@ -6,7 +6,7 @@
 # no token yet (see cloudflare.tf for the curl that lists them).
 #
 # Not imported, created by the first apply: github_repository_ruleset.main,
-# cloudflare_web_analytics_site.site, cloudflare_ruleset.cache (unless they were
+# cloudflare_ruleset.cache (unless they were
 # made by hand meanwhile: then import them, ids in the comments of cloudflare.tf).
 
 # ---- Render -------------------------------------------------------------------
