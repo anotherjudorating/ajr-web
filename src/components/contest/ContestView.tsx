@@ -236,7 +236,12 @@ function Result({ contest: c }: { contest: ContestDetail }) {
       })}
       <div className="h-10 sm:h-12 flex items-center justify-between">
         <span className="text-[12px] font-medium text-muted pl-1 sm:pl-3">{formatDate(c.day)}</span>
-        {c.duration && (
+        {c.walkover ? (
+          <span className="inline-flex items-center gap-2 pr-1">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted">Walkover</span>
+            <span className="text-[12px] font-medium text-muted">not rated</span>
+          </span>
+        ) : c.duration && (
           <span className="inline-flex items-center gap-2 pr-1">
             <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted">Time</span>
             <span className="text-[16px] font-semibold tabular-nums">
