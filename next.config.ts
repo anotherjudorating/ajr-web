@@ -33,6 +33,11 @@ const nextConfig: NextConfig = {
     // (/api/revalidate). (A fixed deploymentId did the same, but Vercel wants a new
     // one for each deploy.)
     durableUseCacheEntries: true,
+    // Build workers, each rendering pages that read the database: Render's builder
+    // started 30 at once, and on 2026-11-07 a build during the update job's publish
+    // failed on the Data API's 3-second limit (api.nations). Four keep the database's
+    // load of a build small.
+    cpus: 4,
   },
   turbopack: {
     rules: {
