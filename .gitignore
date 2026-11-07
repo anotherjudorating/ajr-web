@@ -44,3 +44,11 @@ next-env.d.ts
 .DS_Store
 __pycache__/
 !.env.example
+
+# Terraform (infra/): state and plans hold secrets; the lock file is committed
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+*.plan
