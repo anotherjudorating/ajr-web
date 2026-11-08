@@ -9,6 +9,17 @@ const nextConfig: NextConfig = {
   htmlLimitedBots: new RegExp(`${HTML_LIMITED_BOT_UA_RE.source}|Googlebot`, "i"),
   cacheComponents: true,
   partialPrefetching: true,
+  // The two in-memory caches of a self-hosted server, each of this size (on Vercel both
+  // were outside the process): the rendered pages (each is on disk too, under .next, so
+  // this one only saves a read) and the "use cache" data of lib/api.ts (the "remote"
+  // handler falls back to the built-in in-memory one). The page cache counts a page's
+  // HTML in characters, but the string takes two bytes a character once it holds a "—"
+  // or "↑", so the default 50 MB of pages held ~75 MB. 32 MB: ~150 pages and ~1,700
+  // data entries, enough for the hot ones. The rest of the instance's memory budget:
+  // instrumentation.ts (what a cached Buffer really holds) and the start script in
+  // package.json (the JS heap's size, which Node otherwise sets at half the instance,
+  // leaving nothing for these caches' Buffers and the binary).
+  cacheMaxMemorySize: 32 * 1024 * 1024,
   cacheLife: {
     // Everything read from the database (lib/api.ts): kept until the backend's update
     // job says the data changed (/api/revalidate, tag "data"). The week is only a
