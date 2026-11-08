@@ -70,3 +70,9 @@ variable "revalidate_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "render_outbound_ips" {
+  description = "Render's outbound IPs (service → Connect → Outbound), left out of the data. rate limit once the site reads it"
+  type        = list(string)
+  default     = []
+}

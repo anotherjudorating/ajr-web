@@ -118,5 +118,88 @@ resource "cloudflare_ruleset" "cache" {
         }
       }
     },
+    # data.<domain> (R2, ajr-backend/infra/r2.tf): versioned files never change, a year
+    # at the edge and in browsers; the query string is never part of the key (the WAF
+    # rule below blocks it anyway).
+    {
+      description = "data.: versioned files are immutable, a year at the edge"
+      expression  = "(http.host eq \"data.${var.domain}\" and starts_with(http.request.uri.path, \"/v/\"))"
+      action      = "set_cache_settings"
+      enabled     = true
+      action_parameters = {
+        cache       = true
+        edge_ttl    = { mode = "override_origin", default = 31536000 }
+        browser_ttl = { mode = "override_origin", default = 31536000 }
+        cache_key   = { custom_key = { query_string = { exclude = { all = true } } } }
+      }
+    },
+    {
+      description = "data.: the manifest and the archive follow their own Cache-Control"
+      expression  = "(http.host eq \"data.${var.domain}\" and not starts_with(http.request.uri.path, \"/v/\"))"
+      action      = "set_cache_settings"
+      enabled     = true
+      action_parameters = {
+        cache     = true
+        edge_ttl  = { mode = "respect_origin" }
+        cache_key = { custom_key = { query_string = { exclude = { all = true } } } }
+      }
+    },
   ]
+}
+
+# ---- data.<domain>: only reads of known paths, and not too many --------------------
+# Every request that misses the edge cache is a billed R2 read: block what is not a
+# GET/HEAD of a known path without a query string (random paths and query strings
+# would miss the cache every time), and limit each IP. The Worker's kill switch is the
+# last line (ajr-backend/cloudflare). docs/audits/2026-11-08-r2-tables-plan.md §5.
+
+resource "cloudflare_ruleset" "waf_custom" {
+  zone_id     = data.cloudflare_zone.site.zone_id
+  name        = "default"
+  description = "Custom WAF rules"
+  kind        = "zone"
+  phase       = "http_request_firewall_custom"
+
+  rules = [{
+    description = "data.: only GET/HEAD of known paths, no query string"
+    action      = "block"
+    enabled     = true
+    expression  = <<-EOT
+      (http.host eq "data.${var.domain}" and not (
+        http.request.method in {"GET" "HEAD"} and http.request.uri.query eq "" and (
+          http.request.uri.path eq "/manifest.json" or
+          http.request.uri.path wildcard "/v/*/rankings/*/*/*.json" or
+          http.request.uri.path wildcard "/v/*/p4p/*/*/*.json" or
+          http.request.uri.path wildcard "/v/*/teams/*/*/*.json" or
+          http.request.uri.path wildcard "/archive/*/*"
+        )))
+    EOT
+  }]
+}
+
+# Free plan: one rule, 10 s periods. The site itself reads data.<domain> from Render's
+# few outbound IPs: they are left out once it does (render_outbound_ips).
+resource "cloudflare_ruleset" "ratelimit" {
+  zone_id     = data.cloudflare_zone.site.zone_id
+  name        = "default"
+  description = "Rate limits"
+  kind        = "zone"
+  phase       = "http_ratelimit"
+
+  rules = [{
+    description = "data.: 60 requests per 10 s per IP"
+    action      = "block"
+    enabled     = true
+    expression = (
+      length(var.render_outbound_ips) == 0
+      ? "(http.host eq \"data.${var.domain}\")"
+      : "(http.host eq \"data.${var.domain}\" and not ip.src in {${join(" ", var.render_outbound_ips)}})"
+    )
+    ratelimit = {
+      characteristics     = ["cf.colo.id", "ip.src"]
+      period              = 10
+      requests_per_period = 60
+      mitigation_timeout  = 10
+    }
+  }]
 }
