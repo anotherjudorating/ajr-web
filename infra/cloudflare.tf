@@ -127,20 +127,33 @@ resource "cloudflare_ruleset" "cache" {
       action      = "set_cache_settings"
       enabled     = true
       action_parameters = {
-        cache       = true
-        edge_ttl    = { mode = "override_origin", default = 31536000 }
+        cache = true
+        edge_ttl = {
+          mode            = "override_origin"
+          default         = 31536000
+          status_code_ttl = [{ status_code = 404, value = 60 }] # a file not there yet: a minute
+        }
         browser_ttl = { mode = "override_origin", default = 31536000 }
         cache_key   = { custom_key = { query_string = { exclude = { all = true } } } }
       }
     },
+    # The manifest is never cached at the edge: it is tiny, the site keeps it a few
+    # minutes itself, and a 404 cached before it existed was served for hours (11-08).
     {
-      description = "data.: the manifest and the archive follow their own Cache-Control"
-      expression  = "(http.host eq \"data.${var.domain}\" and not starts_with(http.request.uri.path, \"/v/\"))"
+      description       = "data.: the manifest is not cached at the edge"
+      expression        = "(http.host eq \"data.${var.domain}\" and http.request.uri.path eq \"/manifest.json\")"
+      action            = "set_cache_settings"
+      enabled           = true
+      action_parameters = { cache = false }
+    },
+    {
+      description = "data.: the archive follows its own Cache-Control"
+      expression  = "(http.host eq \"data.${var.domain}\" and starts_with(http.request.uri.path, \"/archive/\"))"
       action      = "set_cache_settings"
       enabled     = true
       action_parameters = {
         cache     = true
-        edge_ttl  = { mode = "respect_origin" }
+        edge_ttl  = { mode = "respect_origin", status_code_ttl = [{ status_code = 404, value = 60 }] }
         cache_key = { custom_key = { query_string = { exclude = { all = true } } } }
       }
     },
