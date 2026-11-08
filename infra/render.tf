@@ -42,6 +42,9 @@ resource "render_web_service" "web" {
     # The same value feeds the ajr-backend Actions secret (ajr-backend/infra):
     # one rotation = both applies, no window where the job cannot refresh the site.
     REVALIDATE_SECRET = { value = var.revalidate_secret }
+    # Past weeks' tables from R2 (ajr-web src/lib/tables.ts); removing it sends every
+    # past day back to the database (the way back).
+    AJR_DATA_URL = { value = "https://data.${var.domain}" }
   }
 
   # Only the primary domain is listed: Render adds the apex as a redirect to www by
