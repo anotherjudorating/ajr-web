@@ -6,6 +6,8 @@
 
 import { cacheLife, cacheTag } from "next/cache";
 
+import { call, DataUnavailable } from "@/lib/data-client";
+
 // Tagged "data" for the "data" profile (next.config.ts): the backend's update job
 // calls /api/revalidate after a run that changed what the site shows, which marks
 // everything tagged stale; until then a cached answer stays, however old.
@@ -121,31 +123,34 @@ export type TeamRow = {
   weights_filled: number;
 };
 
-// A gateway error (the Data API restarting, a dropped connection) is tried once more
-// after a pause. A statement timeout is not, on the live site: the database is then
-// saturated, and the same query again only adds to it. While the site is built it is
-// (and more patiently): the build renders pages in parallel with an empty cache, a
-// cold query can pass the 3 s limit, and no visitor is waiting.
+// Every call goes through the data client (lib/data-client.ts): a limit on calls at
+// once, a bounded queue, a deadline and a circuit breaker, so a busy database gets no
+// more than it can answer. No retry on the live site: a failed call means the database
+// is saturated or stuck, and the same call again only adds to it. While the site is
+// built a failed call is tried again, patiently: the build renders pages in parallel
+// with an empty cache, a cold query can pass the 3 s limit, and no visitor is waiting.
 const BUILDING = process.env.NEXT_PHASE === "phase-production-build";
-const RETRIES = BUILDING ? [2000, 5000, 10000] : [1000 + Math.random() * 1000]; // ms
-const TRANSIENT = (status: number, body: string) =>
-  status === 502 || status === 503 || status === 504 || (BUILDING && body.includes('"57014"'));
+const BUILD_RETRIES = [2000, 5000, 10000]; // ms
+const TRANSIENT = new Set(["timeout", "pool", "statement", "server", "network"]);
 
 async function rpc<T>(name: string, params: Record<string, string | number> = {}): Promise<T> {
   if (!URL || !KEY) {
     throw new Error("SUPABASE_URL and SUPABASE_KEY must be set");
   }
   const query = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]));
+  const address = `${URL}/rest/v1/rpc/${name}?${query}`;
   for (let attempt = 0; ; attempt++) {
-    const response = await fetch(`${URL}/rest/v1/rpc/${name}?${query}`, {
-      headers: { apikey: KEY },
-    });
-    if (response.ok) return response.json() as Promise<T>;
-    const body = await response.text();
-    if (attempt >= RETRIES.length || !TRANSIENT(response.status, body)) {
-      throw new Error(`api.${name}: HTTP ${response.status} ${body}`);
+    try {
+      return await call<T>(name, (signal) => fetch(address, { headers: { apikey: KEY }, signal }));
+    } catch (error) {
+      const retry =
+        BUILDING &&
+        attempt < BUILD_RETRIES.length &&
+        error instanceof DataUnavailable &&
+        TRANSIENT.has(error.outcome);
+      if (!retry) throw error;
+      await new Promise((resolve) => setTimeout(resolve, BUILD_RETRIES[attempt]));
     }
-    await new Promise((resolve) => setTimeout(resolve, RETRIES[attempt]));
   }
 }
 
@@ -191,12 +196,14 @@ export async function contestContext(contestId: number): Promise<ContextRow[]> {
 // One more opening of a head-to-head pair (a write: never cached).
 export async function countMatchup(a: number, b: number): Promise<void> {
   if (!URL || !KEY) throw new Error("SUPABASE_URL and SUPABASE_KEY must be set");
-  const response = await fetch(`${URL}/rest/v1/rpc/count_matchup`, {
-    method: "POST",
-    headers: { apikey: KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({ a, b }),
-  });
-  if (!response.ok) throw new Error(`api.count_matchup: HTTP ${response.status} ${await response.text()}`);
+  await call<void>("count_matchup", (signal) =>
+    fetch(`${URL}/rest/v1/rpc/count_matchup`, {
+      method: "POST",
+      headers: { apikey: KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ a, b }),
+      signal,
+    }),
+  );
 }
 
 export async function lastUpdate(): Promise<string | null> {
