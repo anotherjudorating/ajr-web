@@ -7,6 +7,8 @@
 import { cacheLife, cacheTag } from "next/cache";
 
 import { call, DataUnavailable } from "@/lib/data-client";
+import { pastTable } from "@/lib/tables";
+import { WEIGHTS } from "@/lib/weights";
 
 // Tagged "data" for the "data" profile (next.config.ts): the backend's update job
 // calls /api/revalidate after a run that changed what the site shows, which marks
@@ -155,7 +157,14 @@ async function rpc<T>(name: string, params: Record<string, string | number> = {}
 }
 
 // The whole table of a weight category (a few hundred rows), today's or on `day`.
+// A past day comes from its file in R2 when there is one (lib/tables.ts).
 export async function leaderboard(weight: string, day?: string): Promise<LeaderboardRow[]> {
+  const slug = WEIGHTS.find((w) => w.api === weight)?.slug;
+  const stored = day && slug ? await pastTable<LeaderboardRow>("rankings", slug, day) : null;
+  return stored ?? leaderboardFromDatabase(weight, day);
+}
+
+async function leaderboardFromDatabase(weight: string, day?: string): Promise<LeaderboardRow[]> {
   "use cache: remote";
   dataCache();
   return rpc<LeaderboardRow[]>("leaderboard", day ? { weight, day } : { weight });
@@ -214,6 +223,11 @@ export async function lastUpdate(): Promise<string | null> {
 
 // Pound for pound: the top 3 of every weight of a gender ("men" / "women").
 export async function p4p(gender: string, day?: string): Promise<P4PRow[]> {
+  const stored = day ? await pastTable<P4PRow>("p4p", gender, day) : null;
+  return stored ?? p4pFromDatabase(gender, day);
+}
+
+async function p4pFromDatabase(gender: string, day?: string): Promise<P4PRow[]> {
   "use cache: remote";
   dataCache();
   return rpc<P4PRow[]>("p4p", day ? { gender, day } : { gender });
@@ -221,6 +235,11 @@ export async function p4p(gender: string, day?: string): Promise<P4PRow[]> {
 
 // Nations, kind "men" / "women" / "mixed".
 export async function teams(kind: string, day?: string): Promise<TeamRow[]> {
+  const stored = day ? await pastTable<TeamRow>("teams", kind, day) : null;
+  return stored ?? teamsFromDatabase(kind, day);
+}
+
+async function teamsFromDatabase(kind: string, day?: string): Promise<TeamRow[]> {
   "use cache: remote";
   dataCache();
   return rpc<TeamRow[]>("teams", day ? { kind, day } : { kind });
