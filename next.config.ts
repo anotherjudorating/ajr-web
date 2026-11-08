@@ -29,6 +29,18 @@ const nextConfig: NextConfig = {
       revalidate: 7 * 24 * 60 * 60,
       expire: 30 * 24 * 60 * 60,
     },
+    // Past days' tables in R2 (lib/tables.ts): the manifest a few minutes, the files
+    // (named by version and generation, never changed) as long as the cache keeps them.
+    manifest: {
+      stale: 60,
+      revalidate: 5 * 60,
+      expire: 60 * 60,
+    },
+    tables: {
+      stale: 24 * 60 * 60,
+      revalidate: 30 * 24 * 60 * 60,
+      expire: 365 * 24 * 60 * 60,
+    },
     // The head-to-head pairs people open most, counted as they open them.
     counts: {
       stale: 5 * 60,
