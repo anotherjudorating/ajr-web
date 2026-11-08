@@ -62,7 +62,7 @@ Web Analytics — импортировать их (id в комментария�
 ```sh
 set -a; . ~/.config/ajr/terraform.env; set +a
 cd ~/Projects/anotherjudorating/ajr-web/infra
-terraform init -backend-config="path=$HOME/.config/ajr/tfstate/ajr-web.tfstate"
+terraform init -backend-config="endpoints={s3=\"https://$TF_VAR_cloudflare_account_id.r2.cloudflarestorage.com\"}"   # state in R2 (ajr-terraform-state)
 terraform plan -out=import.plan             # только чтение
 ```
 
@@ -106,3 +106,12 @@ terraform apply                              # Cloudflare: DNS, настройк
 - DNS: записи в дашборде (значения — в `cloudflare.tf`); `state rm`.
 - Cache rule: `terraform destroy -target=cloudflare_ruleset.cache`
   — трогает только его.
+
+
+## State в R2 (с 2026-11-08)
+
+State лежит в приватном бакете R2 `ajr-terraform-state` (ключ `web/terraform.tfstate`,
+блокировка — объект рядом, `use_lockfile`). Доступ — отдельный R2 API token (Object Read & Write
+только на этот бакет) в `~/.config/ajr/terraform.env`: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`.
+Перенос с локального файла был одной командой (`terraform init -migrate-state` с той же
+`-backend-config`); локальные файлы в `~/.config/ajr/tfstate/` остались резервной копией.

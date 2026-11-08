@@ -12,8 +12,22 @@ terraform {
     github     = { source = "integrations/github", version = "~> 6.13" }   # 6.13.0 (2026-07-08)
   }
 
-  # Local state, git-ignored, kept outside the repository (it holds the Render env
-  # values and the REVALIDATE_SECRET): see ajr-backend/infra/versions.tf for the
-  # reasoning and README for the init line and the backup step.
-  backend "local" {}
+  # State in R2 (bucket ajr-terraform-state, ajr-backend/infra/r2.tf), read with its own
+  # R2 API token (Object Read & Write on that bucket only): AWS_ACCESS_KEY_ID and
+  # AWS_SECRET_ACCESS_KEY from ~/.config/ajr/terraform.env. The endpoint is given at init
+  # (-backend-config="endpoints={s3=\"https://<account id>.r2.cloudflarestorage.com\"}"),
+  # as a backend cannot read variables; README has the line. use_lockfile: a lock
+  # object beside the state stops two applies at once.
+  backend "s3" {
+    bucket                      = "ajr-terraform-state"
+    key                         = "web/terraform.tfstate"
+    region                      = "auto"
+    use_lockfile                = true
+    use_path_style              = true
+    skip_credentials_validation = true
+    skip_region_validation      = true
+    skip_requesting_account_id  = true
+    skip_metadata_api_check     = true
+    skip_s3_checksum            = true
+  }
 }
