@@ -1,10 +1,12 @@
-// Past days' tables as files in Cloudflare R2 (ajr-backend ajr/tables,
-// docs/audits/2026-11-08-r2-tables-plan.md): a past day never changes unless the rating
-// does, so the update job computes it once and the site reads the file instead of
-// asking the database. Each file is exactly what api.leaderboard / api.p4p / api.teams
-// answer for that day. The manifest says the version (a hash of the rating settings),
-// the days covered and the generations (a day computed again gets a new file name, as
-// files are cached a year at the edge).
+// Past weeks' tables as files in Cloudflare R2 (ajr-backend ajr/tables,
+// docs/audits/2026-11-08-r2-tables-plan.md): one table a week, on Monday (a table barely
+// moves between tournaments, and they end at weekends); a past week never changes
+// unless the rating does, so the update job computes it once and the site reads the
+// file instead of asking the database. A day's table is its week's Monday's. Each file
+// is exactly what api.leaderboard / api.p4p / api.teams answer for that Monday. The
+// manifest says the version (a hash of the rating settings), the Mondays covered and the
+// generations (a week computed again gets a new file name, as files are cached a year
+// at the edge).
 //
 // Anything missing — AJR_DATA_URL unset, the manifest or a file not there, R2 switched
 // off by its kill switch, a network error — returns null, and lib/api.ts asks the
@@ -51,6 +53,13 @@ async function file<T>(path: string): Promise<{ rows: T[] } | null> {
   return get<{ rows: T[] }>(path);
 }
 
+// The Monday of a day's week, YYYY-MM-DD (the day itself on a Monday).
+function monday(day: string): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d.toISOString().slice(0, 10);
+}
+
 function generation(m: Manifest, day: string): number {
   return Math.max(0, ...(m.generations ?? []).filter((g) => g.from <= day).map((g) => g.g));
 }
@@ -60,8 +69,9 @@ function generation(m: Manifest, day: string): number {
 export async function pastTable<T>(table: "rankings" | "p4p" | "teams", name: string, day: string): Promise<T[] | null> {
   if (!DATA_URL) return null;
   const m = await manifest();
-  if (!m || day < m.first_day || day > m.last_day) return null;
-  const g = generation(m, day);
-  const doc = await file<T>(`v/${m.version}/${table}/${name}/${day.slice(0, 4)}/${day}${g ? `.g${g}` : ""}.json`);
+  const week = monday(day);
+  if (!m || week < m.first_day || week > m.last_day) return null; // this week's: the database
+  const g = generation(m, week);
+  const doc = await file<T>(`v/${m.version}/${table}/${name}/${week.slice(0, 4)}/${week}${g ? `.g${g}` : ""}.json`);
   return doc?.rows ?? null;
 }
