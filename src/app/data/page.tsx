@@ -104,19 +104,6 @@ async function DataContent() {
         <p className="text-muted">The archive is being prepared: come back in a few days.</p>
       )}
 
-      <h2 className={H2}>Reading the files</h2>
-      <p>
-        The rating is Glicko-2: <code>rating</code> and <code>rd</code> (the rating deviation, how unsure the
-        rating is) before and after each contest; the tables order athletes by score, the rating minus{" "}
-        {String(data?.settings.rd_factor ?? 3)} × RD. <code>win_probability</code> is the athlete&apos;s chance
-        before the contest. Join <code>athlete_id</code> and <code>opponent_id</code> on athletes.csv.gz and{" "}
-        <code>competition_id</code> on competitions.csv.gz.
-      </p>
-      <p className="mt-3 text-[14px] text-muted">
-        The &ldquo;Export CSV&rdquo; buttons on the site&apos;s tables save what the page shows, for a
-        spreadsheet; this archive is the full, stable, citable dataset.
-      </p>
-
       <h2 className={H2}>License and source</h2>
       <p>
         The ratings, win chances and these compiled files are published by Another Judo Rating under{" "}
