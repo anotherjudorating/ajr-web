@@ -104,18 +104,17 @@ function TopList({ info, rows }: { info: RecordInfo; rows: RecordRow[] }) {
         <h2 className="font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight">
           <RecordTitle info={info} />
         </h2>
-        <Link
-          href={`/records/${info.slug}${info.views && key !== info.views[0].key ? `?view=${key}` : ""}`}
-          className="font-serif shrink-0 whitespace-nowrap text-[14px] font-semibold text-claret hover:underline"
-        >
-          Full list
-        </Link>
-      </div>
-      {info.views && (
-        <div className="mt-2">
+        {/* the views (Total, In a row…) along the rule, before Full list */}
+        <div className="flex shrink-0 items-end gap-4">
           <ViewSwitch info={info} current={key} onPick={setKey} />
+          <Link
+            href={`/records/${info.slug}${info.views && key !== info.views[0].key ? `?view=${key}` : ""}`}
+            className="font-serif whitespace-nowrap text-[14px] font-semibold text-claret hover:underline"
+          >
+            Full list
+          </Link>
         </div>
-      )}
+      </div>
       <RecordTable rows={top} ranks={places(top)} columns={recordColumns(info, false, view.name)} />
     </section>
   );
