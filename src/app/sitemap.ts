@@ -29,6 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     page("/rankings/p4p/women", today),
     ...["mixed", "men", "women"].map((kind) => page(`/rankings/teams/${kind}`, today)),
     page("/records", today),
+    page("/data", today),
     page("/head-to-head"),
     ...["athletes", "contests", "tournaments", "nations"].map((list) => page(`/explore/${list}`, today)),
     ...data.nations.map((ioc) => page(`/countries/${ioc.toLowerCase()}`, today)),

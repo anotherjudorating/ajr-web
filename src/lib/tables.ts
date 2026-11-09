@@ -17,11 +17,17 @@ import { cacheLife } from "next/cache";
 const DATA_URL = process.env.AJR_DATA_URL; // https://data.anotherjudorating.com
 const TIMEOUT_MS = 5000;
 
+type ArchiveFile = { bytes: number; rows: number; sha256: string; updated_at: string };
+
 type Manifest = {
   version: string;
   first_day: string;
   last_day: string;
   generations?: { from: string; g: number }[];
+  settings?: Record<string, unknown>; // the rating's settings this version was computed with
+  archive?: Record<string, ArchiveFile>; // the open-data files: name → size, rows, checksum
+  readme?: string | null;
+  license?: string;
 };
 
 async function get<T>(path: string): Promise<T | null> {
@@ -74,4 +80,31 @@ export async function pastTable<T>(table: "rankings" | "p4p" | "teams", name: st
   const g = generation(m, week);
   const doc = await file<T>(`v/${m.version}/${table}/${name}/${week.slice(0, 4)}/${week}${g ? `.g${g}` : ""}.json`);
   return doc?.rows ?? null;
+}
+
+// The open-data archive (the /data page): the files with their full URLs, the README,
+// the license and the formula's version and settings. Null without R2 or a manifest.
+export type Archive = {
+  version: string;
+  settings: Record<string, unknown>;
+  files: (ArchiveFile & { name: string; url: string })[];
+  readme: string | null;
+  license: string | null;
+};
+
+export async function archive(): Promise<Archive | null> {
+  if (!DATA_URL) return null;
+  const m = await manifest();
+  if (!m?.archive || Object.keys(m.archive).length === 0) return null;
+  return {
+    version: m.version,
+    settings: m.settings ?? {},
+    files: Object.entries(m.archive).map(([name, file]) => ({
+      name,
+      url: `${DATA_URL}/archive/${m.version}/${name}`,
+      ...file,
+    })),
+    readme: m.readme ? `${DATA_URL}/${m.readme}` : null,
+    license: m.license ?? null,
+  };
 }
