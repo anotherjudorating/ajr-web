@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { recordColumns } from "@/components/records/columns";
 import { RecordTable } from "@/components/records/RecordTable";
@@ -12,6 +12,8 @@ import { GROUPS, type Group, places, RECORDS, type RecordInfo, recordView } from
 const SHOW = 5;
 const ACTIVE = "font-bold text-ink border-claret";
 const INACTIVE = "text-muted hover:text-ink border-transparent";
+// as the weight switcher's, wide enough for "Athletes"
+const LABEL = "w-[72px] shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted";
 
 // The group tab lives in the URL's hash (#medals), as in the prototype.
 function subscribe(onChange: () => void) {
@@ -34,38 +36,42 @@ export function RecordsOverview({ rows }: { rows: Record<Gender, RecordRow[]> })
   return (
     <>
       <div className="mt-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        {/* six groups: four, then two, on a phone (one line is wider than the screen) */}
-        <nav className="flex flex-wrap items-center gap-x-2 gap-y-1" aria-label="Record groups">
-          {GROUPS.map((g, i) => (
-            <Fragment key={g.key}>
-              {i === 4 && <span aria-hidden className="basis-full h-0 sm:hidden" />}
+        {/* a label before each row of tabs, as in the weight switcher; the six groups
+            wrap after the label on a phone (one line is wider than the screen) */}
+        <div className="flex items-start lg:items-center">
+          <span className={`${LABEL} pt-2.5 lg:pt-0`}>Records</span>
+          <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0" aria-label="Record groups">
+            {GROUPS.map((g) => (
               <a
+                key={g.key}
                 href={`#${g.key}`}
                 className={`px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] border-b-2 ${g.key === group ? ACTIVE : INACTIVE}`}
               >
                 {g.title}
               </a>
-            </Fragment>
-          ))}
-        </nav>
-        <div className="flex items-center gap-3 text-[13px] sm:text-[14px]">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted">Athletes</span>
-          {(
-            [
-              ["", "All"],
-              ["male", "Men"],
-              ["female", "Women"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => setGender(value)}
-              className={`px-1 pb-0.5 border-b-2 cursor-pointer ${value === gender ? ACTIVE : INACTIVE}`}
-            >
-              {label}
-            </button>
-          ))}
+            ))}
+          </nav>
+        </div>
+        <div className="flex items-center text-[13px] sm:text-[14px]">
+          <span className={LABEL}>Athletes</span>
+          <div className="flex items-center gap-3">
+            {(
+              [
+                ["", "All"],
+                ["male", "Men"],
+                ["female", "Women"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setGender(value)}
+                className={`px-1 pb-0.5 border-b-2 cursor-pointer ${value === gender ? ACTIVE : INACTIVE}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
