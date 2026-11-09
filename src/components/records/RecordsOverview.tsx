@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { Fragment, useState, useSyncExternalStore } from "react";
 
 import { recordColumns } from "@/components/records/columns";
 import { RecordTable } from "@/components/records/RecordTable";
@@ -34,16 +34,18 @@ export function RecordsOverview({ rows }: { rows: Record<Gender, RecordRow[]> })
   return (
     <>
       <div className="mt-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        {/* six groups: three by two on a phone (one line is wider than the screen) */}
-        <nav className="grid grid-cols-3 gap-x-2 gap-y-1 sm:flex sm:items-center sm:gap-2" aria-label="Record groups">
-          {GROUPS.map((g) => (
-            <a
-              key={g.key}
-              href={`#${g.key}`}
-              className={`justify-self-start px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] border-b-2 ${g.key === group ? ACTIVE : INACTIVE}`}
-            >
-              {g.title}
-            </a>
+        {/* six groups: four, then two, on a phone (one line is wider than the screen) */}
+        <nav className="flex flex-wrap items-center gap-x-2 gap-y-1" aria-label="Record groups">
+          {GROUPS.map((g, i) => (
+            <Fragment key={g.key}>
+              {i === 4 && <span aria-hidden className="basis-full h-0 sm:hidden" />}
+              <a
+                href={`#${g.key}`}
+                className={`px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] border-b-2 ${g.key === group ? ACTIVE : INACTIVE}`}
+              >
+                {g.title}
+              </a>
+            </Fragment>
           ))}
         </nav>
         <div className="flex items-center gap-3 text-[13px] sm:text-[14px]">
