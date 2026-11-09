@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useLayoutEffect, useMemo, useState } from "react";
 
+import { useHashTarget } from "@/components/anchors";
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { MEDAL_BADGE } from "@/components/Medal";
@@ -10,6 +11,7 @@ import { isUpset } from "@/components/rankings/Changes";
 import { PAGE_SIZES } from "@/components/rankings/TableParts";
 import type { Competition } from "@/components/athlete/RatingChart";
 import { RowLink } from "@/components/RowLink";
+import { SECTION } from "@/lib/anchors";
 import type { HistoryRow } from "@/lib/api";
 import { formatChance, roundCode, shortDate, shortName, signed } from "@/lib/format";
 import { pageNumbers } from "@/lib/pages";
@@ -97,13 +99,18 @@ export function Contests({
   const totals = new Map<number, number>();
   for (const c of contests) totals.set(c.competition_id, (totals.get(c.competition_id) ?? 0) + gain(c));
 
+  // #contests from another page: Next does not scroll to it (the section comes after
+  // the page's data), so it scrolls itself once it is there
+  const { ref: anchorRef, scrollNow } = useHashTarget(SECTION.contests);
+  useLayoutEffect(scrollNow, [scrollNow]);
+
   const reset = <T,>(set: (value: T) => void) => (value: T) => {
     set(value);
     setPage(1);
   };
 
   return (
-    <section id="contests" className="mt-14 md:mt-16 scroll-mt-24">
+    <section id={SECTION.contests} ref={anchorRef} className="mt-14 md:mt-16">
       <h2 className="font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight text-ink">
         Contests
       </h2>

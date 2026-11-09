@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useState } from "react";
+import { Fragment, useLayoutEffect, useState } from "react";
 
+import { useHashTarget } from "@/components/anchors";
 import { Icon } from "@/components/Icon";
 import { Medal, MEDAL_BADGE, type MedalKind } from "@/components/Medal";
 import { HEAD_CELL, ROW_CELL } from "@/components/tournament/styles";
 import type { HistoryRow } from "@/lib/api";
+import { LEVEL_SLUGS, SECTION } from "@/lib/anchors";
 import { formatDate } from "@/lib/format";
 import { WEIGHTS } from "@/lib/weights";
 
@@ -63,13 +65,32 @@ function entries(history: HistoryRow[]): (Entry & { level: string })[] {
   return [...byKey.values()].sort((a, b) => (a.day < b.day ? 1 : -1));
 }
 
+const levelOf = (slug: string) => Object.keys(LEVEL_SLUGS).find((title) => LEVEL_SLUGS[title] === slug) ?? null;
+
 const isMedal = (result: string | null): result is MedalKind => KINDS.includes(result as MedalKind);
 
 // Results by the tournament's level, over the whole career (every weight): the medals
 // and how many tournaments were entered (Total, with or without a medal); a level
 // opens to its tournaments with the result. Levels never entered are left out.
+//
+// #results opens the page here; #results-grand-slam (a slug of LEVEL_SLUGS) with
+// that level open, and a click on a level writes its hash into the address (to copy).
 export function Medals({ history }: { history: HistoryRow[] }) {
+  const { qualifier, ref, scrollNow } = useHashTarget(SECTION.results);
   const [open, setOpen] = useState<string | null>(null);
+  // a new hash opens its level, in the same render (then one scroll, to the result)
+  const [seen, setSeen] = useState<string | null>(null);
+  if (qualifier !== seen) {
+    setSeen(qualifier);
+    if (qualifier !== null) setOpen(levelOf(qualifier));
+  }
+  useLayoutEffect(scrollNow, [scrollNow, open]);
+  const toggle = (title: string) => {
+    const next = open === title ? null : title;
+    setOpen(next);
+    // replace, not push: a click is not a step back; Next keeps its own state
+    window.history.replaceState(window.history.state, "", `#${SECTION.results}${next ? `-${LEVEL_SLUGS[next]}` : ""}`);
+  };
   const all = entries(history);
   const levels = LEVELS.map((level) => {
     const list = all.filter((e) => e.level === level.title);
@@ -83,7 +104,7 @@ export function Medals({ history }: { history: HistoryRow[] }) {
   if (levels.length === 0) return null;
 
   return (
-    <section className="mt-14 md:mt-16">
+    <section id={SECTION.results} ref={ref} className="mt-14 md:mt-16">
       <h2 className={H2}>Results</h2>
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <thead>
@@ -115,7 +136,7 @@ export function Medals({ history }: { history: HistoryRow[] }) {
               <Fragment key={level.title}>
                 <tr
                   className="border-b border-rule cursor-pointer hover:bg-panel/40"
-                  onClick={() => setOpen(isOpen ? null : level.title)}
+                  onClick={() => toggle(level.title)}
                   aria-expanded={isOpen}
                 >
                   <td className={`${ROW_CELL} font-medium`}>
