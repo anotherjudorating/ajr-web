@@ -55,27 +55,12 @@ async function DataContent() {
         contest, and the rating, its deviation and volatility before and after. Plus the athletes and the
         competitions to join on.
       </p>
-      <p className="mt-3">
-        The files are rebuilt every week and carry the version of the rating settings they were computed
-        with, so a number you quote today can be checked against the file it came from. After a change of
-        the formula, the previous version stays available for 90 days.
-      </p>
+      <p className="mt-3">The files are rebuilt every week.</p>
 
       <h2 className={H2}>Files</h2>
       {data ? (
         <>
-          <p className="text-[14px] text-muted mb-3">
-            Version <code className="text-ink">{data.version}</code>
-            {updated && <>, updated {formatDate(updated)}</>}. SHA-256 checksums are in the{" "}
-            {data.readme ? (
-              <a href={data.readme} className={LINK}>
-                README
-              </a>
-            ) : (
-              "README"
-            )}
-            .
-          </p>
+          {updated && <p className="text-[14px] text-muted mb-3">Updated {formatDate(updated)}.</p>}
           <div className="overflow-x-auto">
             <table className="w-full text-[14px] border-collapse">
               <thead>
@@ -108,7 +93,7 @@ async function DataContent() {
                     </td>
                     <td />
                     <td />
-                    <td className="py-2 text-muted">every column, the rating settings, how to cite</td>
+                    <td className="py-2 text-muted">every column explained</td>
                   </tr>
                 )}
               </tbody>
@@ -127,11 +112,6 @@ async function DataContent() {
         before the contest. Join <code>athlete_id</code> and <code>opponent_id</code> on athletes.csv.gz and{" "}
         <code>competition_id</code> on competitions.csv.gz.
       </p>
-      {data && (
-        <pre className="mt-3 p-3 bg-panel border border-rule text-[13px] overflow-x-auto">
-          {`import pandas as pd\nh = pd.read_csv("${data.files.find((f) => f.name === "rating_history.csv.gz")?.url ?? ""}")`}
-        </pre>
-      )}
       <p className="mt-3 text-[14px] text-muted">
         The &ldquo;Export CSV&rdquo; buttons on the site&apos;s tables save what the page shows, for a
         spreadsheet; this archive is the full, stable, citable dataset.
@@ -156,7 +136,7 @@ async function DataContent() {
         affiliated with or endorsed by the International Judo Federation.
       </p>
       <p className="mt-3">
-        To cite: <i>Another Judo Rating, rating history, version {data?.version ?? "<version>"}, {SITE}/data</i>.
+        To cite: <i>Another Judo Rating, rating history, {SITE}/data</i>.
       </p>
       <p className="mt-3">
         Questions, corrections or a removal request:{" "}
