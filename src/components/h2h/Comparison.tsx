@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { HashScroll } from "@/components/HashScroll";
+import { SECTION } from "@/lib/anchors";
+
 import { Flag } from "@/components/Flag";
 import { type ChartAthlete, H2HChart } from "@/components/h2h/H2HChart";
 import { Icon } from "@/components/Icon";
@@ -94,7 +97,8 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
 
       <H2HChart athletes={chart} today={today} />
 
-      <section className="mt-14 lg:mt-16">
+      <section id={SECTION.meetings} className="mt-14 lg:mt-16">
+        <HashScroll id={SECTION.meetings} />
         <div className="flex items-baseline justify-between gap-3 border-b-2 border-ink pb-2">
           <h2 className={H2}>{meetingsTitle(a.athlete, b.athlete, winsA, meetings.length - winsA)}</h2>
         </div>
