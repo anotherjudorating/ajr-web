@@ -77,7 +77,7 @@ export function Medals({ history }: { history: HistoryRow[] }) {
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-left`}>Tournament level</th>
+            <th className={`${HEAD_CELL} text-left`}>Level</th>
             {KINDS.map((kind) => (
               <th key={kind} className={`${HEAD_CELL} text-center w-11 sm:w-14`} title={kind}>
                 <span className="inline-flex justify-center w-full">
