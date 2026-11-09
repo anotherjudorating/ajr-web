@@ -99,7 +99,17 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                   onClick={() => setOpen(isOpen ? null : level.title)}
                   aria-expanded={isOpen}
                 >
-                  <td className={`${ROW_CELL} font-medium`}>{level.title}</td>
+                  <td className={`${ROW_CELL} font-medium`}>
+                    {/* the two continental levels break after "Continental" on a phone */}
+                    {level.title.startsWith("Continental ") ? (
+                      <>
+                        Continental <br className="sm:hidden" />
+                        {level.title.slice("Continental ".length)}
+                      </>
+                    ) : (
+                      level.title
+                    )}
+                  </td>
                   {KINDS.map((kind) => (
                     <td key={kind} className={`${ROW_CELL} text-center`}>
                       {level[kind]}
