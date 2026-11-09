@@ -34,7 +34,8 @@ export function RecordsOverview({ rows }: { rows: Record<Gender, RecordRow[]> })
   return (
     <>
       <div className="mt-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <nav className="flex items-center gap-2" aria-label="Record groups">
+        {/* six groups: two lines on a phone rather than wider than the screen */}
+        <nav className="flex flex-wrap items-center gap-x-2 gap-y-1" aria-label="Record groups">
           {GROUPS.map((g) => (
             <a
               key={g.key}
