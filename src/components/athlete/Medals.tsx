@@ -58,7 +58,8 @@ function entries(history: HistoryRow[]): (Entry & { level: string })[] {
 
 const isMedal = (result: string | null): result is MedalKind => KINDS.includes(result as MedalKind);
 
-// Medals by the tournament's level, over the whole career (every weight); a level
+// Results by the tournament's level, over the whole career (every weight): the medals
+// and how many tournaments were entered (Total, with or without a medal); a level
 // opens to its tournaments with the result. Levels never entered are left out.
 export function Medals({ history }: { history: HistoryRow[] }) {
   const [open, setOpen] = useState<string | null>(null);
@@ -69,11 +70,10 @@ export function Medals({ history }: { history: HistoryRow[] }) {
     return { title: level.title, list, gold: count("gold"), silver: count("silver"), bronze: count("bronze") };
   }).filter((level) => level.list.length > 0);
   if (levels.length === 0) return null;
-  const total = (l: { gold: number; silver: number; bronze: number }) => l.gold + l.silver + l.bronze;
 
   return (
     <section className="mt-14 md:mt-16">
-      <h2 className={H2}>Medals</h2>
+      <h2 className={H2}>Results</h2>
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <thead>
           <tr className="bg-panel border-b border-rule">
@@ -85,7 +85,9 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                 </span>
               </th>
             ))}
-            <th className={`${HEAD_CELL} text-right w-14 sm:w-16`}>Total</th>
+            <th className={`${HEAD_CELL} text-right w-14 sm:w-16`} title="Tournaments entered">
+              Total
+            </th>
             <th className="w-6 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
@@ -115,7 +117,7 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                       {level[kind]}
                     </td>
                   ))}
-                  <td className={`${ROW_CELL} text-right font-semibold`}>{total(level)}</td>
+                  <td className={`${ROW_CELL} text-right font-semibold`}>{level.list.length}</td>
                   <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
                     <Icon size={18} name={isOpen ? "expand_less" : "expand_more"} className="align-middle" />
                   </td>
