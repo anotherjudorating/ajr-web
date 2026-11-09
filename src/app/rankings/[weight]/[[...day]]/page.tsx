@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { BreadcrumbData } from "@/components/Breadcrumbs";
 import { RankingsBrowser } from "@/components/rankings/RankingsBrowser";
-import { leaderboard } from "@/lib/api";
+import { countryNames, leaderboard } from "@/lib/api";
 import { tableDay } from "@/lib/days";
 import { WEIGHTS, weightBySlug, weightTitle } from "@/lib/weights";
 import { shortName } from "@/lib/format";
@@ -46,6 +46,7 @@ async function Rankings({ params }: { params: PageProps<"/rankings/[weight]/[[..
   if (!weight) notFound();
   const { asOf, latest, past } = await tableDay(day);
   const rows = await leaderboard(weight.api, past);
+  const names = await countryNames(rows.map((r) => r.country));
   const path = `/rankings/${weight.slug}`;
 
   return (
@@ -59,6 +60,7 @@ async function Rankings({ params }: { params: PageProps<"/rankings/[weight]/[[..
         latest={latest}
         path={path}
         csvName={`ajr-${weight.slug}-${asOf}.csv`}
+        countryNames={names}
       />
     </>
   );

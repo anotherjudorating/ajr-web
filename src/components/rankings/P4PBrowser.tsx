@@ -8,7 +8,6 @@ import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { HEAD_CELL, PlaceholderRows, ROW_CELL, saveCsv, Tip, Toolbar } from "@/components/rankings/TableParts";
 import type { P4PRow } from "@/lib/api";
-import { COUNTRY_NAMES } from "@/lib/countries";
 import { shortName, signed } from "@/lib/format";
 
 const SORTS = {
@@ -21,6 +20,8 @@ type Sort = keyof typeof SORTS;
 
 const weightLabel = (weight: string) => `${weight.replace("-", "−")} kg`;
 
+const NO_NAMES: Record<string, string> = {};
+
 // Pound for pound: the top 3 of every weight by their lead over the 7 best others
 // of their own weight. A few dozen rows: no pages.
 export function P4PBrowser({
@@ -29,6 +30,7 @@ export function P4PBrowser({
   latest,
   path,
   csvName,
+  countryNames = NO_NAMES,
   loading = false,
 }: {
   rows: P4PRow[];
@@ -36,6 +38,7 @@ export function P4PBrowser({
   latest: string;
   path: string;
   csvName: string;
+  countryNames?: Record<string, string>; // IOC code → name, for the table's countries (lib/api.ts countryNames)
   loading?: boolean;
 }) {
   const router = useRouter();
@@ -46,9 +49,9 @@ export function P4PBrowser({
   const countries = useMemo(
     () =>
       [...new Set(rows.map((r) => r.country).filter((c): c is string => !!c))]
-        .map((code) => ({ code, name: COUNTRY_NAMES[code] ?? code }))
+        .map((code) => ({ code, name: countryNames[code] ?? code }))
         .sort((a, b) => a.name.localeCompare(b.name)),
-    [rows],
+    [rows, countryNames],
   );
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();

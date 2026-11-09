@@ -21,9 +21,9 @@
 
 const BUILDING = process.env.NEXT_PHASE === "phase-production-build";
 
-export type Outcome = "ok" | "timeout" | "pool" | "statement" | "server" | "network" | "shed" | "open" | "client";
+type Outcome = "ok" | "timeout" | "pool" | "statement" | "server" | "network" | "shed" | "open" | "client";
 
-export type Config = {
+type Config = {
   limit: number; // calls at once (the pool is 10: room for the update job)
   queueMax: number; // calls waiting beyond the limit; more fail at once
   queueWaitMs: number; // a call waiting longer fails (the page fails fast instead of hanging)
@@ -38,7 +38,7 @@ const number = (name: string, fallback: number) => {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 };
 
-export const CONFIG: Config = {
+const CONFIG: Config = {
   // while the site is built, each build worker (next.config.ts cpus) has its own
   // client: one call at a time each, and patience, as nobody is waiting
   limit: BUILDING ? 1 : number("AJR_DB_LIMIT", 6),

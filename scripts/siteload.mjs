@@ -1,5 +1,5 @@
 // Load test of the whole site: visitors walking its pages, as people do, against
-// the deployment (Vercel's cache, the server, the database behind it).
+// the deployment (the server, its in-memory caches, the database behind it).
 //
 //   node scripts/siteload.mjs [--site https://www.anotherjudorating.com] [--steps 25,50,100,200] [--seconds 45]
 //                             [--skip search,explore]   (kinds of visits left out)
@@ -91,7 +91,7 @@ async function step(kinds, clients) {
         const response = await fetch(SITE + url, { signal: AbortSignal.timeout(TIMEOUT), redirect: "manual" });
         await response.arrayBuffer();
         status = response.status;
-        cache = response.headers.get("x-vercel-cache") ?? "";
+        cache = response.headers.get("x-nextjs-cache") ?? "";
       } catch (error) {
         status = error.name === "TimeoutError" ? -1 : 0;
       }

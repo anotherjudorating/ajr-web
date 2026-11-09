@@ -6,6 +6,7 @@ import { Fragment, useMemo, useState } from "react";
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { isUpset } from "@/components/rankings/Changes";
+import { PAGE_SIZES } from "@/components/rankings/TableParts";
 import type { Competition } from "@/components/athlete/RatingChart";
 import { RowLink } from "@/components/RowLink";
 import type { HistoryRow } from "@/lib/api";
@@ -31,7 +32,6 @@ const RESULTS = {
 } as const;
 type Result = keyof typeof RESULTS;
 
-const PAGE_SIZES = [20, 50, 100];
 const CONTROL =
   "h-8 py-0 px-2.5 bg-paper border border-rule text-[12px] text-ink focus:outline-none focus:border-ink cursor-pointer min-w-0";
 const CELL = "px-2 sm:px-3 h-10 sm:h-11 py-0 align-middle";

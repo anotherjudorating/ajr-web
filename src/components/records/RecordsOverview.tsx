@@ -75,7 +75,7 @@ export function RecordsOverview({ rows }: { rows: Record<Gender, RecordRow[]> })
   );
 }
 
-export function RecordTitle({ info }: { info: RecordInfo }) {
+function RecordTitle({ info }: { info: RecordInfo }) {
   if (!info.breakAfter) return <>{info.title}</>;
   return (
     <>

@@ -1,8 +1,8 @@
 // Reads the backend's `api` schema through the Supabase Data API (PostgREST).
 // Every function is cached until the data changes (dataCache below). "use cache:
-// remote": one cache for all the server's instances (on Vercel its Runtime Cache); a
-// plain "use cache" lives in one instance's memory, which serverless keeps briefly,
-// so under load each new instance went to the database again.
+// remote": on Render's single instance it is the built-in in-memory cache (sized in
+// next.config.ts), and the name keeps the door open to a shared cache handler should
+// there ever be more than one instance.
 
 import { cacheLife, cacheTag } from "next/cache";
 
@@ -484,6 +484,15 @@ export async function nations(): Promise<NationRow[]> {
   "use cache: remote";
   dataCache();
   return rpc<NationRow[]>("nations");
+}
+
+// The names of the given countries as the database has them (IOC code → name), for
+// the tables whose rows carry only the code: a code judobase adds (a new neutral
+// flag) gets its name with the data, not with a release of the site.
+export async function countryNames(codes: (string | null)[]): Promise<Record<string, string>> {
+  const wanted = new Set(codes);
+  const names = (await nations()).filter((n) => wanted.has(n.country)).map((n) => [n.country, n.name]);
+  return Object.fromEntries(names);
 }
 
 export type Competition = CompetitionRow & {

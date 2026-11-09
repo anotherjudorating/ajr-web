@@ -13,7 +13,6 @@ import { Sparkline } from "@/components/rankings/Sparkline";
 import { CELL, Pagination, TH, Tip, Toolbar } from "@/components/rankings/TableParts";
 import type { LeaderboardRow } from "@/lib/api";
 import { fetchAthleteHistory } from "@/lib/browser-api";
-import { COUNTRY_NAMES } from "@/lib/countries";
 import { competitionCode, fullName, shortDate, shortName, signed } from "@/lib/format";
 
 const SORTS = {
@@ -89,12 +88,15 @@ function downloadCsv(rows: LeaderboardRow[], asOf: string, fileName: string) {
   URL.revokeObjectURL(link.href);
 }
 
+const NO_NAMES: Record<string, string> = {};
+
 export function RankingsBrowser({
   rows,
   asOf,
   latest,
   path,
   csvName,
+  countryNames = NO_NAMES,
   loading = false,
 }: {
   rows: LeaderboardRow[];
@@ -102,6 +104,7 @@ export function RankingsBrowser({
   latest: string; // the newest day there is data for
   path: string; // e.g. /rankings/men-73
   csvName: string;
+  countryNames?: Record<string, string>; // IOC code → name, for the table's countries (lib/api.ts countryNames)
   loading?: boolean; // the table is on its way: show the page around it, rows as placeholders
 }) {
   const router = useRouter();
@@ -117,9 +120,9 @@ export function RankingsBrowser({
   const countries = useMemo(
     () =>
       [...new Set(rows.map((r) => r.country).filter((c): c is string => !!c))]
-        .map((code) => ({ code, name: COUNTRY_NAMES[code] ?? code }))
+        .map((code) => ({ code, name: countryNames[code] ?? code }))
         .sort((a, b) => a.name.localeCompare(b.name)),
-    [rows],
+    [rows, countryNames],
   );
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -248,7 +251,7 @@ export function RankingsBrowser({
                       <td className={`${CELL} hidden sm:table-cell text-[12px] leading-[16px] whitespace-nowrap`}>
                         <div className="inline-flex items-center gap-1.5">
                           <Flag ioc={row.country} />
-                          <span title={row.country ? COUNTRY_NAMES[row.country] : undefined}>{row.country}</span>
+                          <span title={row.country ? countryNames[row.country] : undefined}>{row.country}</span>
                         </div>
                       </td>
                       <td className={`${CELL} w-14 sm:w-20 text-right font-bold tabular-nums relative group cursor-pointer`}>

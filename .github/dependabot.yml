@@ -1,5 +1,5 @@
 # Weekly pull requests for outdated npm packages (security fixes come as soon as
-# they are published). Vercel builds a preview of each.
+# they are published); check.yml lints and type-checks each.
 version: 2
 updates:
   - package-ecosystem: npm
