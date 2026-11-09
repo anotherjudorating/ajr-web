@@ -12,6 +12,13 @@ import { WEIGHTS } from "@/lib/weights";
 
 const H2 = "font-serif text-[20px] sm:text-[24px] font-bold text-ink border-b-2 border-ink pb-2";
 const KINDS: MedalKind[] = ["gold", "silver", "bronze"];
+// The places without a medal, as columns: key, heading, tooltip.
+const PLACES = [
+  ["fifth", "5th", "Fifth place"],
+  ["seventh", "7th", "Seventh place"],
+  ["other", "Other", "Out earlier, or a result judobase does not give"],
+] as const;
+const WIDE = "hidden md:table-cell";
 
 // The levels, most important first, and which judobase levels (rank_name) each holds.
 const LEVELS: { title: string; holds: (rank: string) => boolean }[] = [
@@ -67,7 +74,11 @@ export function Medals({ history }: { history: HistoryRow[] }) {
   const levels = LEVELS.map((level) => {
     const list = all.filter((e) => e.level === level.title);
     const count = (m: MedalKind) => list.filter((e) => e.result === m).length;
-    return { title: level.title, list, gold: count("gold"), silver: count("silver"), bronze: count("bronze") };
+    const gold = count("gold"), silver = count("silver"), bronze = count("bronze");
+    const fifth = list.filter((e) => e.result === "5th").length;
+    const seventh = list.filter((e) => e.result === "7th").length;
+    const other = list.length - gold - silver - bronze - fifth - seventh;
+    return { title: level.title, list, gold, silver, bronze, fifth, seventh, other };
   }).filter((level) => level.list.length > 0);
   if (levels.length === 0) return null;
 
@@ -83,6 +94,12 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                 <span className="inline-flex justify-center w-full">
                   <Medal kind={kind} />
                 </span>
+              </th>
+            ))}
+            {/* places without a medal: on wider screens only */}
+            {PLACES.map(([key, label, title]) => (
+              <th key={key} className={`${HEAD_CELL} ${WIDE} text-center w-14`} title={title}>
+                {label}
               </th>
             ))}
             <th className={`${HEAD_CELL} text-right w-14 sm:w-16`} title="Tournaments entered">
@@ -117,6 +134,11 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                       {level[kind]}
                     </td>
                   ))}
+                  {PLACES.map(([key]) => (
+                    <td key={key} className={`${ROW_CELL} ${WIDE} text-center`}>
+                      {level[key]}
+                    </td>
+                  ))}
                   <td className={`${ROW_CELL} text-right font-semibold`}>{level.list.length}</td>
                   <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
                     <Icon size={18} name={isOpen ? "expand_less" : "expand_more"} className="align-middle" />
@@ -132,7 +154,11 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                         </Link>
                         {e.weight && <span className="text-muted ml-2 whitespace-nowrap">{weightLabel(e.weight)}</span>}
                       </td>
-                      <td colSpan={2} className="px-2 sm:px-3 text-right whitespace-nowrap">
+                      {/* the result under Total (and the places, when they are shown) */}
+                      <td colSpan={2} className="md:hidden px-2 sm:px-3 text-right whitespace-nowrap">
+                        <Result result={e.result} />
+                      </td>
+                      <td colSpan={2 + PLACES.length} className={`${WIDE} px-2 sm:px-3 text-right whitespace-nowrap`}>
                         <Result result={e.result} />
                       </td>
                     </tr>
