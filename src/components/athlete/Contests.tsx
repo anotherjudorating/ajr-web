@@ -5,6 +5,7 @@ import { Fragment, useMemo, useState } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
+import { MEDAL_BADGE } from "@/components/Medal";
 import { isUpset } from "@/components/rankings/Changes";
 import { PAGE_SIZES } from "@/components/rankings/TableParts";
 import type { Competition } from "@/components/athlete/RatingChart";
@@ -264,11 +265,7 @@ export function Contests({
   );
 }
 
-const MEDALS: Record<string, string> = {
-  gold: "bg-[#F1E3B3] text-[#8A6A00] border-[#E8D49E]",
-  silver: "bg-[#E4E4E4] text-[#5A5A5A] border-[#D2D2D2]",
-  bronze: "bg-[#EBD5C3] text-[#8A4B1F] border-[#DDBFA6]",
-};
+const MEDALS: Record<string, string> = MEDAL_BADGE;
 
 function CompetitionRow({ contest, total }: { contest: HistoryRow; total: number }) {
   const medal = contest.result ? MEDALS[contest.result] : undefined;

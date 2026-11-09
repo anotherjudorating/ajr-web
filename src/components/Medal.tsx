@@ -19,3 +19,10 @@ export function Medal({ kind, className = "w-4 h-5", predicted = false }: { kind
     </svg>
   );
 }
+
+// A result written as a medal: the badge of the athlete page's contests and medals.
+export const MEDAL_BADGE: Record<MedalKind, string> = {
+  gold: "bg-[#F1E3B3] text-[#8A6A00] border-[#E8D49E]",
+  silver: "bg-[#E4E4E4] text-[#5A5A5A] border-[#D2D2D2]",
+  bronze: "bg-[#EBD5C3] text-[#8A4B1F] border-[#DDBFA6]",
+};

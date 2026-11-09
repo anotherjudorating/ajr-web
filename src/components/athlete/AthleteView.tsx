@@ -6,6 +6,7 @@ import { AthleteHeader } from "@/components/athlete/AthleteHeader";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Contests } from "@/components/athlete/Contests";
 import { FrequentOpponents, NextTournaments, Standouts } from "@/components/athlete/Lists";
+import { Medals } from "@/components/athlete/Medals";
 import { type Competition, RatingChart } from "@/components/athlete/RatingChart";
 import type { Athlete, HistoryRow } from "@/lib/api";
 import { shortName } from "@/lib/format";
@@ -53,6 +54,7 @@ export function AthleteView({
 
       <AthleteHeader athlete={athlete} weight={weight} onWeight={pickWeight} today={today} />
       <RatingChart athlete={athlete} history={history} today={today} onCompetition={pickCompetition} />
+      <Medals history={history} />
       <Contests
         key={weight}
         contests={contests}

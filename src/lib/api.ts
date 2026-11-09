@@ -80,6 +80,7 @@ export type HistoryRow = {
   fought_on: string;
   competition_id: number;
   competition: string;
+  competition_rank: string | null; // the tournament's level: Grand Slam, World Championships…
   round: string | null;
   weight: string | null;
   opponent_id: number;
