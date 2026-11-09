@@ -56,6 +56,15 @@ const nextConfig: NextConfig = {
     // (/api/revalidate). (A fixed deploymentId did the same, but Vercel wants a new
     // one for each deploy.)
     durableUseCacheEntries: true,
+    // Rendered pages stay in the in-memory cache only, never written under .next/server.
+    // Every page a crawler opened became files there (HTML, RSC, segments), and the
+    // kernel's records of those files (slab: dentries, inodes) and their page cache count
+    // against the instance's 512 MB: on 2026-11-09 .next/server grew 830 → 849 MB in two
+    // minutes of crawling, the container stood at 510 MB with Next itself at 339, and
+    // Render OOM-killed it every ~15 hours. The disk only saved a re-render of a page
+    // that had left the memory cache, and was lost at each restart or deploy anyway.
+    // The build's pages are still read from disk.
+    isrFlushToDisk: false,
     // Build workers, each rendering pages that read the database: Render's builder
     // started 30 at once, and on 2026-11-07 a build during the update job's publish
     // failed on the Data API's 3-second limit (api.nations). Four keep the database's
