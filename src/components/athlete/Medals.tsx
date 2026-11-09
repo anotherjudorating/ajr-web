@@ -130,10 +130,6 @@ export function Medals({ history }: { history: HistoryRow[] }) {
           })}
         </tbody>
       </table>
-      <p className="mt-3 text-[12px] text-muted">
-        Individual senior events in the IJF judobase since 2009; the World Championships 2009–2011 and the 2012
-        Olympic finals are missing there.
-      </p>
     </section>
   );
 }
