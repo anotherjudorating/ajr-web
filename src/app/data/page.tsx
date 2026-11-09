@@ -14,13 +14,6 @@ export const metadata: Metadata = {
 const LICENSE = "https://creativecommons.org/licenses/by/4.0/";
 const CONTACT = "data@anotherjudorating.com";
 
-// What each file holds, for the table of files (the README has every column).
-const HOLDS: Record<string, string> = {
-  "rating_history.csv.gz": "every rating change since 2009: one row per athlete per contest",
-  "athletes.csv.gz": "id, name, gender, birth year, country",
-  "competitions.csv.gz": "id, name, level, city, country, dates",
-};
-
 const size = (bytes: number) =>
   bytes >= 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1e3))} KB`;
 
@@ -67,8 +60,7 @@ async function DataContent() {
                 <tr className="border-b border-rule text-left text-muted">
                   <th className="py-2 pr-4 font-normal">File</th>
                   <th className="py-2 pr-4 font-normal text-right">Rows</th>
-                  <th className="py-2 pr-4 font-normal text-right">Size</th>
-                  <th className="py-2 font-normal">What it holds</th>
+                  <th className="py-2 font-normal text-right">Size</th>
                 </tr>
               </thead>
               <tbody>
@@ -80,8 +72,7 @@ async function DataContent() {
                       </a>
                     </td>
                     <td className="py-2 pr-4 text-right tabular-nums">{file.rows.toLocaleString("en-US")}</td>
-                    <td className="py-2 pr-4 text-right tabular-nums whitespace-nowrap">{size(file.bytes)}</td>
-                    <td className="py-2 text-muted">{HOLDS[file.name] ?? ""}</td>
+                    <td className="py-2 text-right tabular-nums whitespace-nowrap">{size(file.bytes)}</td>
                   </tr>
                 ))}
                 {data.readme && (
@@ -93,7 +84,6 @@ async function DataContent() {
                     </td>
                     <td />
                     <td />
-                    <td className="py-2 text-muted">every column explained</td>
                   </tr>
                 )}
               </tbody>
