@@ -34,13 +34,13 @@ export function RecordsOverview({ rows }: { rows: Record<Gender, RecordRow[]> })
   return (
     <>
       <div className="mt-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        {/* six groups: two lines on a phone rather than wider than the screen */}
-        <nav className="flex flex-wrap items-center gap-x-2 gap-y-1" aria-label="Record groups">
+        {/* six groups: three by two on a phone (one line is wider than the screen) */}
+        <nav className="grid grid-cols-3 gap-x-2 gap-y-1 sm:flex sm:items-center sm:gap-2" aria-label="Record groups">
           {GROUPS.map((g) => (
             <a
               key={g.key}
               href={`#${g.key}`}
-              className={`px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] border-b-2 ${g.key === group ? ACTIVE : INACTIVE}`}
+              className={`justify-self-start px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] border-b-2 ${g.key === group ? ACTIVE : INACTIVE}`}
             >
               {g.title}
             </a>
