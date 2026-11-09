@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { BreadcrumbData } from "@/components/Breadcrumbs";
 import { P4PBrowser } from "@/components/rankings/P4PBrowser";
-import { p4p } from "@/lib/api";
+import { countryNames, p4p } from "@/lib/api";
 import { tableDay } from "@/lib/days";
 import { NOINDEX } from "@/lib/seo";
 
@@ -41,6 +41,7 @@ async function Table({ params }: { params: PageProps<"/rankings/p4p/[gender]/[[.
   const path = `/rankings/p4p/${gender}`;
   const { asOf, latest, past } = await tableDay(day);
   const rows = await p4p(gender, past);
+  const names = await countryNames(rows.map((r) => r.country));
   return (
     <>
       <h1 className="sr-only">{GENDERS[gender as Gender]} pound for pound — judo ranking</h1>
@@ -52,6 +53,7 @@ async function Table({ params }: { params: PageProps<"/rankings/p4p/[gender]/[[.
         latest={latest}
         path={path}
         csvName={`ajr-p4p-${gender}-${asOf}.csv`}
+        countryNames={names}
       />
     </>
   );

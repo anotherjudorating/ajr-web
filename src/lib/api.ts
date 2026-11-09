@@ -486,6 +486,15 @@ export async function nations(): Promise<NationRow[]> {
   return rpc<NationRow[]>("nations");
 }
 
+// The names of the given countries as the database has them (IOC code → name), for
+// the tables whose rows carry only the code: a code judobase adds (a new neutral
+// flag) gets its name with the data, not with a release of the site.
+export async function countryNames(codes: (string | null)[]): Promise<Record<string, string>> {
+  const wanted = new Set(codes);
+  const names = (await nations()).filter((n) => wanted.has(n.country)).map((n) => [n.country, n.name]);
+  return Object.fromEntries(names);
+}
+
 export type Competition = CompetitionRow & {
   weights: string[]; // fought at the tournament, in the site's order
 };
