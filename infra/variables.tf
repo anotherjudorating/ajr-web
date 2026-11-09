@@ -76,3 +76,9 @@ variable "render_outbound_ips" {
   type        = list(string)
   default     = []
 }
+
+variable "owner_email" {
+  description = "The owner's mailbox that data@ forwards to (email.tf). Kept out of git."
+  type        = string
+  sensitive   = true
+}
