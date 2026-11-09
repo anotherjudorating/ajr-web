@@ -6,7 +6,7 @@ import { SITE } from "@/lib/seo";
 import { archive, type Archive } from "@/lib/tables";
 
 export const metadata: Metadata = {
-  title: "Data",
+  title: "Export data",
   description:
     "Download the full rating history of every IJF World Tour judoka as CSV: every contest since 2009 with win chances and ratings before and after. CC BY 4.0.",
 };
@@ -47,7 +47,7 @@ async function DataContent() {
     <div className="w-full max-w-[760px] bg-paper pt-[37.25px] sm:pt-[47.25px] md:pt-[48.75px] pb-8 text-[15px] leading-relaxed text-ink">
       {data && <DatasetData data={data} updated={updated} />}
       <h1 className="font-serif text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold tracking-[-0.015em]">
-        Data
+        Export data
       </h1>
       <p className="mt-3">
         Everything the tables are built from, as files you can download and reproduce. One row per athlete

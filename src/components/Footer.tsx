@@ -14,21 +14,21 @@ export async function Footer() {
             Methodology
           </Link>
           <Link href="/data" className="hover:underline">
-            Data
+            Export data
           </Link>
         </div>
         <div className="flex items-center text-[12px] text-muted whitespace-nowrap mt-2 sm:mt-0">
           {updated && <span>Ratings updated {formatDate(updated)}</span>}
           {updated && <span className="inline-block w-px h-3 bg-rule mx-2 align-middle" />}
           <span>
-            Data:{" "}
+            Source:{" "}
             <a
               href="https://judobase.ijf.org/#/dashboard"
               target="_blank"
               rel="noopener"
               className="hover:text-ink hover:underline"
             >
-              IJF judobase
+              IJF Judobase
             </a>
           </span>
         </div>
@@ -37,7 +37,7 @@ export async function Footer() {
             Methodology
           </Link>
           <Link href="/data" className="hover:text-ink hover:underline">
-            Data
+            Export data
           </Link>
         </div>
       </div>
