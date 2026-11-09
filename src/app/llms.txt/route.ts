@@ -44,6 +44,10 @@ ${firsts.join("\n")}
 - Nations: ${SITE}/countries/<ioc> (e.g. /countries/jpn)
 - Head-to-head: ${SITE}/head-to-head — two athletes compared, win chance, every meeting
 - Lists: ${SITE}/explore/athletes, ${SITE}/explore/tournaments, ${SITE}/explore/contests
+
+## Data
+
+- [Full dataset](${SITE}/data): every rating change since 2009 as CSV (contest, athletes, day, weight, win chance, rating, RD and volatility before and after), plus athletes and competitions; CC BY 4.0, versioned by the rating settings, with a README of every column. Results originate from IJF judobase; the ratings are ours.
 `;
   return new Response(text, {
     headers: {

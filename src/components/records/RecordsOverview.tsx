@@ -12,6 +12,8 @@ import { GROUPS, type Group, places, RECORDS, type RecordInfo, recordView } from
 const SHOW = 5;
 const ACTIVE = "font-bold text-ink border-claret";
 const INACTIVE = "text-muted hover:text-ink border-transparent";
+// as the weight switcher's, wide enough for "Athletes"
+const LABEL = "w-[72px] shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted";
 
 // The group tab lives in the URL's hash (#medals), as in the prototype.
 function subscribe(onChange: () => void) {
@@ -34,35 +36,42 @@ export function RecordsOverview({ rows }: { rows: Record<Gender, RecordRow[]> })
   return (
     <>
       <div className="mt-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-        <nav className="flex items-center gap-2" aria-label="Record groups">
-          {GROUPS.map((g) => (
-            <a
-              key={g.key}
-              href={`#${g.key}`}
-              className={`px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] border-b-2 ${g.key === group ? ACTIVE : INACTIVE}`}
-            >
-              {g.title}
-            </a>
-          ))}
-        </nav>
-        <div className="flex items-center gap-3 text-[13px] sm:text-[14px]">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted">Athletes</span>
-          {(
-            [
-              ["", "All"],
-              ["male", "Men"],
-              ["female", "Women"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => setGender(value)}
-              className={`px-1 pb-0.5 border-b-2 cursor-pointer ${value === gender ? ACTIVE : INACTIVE}`}
-            >
-              {label}
-            </button>
-          ))}
+        {/* a label before each row of tabs, as in the weight switcher; the six groups
+            wrap after the label on a phone (one line is wider than the screen) */}
+        <div className="flex items-start lg:items-center">
+          <span className={`${LABEL} pt-2.5 lg:pt-0`}>Records</span>
+          <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0" aria-label="Record groups">
+            {GROUPS.map((g) => (
+              <a
+                key={g.key}
+                href={`#${g.key}`}
+                className={`px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] border-b-2 ${g.key === group ? ACTIVE : INACTIVE}`}
+              >
+                {g.title}
+              </a>
+            ))}
+          </nav>
+        </div>
+        <div className="flex items-center text-[13px] sm:text-[14px]">
+          <span className={LABEL}>Athletes</span>
+          <div className="flex items-center gap-3">
+            {(
+              [
+                ["", "All"],
+                ["male", "Men"],
+                ["female", "Women"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setGender(value)}
+                className={`px-1 pb-0.5 border-b-2 cursor-pointer ${value === gender ? ACTIVE : INACTIVE}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -95,18 +104,17 @@ function TopList({ info, rows }: { info: RecordInfo; rows: RecordRow[] }) {
         <h2 className="font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight">
           <RecordTitle info={info} />
         </h2>
-        <Link
-          href={`/records/${info.slug}${info.views && key !== info.views[0].key ? `?view=${key}` : ""}`}
-          className="font-serif shrink-0 whitespace-nowrap text-[14px] font-semibold text-claret hover:underline"
-        >
-          Full list
-        </Link>
-      </div>
-      {info.views && (
-        <div className="mt-2">
+        {/* the views (Total, In a row…) along the rule, before Full list */}
+        <div className="flex shrink-0 items-end gap-4">
           <ViewSwitch info={info} current={key} onPick={setKey} />
+          <Link
+            href={`/records/${info.slug}${info.views && key !== info.views[0].key ? `?view=${key}` : ""}`}
+            className="font-serif whitespace-nowrap text-[14px] font-semibold text-claret hover:underline"
+          >
+            Full list
+          </Link>
         </div>
-      )}
+      </div>
       <RecordTable rows={top} ranks={places(top)} columns={recordColumns(info, false, view.name)} />
     </section>
   );

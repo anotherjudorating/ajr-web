@@ -27,7 +27,7 @@ export default async function RecordsPage() {
         >
           IJF judobase
         </a>
-        : from 2009, and from 2011 for the records that rest on ratings, once they had settled.
+        , from 2009.
       </p>
       <RecordsOverview rows={{ "": all, male: men, female: women }} />
     </div>
