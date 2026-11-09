@@ -1,8 +1,8 @@
 // Reads the backend's `api` schema through the Supabase Data API (PostgREST).
 // Every function is cached until the data changes (dataCache below). "use cache:
-// remote": one cache for all the server's instances (on Vercel its Runtime Cache); a
-// plain "use cache" lives in one instance's memory, which serverless keeps briefly,
-// so under load each new instance went to the database again.
+// remote": on Render's single instance it is the built-in in-memory cache (sized in
+// next.config.ts), and the name keeps the door open to a shared cache handler should
+// there ever be more than one instance.
 
 import { cacheLife, cacheTag } from "next/cache";
 

@@ -1,8 +1,7 @@
 name: Check
 
 # Every pull request and push to main: lint and type-check. No build: a build reads
-# the production database, and Vercel builds only main (vercel.json); a merge to main
-# makes a production deployment that is promoted by hand.
+# the production database, and Render builds and deploys main on each merge.
 on:
   pull_request:
   push:

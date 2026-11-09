@@ -15,8 +15,8 @@ const MEDALS: string[] = ["gold", "silver", "bronze"];
 const UPSET = 0.35; // a winner's chance of 35% or less, as everywhere on the site
 const EXPERIENCE = 10; // rated contests before the tournament to count in the gains
 
-export const isMedal = (r: CompetitionResult) => r.result !== null && MEDALS.includes(r.result);
-export const gainOf = (r: CompetitionResult) => r.score_after - r.score_before;
+const isMedal = (r: CompetitionResult) => r.result !== null && MEDALS.includes(r.result);
+const gainOf = (r: CompetitionResult) => r.score_after - r.score_before;
 
 // A weight's four lines on the overview: its medallists once it is over, until then
 // the four likeliest medallists of the draw.

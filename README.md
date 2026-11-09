@@ -1,12 +1,14 @@
 # ajr-web
 
 The site of Another Judo Rating: Next.js 16 (App Router, Cache Components) with
-Tailwind 4, deployed on Vercel.
+Tailwind 4, on a Render web service behind Cloudflare.
 
 There is no backend server of our own: pages read the `api` schema of the Supabase
-database through its Data API with the publishable key (`src/lib/api.ts`). The data
-changes every 15 minutes (the backend job), so every read is cached for 15 minutes
-(the `data` profile in `next.config.ts`) and pages are rendered ahead of time.
+database through its Data API with the publishable key (`src/lib/api.ts`), through one
+data client that limits, queues and, when the database fails, stops the calls
+(`src/lib/data-client.ts`). Every read is cached until the backend's update job says
+the data changed (`/api/revalidate`, tag `data`; the `data` profile in
+`next.config.ts`). Past weeks' tables are files in Cloudflare R2 (`src/lib/tables.ts`).
 
 ## Run
 
@@ -20,11 +22,15 @@ npm run build && npm start   # production build
 ## Layout
 
 ```
-src/app/            pages; layout.tsx holds the header and footer of every page
-src/components/     Header, Footer, WeightSwitcher, RankingTable, Change (▲▼, +/−)
-src/lib/api.ts      the backend's api functions: leaderboard, athlete, athlete_history, last_update
-src/lib/weights.ts  the 14 weight categories and their URL slugs (men-73, women-plus-78)
-prototype/          the clickable HTML prototype from Google Stitch: the reference for the design
+src/app/                pages; layout.tsx holds the header and footer of every page;
+                        api/health (the data client's state), api/revalidate
+src/components/         one folder per kind of page (rankings, athlete, tournament, …)
+src/lib/api.ts          the backend's api functions, cached
+src/lib/data-client.ts  the one way to the database: limit, queue, breaker
+src/lib/tables.ts       past weeks' tables from R2, the database as fallback
+src/lib/weights.ts      the 14 weight categories and their URL slugs (men-73, women-plus-78)
+src/proxy.ts            tells crawlers to come back later while the database struggles
+scripts/                siteload.mjs, stress.mjs (load tests), memcheck.mjs (server memory)
 ```
 
 Colors and fonts are Tailwind tokens in `src/app/globals.css` (`bg-paper`, `text-claret`,

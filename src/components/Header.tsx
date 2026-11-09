@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Icon } from "@/components/Icon";
 import { SiteSearch } from "@/components/SiteSearch";
 
-export const SECTIONS = [
+const SECTIONS = [
   { label: "Rankings", href: "/rankings" },
   { label: "Explore", href: "/explore", also: ["/tournaments", "/contests", "/countries"] },
   { label: "Head-to-head", href: "/head-to-head" },
