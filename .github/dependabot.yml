@@ -14,3 +14,7 @@ updates:
       # lint fails on 7 (https://github.com/typescript-eslint/typescript-eslint/issues/10940)
       - dependency-name: typescript
         versions: [">= 6.1"]
+  - package-ecosystem: terraform
+    directory: /infra
+    schedule:
+      interval: weekly

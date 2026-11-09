@@ -1,0 +1,14 @@
+# Copy to terraform.tfvars (git-ignored) and fill in, or export the same as
+# TF_VAR_<name> from ~/.config/ajr/terraform.env (README). Never commit the real file.
+
+cloudflare_account_id = "" # Dashboard → zone Overview → API → Account ID (not a secret)
+cloudflare_zone_id    = "" # same → Zone ID
+
+render_api_key       = "" # ~/.config/ajr/render.env (RENDER_API_KEY)
+cloudflare_api_token = "" # Zone › DNS › Edit, Zone Settings › Edit, Cache Rules › Edit, Zone › Read; Account › Account Settings › Edit, Zone › Email Routing Rules › Edit, Account › Email Routing Addresses › Edit
+github_token         = "" # fine-grained PAT: ajr-web (+ ajr-backend), Administration RW, Secrets RW, Variables RW, Contents R
+
+supabase_publishable_key = "" # sb_publishable_… (Supabase → Project Settings → API Keys): today's SUPABASE_KEY on Render
+revalidate_secret        = "" # today's REVALIDATE_SECRET (~/.config/ajr/revalidate.env) = the ajr-backend Actions secret
+
+owner_email = "" # the mailbox data@ forwards to (email.tf)
