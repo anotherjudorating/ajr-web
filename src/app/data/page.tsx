@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { formatDate } from "@/lib/format";
 import { SITE } from "@/lib/seo";
@@ -29,7 +30,17 @@ const H2 = "font-serif text-[22px] leading-[28px] font-bold text-ink mt-8 mb-2";
 // The open-data archive the backend writes to R2 every week (ajr-backend ajr/tables):
 // the files with their sizes and checksums from the manifest, the columns, the
 // license. Without the manifest (R2 off, not written yet) the same text, no table.
-export default async function DataPage() {
+// The manifest is cached minutes, not until the data changes: read inside the
+// Suspense, so the page's shell stays static.
+export default function DataPage() {
+  return (
+    <Suspense fallback={null}>
+      <DataContent />
+    </Suspense>
+  );
+}
+
+async function DataContent() {
   const data = await archive();
   const updated = data?.files[0]?.updated_at.slice(0, 10);
   return (
