@@ -48,7 +48,7 @@ export function useHashTarget(id: string): {
 // Scroll to `section` (below the header: scroll-padding-top, globals.css). The rest
 // of the page may still be on its way, too short to scroll that far: scroll again as
 // it grows, until the section is in place, the reader scrolls, or 5 seconds pass.
-function scrollWhileGrowing(section: HTMLElement): void {
+export function scrollWhileGrowing(section: HTMLElement): void {
   const padding = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
   const placed = () => Math.abs(section.getBoundingClientRect().top - padding) < 2;
   section.scrollIntoView();

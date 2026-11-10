@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { HashScroll } from "@/components/HashScroll";
+import { SECTION } from "@/lib/anchors";
+
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
@@ -113,8 +116,10 @@ function Medallists({
 }) {
   const shown = groups.filter((g) => g.lines.length > 0);
   if (shown.length === 0) return null;
+  const anchorId = title === "Men" ? SECTION.men : title === "Women" ? SECTION.women : undefined;
   return (
-    <section>
+    <section id={anchorId}>
+      {anchorId && <HashScroll id={anchorId} />}
       <div className={HEAD}>
         <h2 className={H2}>{title}</h2>
       </div>
@@ -180,7 +185,8 @@ function Upsets({ contests, total, href }: { contests: CompetitionContest[]; tot
     .slice(0, 5);
   if (upsets.length === 0) return null;
   return (
-    <section>
+    <section id={SECTION.upsets}>
+      <HashScroll id={SECTION.upsets} />
       <div className={HEAD}>
         <h2 className={H2}>Biggest upsets</h2>
         <Link href={href} className={LINK}>
@@ -216,7 +222,8 @@ function Gains({ results, href }: { results: CompetitionResult[]; href: string }
     .slice(0, 5);
   if (rows.length === 0) return null;
   return (
-    <section>
+    <section id={SECTION.gains}>
+      <HashScroll id={SECTION.gains} />
       <div className={HEAD}>
         <h2 className={H2}>Biggest gains</h2>
         <Link href={href} className={LINK}>

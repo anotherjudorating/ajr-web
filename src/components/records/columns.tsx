@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Medal } from "@/components/Medal";
+import { anchor, SECTION } from "@/lib/anchors";
 import type { RecordRow } from "@/lib/api";
 import { monthYear, shortCompetition, shortName, signed } from "@/lib/format";
 import type { RecordInfo } from "@/lib/records";
@@ -389,18 +390,35 @@ export function recordColumns(info: RecordInfo, full: boolean, name: string = in
 const PAIRS = new Set(["greatest_rivalry", "longest_rivalry", "nemesis"]);
 const CONTESTS = new Set(["biggest_upsets", "longest_contest"]);
 const IN_A_WEIGHT = new Set(["least_likely_champion", "youngest_grand_slam_medal", "youngest_grand_slam_gold"]);
+// The section of the athlete's or the tournament's page a record is about
+// (lib/anchors.ts); other records open the page at the top.
+const ATHLETE_SECTION: Record<string, string> = {
+  most_world_tour_medals: SECTION.results,
+  most_world_tour_golds: SECTION.results,
+  most_medals_in_row: SECTION.results,
+  most_golds_in_row: SECTION.results,
+  longest_medal_span: SECTION.results,
+  best_finals_record: SECTION.results,
+  longest_winning_streak: SECTION.contests,
+  golden_score_king: SECTION.contests,
+  giant_killer: SECTION.bestWins,
+};
+const TOURNAMENT_SECTION: Record<string, string> = {
+  most_nations_on_podium: SECTION.nations,
+  most_unpredictable_tournament: SECTION.upsets,
+};
 
 export function rowLink(row: RecordRow): string | null {
   if (PAIRS.has(row.record) && row.athlete_id && row.opponent_id) {
-    return `/head-to-head?a=${row.athlete_id}&b=${row.opponent_id}`;
+    return anchor(`/head-to-head?a=${row.athlete_id}&b=${row.opponent_id}`, SECTION.meetings);
   }
   if (CONTESTS.has(row.record) && row.detail?.contest) return `/contests/${row.detail.contest}`;
   if (IN_A_WEIGHT.has(row.record) && row.competition_id) {
     const weight = WEIGHTS.find((w) => w.api === row.weight && w.gender === (row.gender === "female" ? "women" : "men"));
     return weight ? `/tournaments/${row.competition_id}/${weight.slug}` : `/tournaments/${row.competition_id}`;
   }
-  if (row.athlete_id) return `/athletes/${row.athlete_id}`;
-  if (row.competition_id) return `/tournaments/${row.competition_id}`;
+  if (row.athlete_id) return anchor(`/athletes/${row.athlete_id}`, ATHLETE_SECTION[row.record]);
+  if (row.competition_id) return anchor(`/tournaments/${row.competition_id}`, TOURNAMENT_SECTION[row.record]);
   if (row.country) return `/countries/${row.country.toLowerCase()}`;
   return null;
 }

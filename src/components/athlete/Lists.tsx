@@ -2,7 +2,9 @@ import Link from "next/link";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
+import { HashScroll } from "@/components/HashScroll";
 import { RowLink } from "@/components/RowLink";
+import { SECTION } from "@/lib/anchors";
 import type { HistoryRow } from "@/lib/api";
 import { formatChance, shortCompetition, shortName } from "@/lib/format";
 
@@ -22,15 +24,16 @@ export function Standouts({ contests }: { contests: HistoryRow[] }) {
     .slice(0, 5);
   return (
     <section className="mt-14 md:mt-16 grid grid-cols-1 lg:grid-cols-2 lg:gap-x-24 gap-y-14">
-      <ContestList title="Best wins" contests={bestWins} />
-      <ContestList title="Toughest losses" contests={toughestLosses} />
+      <ContestList id={SECTION.bestWins} title="Best wins" contests={bestWins} />
+      <ContestList id={SECTION.toughestLosses} title="Toughest losses" contests={toughestLosses} />
     </section>
   );
 }
 
-function ContestList({ title, contests }: { title: string; contests: HistoryRow[] }) {
+function ContestList({ id, title, contests }: { id: string; title: string; contests: HistoryRow[] }) {
   return (
-    <div>
+    <div id={id}>
+      <HashScroll id={id} />
       <h2 className={H2}>{title}</h2>
       <table className="w-full border-collapse text-[13px] sm:text-[14px]">
         <tbody>
@@ -85,7 +88,8 @@ export function FrequentOpponents({ contests }: { contests: HistoryRow[] }) {
     .slice(0, 5);
 
   return (
-    <div>
+    <div id={SECTION.opponents}>
+      <HashScroll id={SECTION.opponents} />
       <h2 className={H2}>Frequent opponents</h2>
       <div>
         {frequent.map(({ contest: c, wins, losses }) => (

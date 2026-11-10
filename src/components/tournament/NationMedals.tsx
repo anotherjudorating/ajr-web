@@ -5,11 +5,13 @@ import { useState } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
+import { HashScroll } from "@/components/HashScroll";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { HEAD_CELL, Pagination, ROW_CELL } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import { H2, HEAD, LINK } from "@/components/tournament/styles";
 import type { CompetitionResult } from "@/lib/api";
+import { SECTION } from "@/lib/anchors";
 
 const KINDS: MedalKind[] = ["gold", "silver", "bronze"];
 const SIZES = [10, 20, 50];
@@ -57,7 +59,8 @@ export function NationMedals({ medallists }: { medallists: CompetitionResult[] }
   );
 
   return (
-    <section>
+    <section id={SECTION.nations}>
+      <HashScroll id={SECTION.nations} />
       <div className={HEAD}>
         <h2 className={H2}>Medals by nation</h2>
         <Link href="/rankings/teams/mixed" className={LINK}>

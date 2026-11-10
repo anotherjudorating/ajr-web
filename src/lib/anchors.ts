@@ -8,8 +8,20 @@
 // No "use client": records' links (components/records/columns.tsx) use them too.
 
 export const SECTION = {
+  // athlete
   results: "results",
   contests: "contests",
+  bestWins: "best-wins",
+  toughestLosses: "toughest-losses",
+  opponents: "opponents",
+  // tournament
+  men: "men",
+  women: "women",
+  nations: "nations",
+  upsets: "upsets",
+  gains: "gains",
+  // head-to-head
+  meetings: "meetings",
 } as const;
 
 // The athlete page's tournament levels (components/athlete/Medals.tsx), by title.
