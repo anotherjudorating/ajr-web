@@ -16,9 +16,8 @@
 
 **Вне Terraform:** сборка и деплой (git push в `main` → Render), `next.config.ts`,
 Crawler Hints и managed robots.txt у Cloudflare (нет ресурса / зависит от плана),
-кэш страниц (внутри Next + `/api/revalidate`). **Vercel** не моделируется: проект на
-паузе и удаляется ~2026-11-14; после удаления `vercel.json` в репо можно убрать
-(Render его не читает). Render API key — без скоупов (полный доступ к команде):
+кэш страниц (внутри Next + `/api/revalidate`). **Vercel** удалён 2026-11-10 (проект и
+его комментарии в PR; сайт на Render). Render API key — без скоупов (полный доступ к команде):
 держать только в `~/.config/ajr/render.env`.
 
 ## Токены и права (минимум)

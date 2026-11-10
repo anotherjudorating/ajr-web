@@ -115,13 +115,21 @@ export type LinePoint = {
 // one started from, as the uncertainty grows), the period's competitions with it,
 // so every point is as easy to pick as the next; the last today (`today`), or at the
 // last contest for an inactive athlete (null).
-export function careerLine(history: HistoryRow[], today: { day: number; rating: number; score: number } | null, period: Period): LinePoint[] {
+// `split`: a day of its own on the line (the athlete's peak): it ends a part of its
+// period, with what it has and the competitions so far (one under way too), and the
+// period's end starts from it.
+export function careerLine(
+  history: HistoryRow[],
+  today: { day: number; rating: number; score: number } | null,
+  period: Period,
+  split?: { day: number; rating: number; score: number; period: string },
+): LinePoint[] {
   if (history.length === 0) return today ? [{ ...today, period: "Today", before: null, events: [], idle: true }] : [];
   // every competition's first contest (history is latest first) and its last
   const first = new Map<number, HistoryRow>();
   for (const contest of history) first.set(contest.competition_id, contest);
   const seen = new Set<number>();
-  const competitions: (Competition & { at: number })[] = [];
+  const competitions: (Competition & { at: number; from: number })[] = [];
   const known: { day: number; rating: number; score: number }[] = [];
   for (const contest of history) {
     if (seen.has(contest.competition_id)) continue;
@@ -130,6 +138,7 @@ export function careerLine(history: HistoryRow[], today: { day: number; rating: 
     const at = new Date(contest.fought_on).getTime();
     competitions.unshift({
       at,
+      from: new Date(start.fought_on).getTime(),
       id: contest.competition_id,
       name: contest.competition,
       weight: contest.weight,
@@ -144,20 +153,23 @@ export function careerLine(history: HistoryRow[], today: { day: number; rating: 
     if (start !== history.at(-1)) known.unshift({ day: new Date(start.fought_on).getTime() - 1, rating: start.rating_before, score: start.score_before });
   }
   if (today) known.push(today);
+  if (split) known.push(split);
   known.sort((a, b) => a.day - b.day);
   const on = (key: "rating" | "score", day: number) => between(known.map((k) => ({ day: k.day, value: k[key] })), day) ?? known[0][key];
   const firstDay = known[0].day;
   const lastDay = known.at(-1)!.day;
   // the periods' ends, and the line's own end (today, or the last contest)
-  const days = [...periodEnds(period, firstDay, lastDay), lastDay];
+  const ends = [...periodEnds(period, firstDay, lastDay), lastDay];
+  const days = split && !ends.includes(split.day) ? [...ends, split.day].sort((a, b) => a - b) : ends;
   return days.map((day, i) => {
     const after = i ? days[i - 1] : firstDay - 1;
-    const events: Competition[] = competitions.filter((c) => c.at > after && c.at <= day);
+    const own = split?.day === day;
+    const events: Competition[] = competitions.filter((c) => (c.at > after && c.at <= day) || (own && c.from <= day && c.at > day));
     return {
       day,
       rating: on("rating", day),
       score: on("score", day),
-      period: today && day === lastDay ? "Today" : periodName(period, day),
+      period: own ? split.period : today && day === lastDay ? "Today" : periodName(period, day),
       before: i ? on("score", days[i - 1]) : null,
       events,
       idle: events.length === 0,
