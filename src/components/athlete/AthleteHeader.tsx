@@ -6,10 +6,12 @@ import { Flag } from "@/components/Flag";
 import { changeText, ijfDifference, placesText } from "@/components/rankings/Changes";
 import type { Athlete } from "@/lib/api";
 import type { LastRating } from "@/lib/inactive";
+import { peakTableLink } from "@/lib/anchors";
 import { fullName, ijfProfile, monthYear } from "@/lib/format";
 
 const LABEL = "text-xs uppercase tracking-wider text-muted font-semibold";
 const BIG = "font-serif text-[28px] leading-tight font-bold text-ink";
+const LINKED = "underline decoration-rule decoration-2 underline-offset-4 hover:decoration-ink";
 
 // Name, weights, places and the rating with its parts.
 export function AthleteHeader({
@@ -25,6 +27,7 @@ export function AthleteHeader({
   today: string;
   inactive: LastRating | null; // over a year without a contest: the rating then
 }) {
+  const peakLink = peakTableLink(athlete, today);
   const age = athlete.birth_year ? Number(today.slice(0, 4)) - athlete.birth_year : null;
   // an inactive athlete: the rating after the last contest, not today's (lowered only
   // by the uncertainty grown since)
@@ -90,7 +93,14 @@ export function AthleteHeader({
             <div className="flex flex-col items-start">
               <span className={LABEL}>Peak</span>
               <div className="flex items-center gap-2 mt-1">
-                <span className={BIG}>{athlete.peak_place ? `#${athlete.peak_place}` : "–"}</span>
+                {peakLink && athlete.peak_place ? (
+                  // the table of that day, at the athlete's row
+                  <Link href={peakLink} className={`${BIG} ${LINKED}`} title="The table of that week">
+                    #{athlete.peak_place}
+                  </Link>
+                ) : (
+                  <span className={BIG}>{athlete.peak_place ? `#${athlete.peak_place}` : "–"}</span>
+                )}
                 {athlete.peak_score !== null && athlete.peak_on && (
                   <div className="leading-tight flex flex-col">
                     <span className="text-xs font-semibold text-ink tabular-nums">{athlete.peak_score}</span>
@@ -106,7 +116,7 @@ export function AthleteHeader({
               <span className={LABEL}>IJF</span>
               <div className="flex items-baseline gap-1.5 mt-1">
                 {/* our ids are the IJF's: the profile with its ranking and results */}
-                <a href={ijfProfile(athlete.id)} target="_blank" rel="noopener" className={`${BIG} underline decoration-rule decoration-2 underline-offset-4 hover:decoration-ink`}>
+                <a href={ijfProfile(athlete.id)} target="_blank" rel="noopener" className={`${BIG} ${LINKED}`}>
                   {athlete.wrl_place ? `#${athlete.wrl_place}` : "–"}
                 </a>
                 {athlete.place && athlete.wrl_place && (

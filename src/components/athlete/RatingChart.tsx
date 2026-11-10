@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { Athlete, HistoryRow } from "@/lib/api";
 import type { LastRating } from "@/lib/inactive";
+import { peakTableLink } from "@/lib/anchors";
 import { formatDate, monthYear, signed } from "@/lib/format";
 
 // Where things go on the canvas. From md up, the prototype's chart: a 1000×280 canvas
@@ -166,6 +167,7 @@ export function RatingChart({
   const real = shown.filter((p) => !p.edge);
   // the all-time peak of the header, when it is in the window
   const peak = athlete.peak_on ? real.find((p) => p.day === new Date(athlete.peak_on!).getTime()) : undefined;
+  const peakLink = peakTableLink(athlete, today);
   const ticks = monthTicks(start, now, at.maxDates);
   // the end labels (Skill, −RD, Rating) next to the line's last point: at today's edge,
   // or, for an inactive athlete whose line ends earlier, right after that point (over
@@ -291,12 +293,16 @@ export function RatingChart({
           {peak && <circle cx={x(peak.day)} cy={y(peak.score)} fill="#990F3D" r={peak === hovered ? 6 : 4} />}
           <circle cx={x(last.day)} cy={y(last.score)} fill="#33302E" r="4" />
           {peak && peak !== last && (
-            <g transform={`translate(${x(peak.day)}, ${y(peak.score)})`}>
-              <rect fill="#F3EEE3" height="16" stroke="#D6CFC2" strokeWidth="0.8" width="68" x="-34" y="-24" />
-              <text fill="#33302E" fontFamily={FONT} fontSize="11" fontWeight="600" textAnchor="middle" x="0" y="-12">
-                Peak {athlete.peak_score}
-              </text>
-            </g>
+            // the label opens the table of that week, at the athlete's row
+            <a href={peakLink ?? undefined} className={peakLink ? "cursor-pointer" : undefined}>
+              <g transform={`translate(${x(peak.day)}, ${y(peak.score)})`}>
+                <title>{peakLink ? "The table of that week" : ""}</title>
+                <rect fill="#F3EEE3" height="16" stroke={peakLink ? "#990F3D" : "#D6CFC2"} strokeWidth="0.8" width="68" x="-34" y="-24" />
+                <text fill="#33302E" fontFamily={FONT} fontSize="11" fontWeight="600" textAnchor="middle" x="0" y="-12">
+                  Peak {athlete.peak_score}
+                </text>
+              </g>
+            </a>
           )}
           <g fontFamily={FONT} fontSize="12" stroke="#F3EEE3" strokeWidth={inactive ? 4 : 0} paintOrder="stroke" strokeLinejoin="round">
             <text fill="#66605C" x={labelX} y={y(last.rating) + 4}>

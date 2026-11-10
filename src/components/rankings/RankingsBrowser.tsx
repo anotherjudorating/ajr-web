@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
@@ -12,6 +12,8 @@ import { PastTable } from "@/components/rankings/PastTable";
 import { Sparkline } from "@/components/rankings/Sparkline";
 import { CELL, Pagination, TH, Tip, Toolbar } from "@/components/rankings/TableParts";
 import type { LeaderboardRow } from "@/lib/api";
+import { scrollWhileGrowing, useHash } from "@/components/anchors";
+import { athleteRow } from "@/lib/anchors";
 import { fetchAthleteHistory } from "@/lib/browser-api";
 import { competitionCode, fullName, shortDate, shortName, signed } from "@/lib/format";
 
@@ -126,8 +128,14 @@ export function RankingsBrowser({
   const [all, setAll] = useState<LeaderboardRow[] | null>(null);
   const partial = all === null && total !== undefined && total > firstRows.length && !!full;
   const rows = all ?? firstRows;
+  // #athlete-<id> (an athlete page's peak): that athlete's row, opened at its page,
+  // marked and scrolled to; the whole table first when the row is past the first ones
+  const hash = useHash();
+  const marked = hash.startsWith("athlete-") ? Number(hash.slice("athlete-".length)) || null : null;
+  const markedMissing = marked !== null && !firstRows.some((r) => r.athlete_id === marked);
   const needsAll =
-    partial && (!!query.trim() || !!country || sort !== "rating-desc" || page > 1 || pageSize > firstRows.length);
+    partial &&
+    (!!query.trim() || !!country || sort !== "rating-desc" || page > 1 || pageSize > firstRows.length || markedMissing);
   const fetching = useRef<Promise<LeaderboardRow[]> | null>(null);
   const fetchAll = () => {
     fetching.current ??= fetch(full!)
@@ -165,6 +173,20 @@ export function RankingsBrowser({
   }, [rows, query, country, sort]);
 
   const count = partial && !needsAll ? total! : shown.length;
+  // the marked row's page, once it is in the rows (then the scroll, once per hash)
+  const markedAt = marked === null ? -1 : shown.findIndex((r) => r.athlete_id === marked);
+  const [placedFor, setPlacedFor] = useState("");
+  if (markedAt >= 0 && placedFor !== hash) {
+    setPlacedFor(hash);
+    setPage(Math.floor(markedAt / pageSize) + 1);
+  }
+  const scrolledFor = useRef("");
+  useLayoutEffect(() => {
+    const row = placedFor === hash ? document.getElementById(hash) : null;
+    if (!row || scrolledFor.current === hash) return;
+    scrolledFor.current = hash;
+    scrollWhileGrowing(row);
+  });
   const pages = Math.max(1, Math.ceil(count / pageSize));
   const currentPage = Math.min(page, pages);
   const first = (currentPage - 1) * pageSize;
@@ -213,7 +235,7 @@ export function RankingsBrowser({
       {/* table */}
       <div className="w-full border-b border-rule bg-paper">
         {past ? (
-          <PastTable rows={pageRows} year={year} />
+          <PastTable rows={pageRows} year={year} marked={marked} />
         ) : (
           <table className="rk-table w-full table-fixed border-collapse text-left">
             <thead>
@@ -262,8 +284,9 @@ export function RankingsBrowser({
                 return (
                   <Fragment key={row.athlete_id}>
                     <tr
+                      id={athleteRow(row.athlete_id)}
                       onClick={() => router.push(`/athletes/${row.athlete_id}`)}
-                      className="athlete-row border-b border-rule hover:bg-panel/60 transition-colors cursor-pointer"
+                      className={`athlete-row border-b border-rule hover:bg-panel/60 transition-colors cursor-pointer ${row.athlete_id === marked ? "bg-claret/10" : ""}`}
                     >
                       <td className={`${CELL} px-1 w-9 sm:w-12 text-right tabular-nums whitespace-nowrap font-medium`}>
                         {row.place}

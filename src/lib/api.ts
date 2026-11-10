@@ -69,6 +69,7 @@ export type Athlete = {
   peak_score: number | null;
   peak_on: string | null;
   peak_place: number | null; // the place in that day's table
+  peak_weight: string | null; // the weight of that table
   score_change_90d: number | null;
   score_change_6m: number | null;
   places_up_90d: number | null;

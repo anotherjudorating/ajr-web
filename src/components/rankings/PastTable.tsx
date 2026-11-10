@@ -8,10 +8,14 @@ import { Icon } from "@/components/Icon";
 import { HEAD_CELL, ROW_CELL } from "@/components/rankings/TableParts";
 import type { LeaderboardRow } from "@/lib/api";
 import { fullName, shortName } from "@/lib/format";
+import { athleteRow } from "@/lib/anchors";
 
 // A weight's table on a past day: places, names, nations, ratings and ages then.
 // The changes, trend, IJF place and latest tournament are only built for today.
-export function PastTable({ rows, year }: { rows: LeaderboardRow[]; year: number }) {
+// the row a link pointed at (#athlete-<id>)
+const MARKED = "bg-claret/10";
+
+export function PastTable({ rows, year, marked = null }: { rows: LeaderboardRow[]; year: number; marked?: number | null }) {
   const router = useRouter();
   return (
     <table className="w-full table-fixed border-collapse text-left">
@@ -29,8 +33,9 @@ export function PastTable({ rows, year }: { rows: LeaderboardRow[]; year: number
         {rows.map((row) => (
           <tr
             key={row.athlete_id}
+            id={athleteRow(row.athlete_id)}
             onClick={() => router.push(`/athletes/${row.athlete_id}`)}
-            className="border-b border-rule hover:bg-panel/60 cursor-pointer"
+            className={`border-b border-rule hover:bg-panel/60 cursor-pointer ${row.athlete_id === marked ? MARKED : ""}`}
           >
             <td className={`${ROW_CELL} text-right tabular-nums font-medium`}>{row.place}</td>
             <td className={`${ROW_CELL} font-medium truncate`}>

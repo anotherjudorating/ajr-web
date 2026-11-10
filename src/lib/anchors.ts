@@ -7,6 +7,8 @@
 // table) fought the browser's and Next's own scroll to a missing id, and was dropped.
 // No "use client": records' links (components/records/columns.tsx) use them too.
 
+import { WEIGHTS } from "@/lib/weights";
+
 export const SECTION = {
   // athlete
   results: "results",
@@ -34,3 +36,20 @@ export function targetOf(hash: string, id: string): string | null {
   if (hash === id) return "";
   return hash.startsWith(`${id}-`) ? hash.slice(id.length + 1) : null;
 }
+
+// The table where an athlete's peak shows: the peak's weight on the Monday after it
+// (a day's table is its week's Monday's, and a peak comes at a weekend tournament, so
+// the Monday before has not seen it yet), today's table if that Monday has not come,
+// at the athlete's row (#athlete-<id>: the table opens its page and marks it).
+export function peakTableLink(athlete: { id: number; peak_on: string | null; peak_weight: string | null }, today: string): string | null {
+  const weight = WEIGHTS.find((w) => w.api === athlete.peak_weight);
+  if (!weight || !athlete.peak_on) return null;
+  const day = new Date(`${athlete.peak_on}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() + (8 - day.getUTCDay()) % 7 || 7); // the next Monday, never the same day
+  const monday = day.toISOString().slice(0, 10);
+  const path = monday >= today ? `/rankings/${weight.slug}` : `/rankings/${weight.slug}/${monday}`;
+  return `${path}#${athleteRow(athlete.id)}`;
+}
+
+// A table row's id: the anchor of an athlete in a ranking table.
+export const athleteRow = (id: number) => `athlete-${id}`;
