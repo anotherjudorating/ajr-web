@@ -163,6 +163,10 @@ export function RatingChart({
   // the all-time peak of the header, when it is in the window
   const peak = athlete.peak_on ? real.find((p) => p.day === new Date(athlete.peak_on!).getTime()) : undefined;
   const ticks = monthTicks(start, now, at.maxDates);
+  // the end labels (Skill, −RD, Rating) next to the line's last point: at today's edge,
+  // or, for an inactive athlete whose line ends earlier, right after that point (over
+  // the inactive zone, on a paper halo)
+  const labelX = inactive ? Math.min(x(last.day) + 12, RIGHT + at.labels) : RIGHT + at.labels;
 
   // Inactive: no contest for over a year (out of the tables), between competitions or
   // since the last one. The rating holds, its uncertainty grows, so the score drifts
@@ -290,22 +294,22 @@ export function RatingChart({
               </text>
             </g>
           )}
-          <g fontFamily={FONT} fontSize="12">
-            <text fill="#66605C" x={RIGHT + at.labels} y={y(last.rating) + 4}>
+          <g fontFamily={FONT} fontSize="12" stroke="#F3EEE3" strokeWidth={inactive ? 4 : 0} paintOrder="stroke" strokeLinejoin="round">
+            <text fill="#66605C" x={labelX} y={y(last.rating) + 4}>
               Skill {last.rating}
             </text>
             <line
               stroke="#D6CFC2"
               strokeWidth="0.8"
-              x1={RIGHT + at.labels + 12}
-              x2={RIGHT + at.labels + 12}
+              x1={labelX + 4}
+              x2={labelX + 4}
               y1={y(last.rating) + 11}
               y2={y(last.score) - 11}
             />
-            <text fill="#66605C" x={RIGHT + at.labels + 20} y={(y(last.rating) + y(last.score)) / 2 + 4}>
+            <text fill="#66605C" x={labelX + 12} y={(y(last.rating) + y(last.score)) / 2 + 4}>
               −{last.rating - last.score}
             </text>
-            <text fill="#33302E" fontWeight="700" x={RIGHT + at.labels + 12} y={y(last.score) + 4}>
+            <text fill="#33302E" fontWeight="700" x={labelX} y={y(last.score) + 4}>
               Rating {last.score}
             </text>
           </g>
