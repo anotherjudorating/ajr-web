@@ -4,10 +4,10 @@ import { Suspense } from "react";
 
 import { AthleteView } from "@/components/athlete/AthleteView";
 import { athlete, athleteHistory, canonicalAthlete, homeLeaders, lastUpdate } from "@/lib/api";
-import { fullName } from "@/lib/format";
+import { fullName, ijfProfile } from "@/lib/format";
 import type { Athlete } from "@/lib/api";
 import { monthYear } from "@/lib/format";
-import { indexableAthlete, NOINDEX } from "@/lib/seo";
+import { indexableAthlete, NOINDEX, SITE } from "@/lib/seo";
 import { WEIGHTS, weightTitle } from "@/lib/weights";
 
 // One athlete is built ahead (more would load the database at every deploy); any
@@ -71,5 +71,32 @@ async function Athlete({ params }: { params: PageProps<"/athletes/[id]">["params
   const [found, history, updated] = await Promise.all([athlete(id), athleteHistory(id), lastUpdate()]);
   if (!found || found.rating === null) return missing(id);
   // "today" is the day of the latest rating run, as on the rankings page
-  return <AthleteView athlete={found} history={history} today={(updated ?? "1970-01-01").slice(0, 10)} />;
+  return (
+    <>
+      <PersonData athlete={found} />
+      <AthleteView athlete={found} history={history} today={(updated ?? "1970-01-01").slice(0, 10)} />
+    </>
+  );
+}
+
+// schema.org Person, with the IJF profile as sameAs: search engines tie this page
+// to the athlete's official one.
+function PersonData({ athlete: a }: { athlete: Athlete }) {
+  const json = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: fullName(a.family_name, a.given_name),
+    url: `${SITE}/athletes/${a.id}`,
+    sameAs: [ijfProfile(a.id)],
+    ...(a.gender ? { gender: a.gender === "female" ? "Female" : "Male" } : {}),
+    ...(a.country_name ? { nationality: { "@type": "Country", name: a.country_name } } : {}),
+    knowsAbout: "Judo",
+  };
+  return (
+    <script
+      type="application/ld+json"
+      // "<" escaped, so that a name cannot close the script
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(json).replace(/</g, "\\u003c") }}
+    />
+  );
 }

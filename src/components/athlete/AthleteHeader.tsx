@@ -6,7 +6,7 @@ import { Flag } from "@/components/Flag";
 import { changeText, ijfDifference, placesText } from "@/components/rankings/Changes";
 import type { Athlete } from "@/lib/api";
 import type { LastRating } from "@/lib/inactive";
-import { fullName, monthYear } from "@/lib/format";
+import { fullName, ijfProfile, monthYear } from "@/lib/format";
 
 const LABEL = "text-xs uppercase tracking-wider text-muted font-semibold";
 const BIG = "font-serif text-[28px] leading-tight font-bold text-ink";
@@ -78,7 +78,7 @@ export function AthleteHeader({
               {inactive ? (
                 // why there is no rank: no contest in any weight for a year
                 <span
-                  className="font-serif text-[22px] leading-[38px] font-bold text-muted mt-1"
+                  className="font-serif text-[22px] leading-[38px] font-bold text-ink mt-1"
                   title="No contest for over a year: out of the tables until the next one"
                 >
                   Inactive
@@ -101,11 +101,14 @@ export function AthleteHeader({
             </div>
             <div
               className="flex flex-col items-start"
-              title="Position in the IJF World Ranking List. ↑ higher in IJF than in AJR, ↓ lower."
+              title="Position in the IJF World Ranking List. ↑ higher in IJF than in AJR, ↓ lower. Opens the athlete's IJF profile."
             >
               <span className={LABEL}>IJF</span>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className={BIG}>{athlete.wrl_place ? `#${athlete.wrl_place}` : "–"}</span>
+                {/* our ids are the IJF's: the profile with its ranking and results */}
+                <a href={ijfProfile(athlete.id)} target="_blank" rel="noopener" className={`${BIG} hover:underline`}>
+                  {athlete.wrl_place ? `#${athlete.wrl_place}` : "–"}
+                </a>
                 {athlete.place && athlete.wrl_place && (
                   <span className="text-xs text-muted">{ijfDifference(athlete.place, athlete.wrl_place)}</span>
                 )}
