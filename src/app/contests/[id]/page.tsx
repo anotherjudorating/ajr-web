@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { ContestView } from "@/components/contest/ContestView";
 import { contest, contestContext } from "@/lib/api";
-import { shortName } from "@/lib/format";
+import { roundTitle, shortName } from "@/lib/format";
 import { NOINDEX } from "@/lib/seo";
 
 export async function generateMetadata({ params }: PageProps<"/contests/[id]">): Promise<Metadata> {
@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: PageProps<"/contests/[id]">):
   if (!found || !found.white_id || !found.blue_id) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const names = `${shortName(found.white_family_name, found.white_given_name)} vs ${shortName(found.blue_family_name, found.blue_given_name)}`;
   // 230 thousand of them: closed to crawlers (robots.ts), not indexed
-  return { title: `${names} — ${found.round ?? "contest"}, ${found.competition}`, robots: NOINDEX };
+  return { title: `${names} — ${found.round ? roundTitle(found.round) : "contest"}, ${found.competition}`, robots: NOINDEX };
 }
 
 export default function ContestPage({ params }: PageProps<"/contests/[id]">) {

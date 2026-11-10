@@ -9,14 +9,16 @@ import { FrequentOpponents, NextTournaments, Standouts } from "@/components/athl
 import { Medals } from "@/components/athlete/Medals";
 import { type Competition, RatingChart } from "@/components/athlete/RatingChart";
 import type { Places } from "@/lib/places";
+import { weightView } from "@/lib/weight-view";
 import type { Athlete, HistoryRow } from "@/lib/api";
 import { shortName } from "@/lib/format";
 import { lastRating } from "@/lib/inactive";
 import { WEIGHTS } from "@/lib/weights";
 
 // The athlete page. The weight tabs set the contests' weight filter (the list has its
-// own, with "All weights") and pick the lists below; the rating is one
-// for all weights, so the header and the chart stay the same.
+// own, with "All weights"), pick the lists below and the header's place, changes and
+// peak (lib/weight-view.ts); the rating is one for all weights, so its numbers and the
+// chart stay the same.
 export function AthleteView({
   athlete,
   history,
@@ -70,7 +72,8 @@ export function AthleteView({
         current={shortName(athlete.family_name, athlete.given_name)}
       />
 
-      <AthleteHeader athlete={athlete} weight={weight} onWeight={pickWeight} today={today} inactive={inactive} />
+      {/* the place, the changes and the peak of the picked weight */}
+      <AthleteHeader athlete={{ ...athlete, ...weightView(athlete, weight, history, places) }} weight={weight} onWeight={pickWeight} today={today} inactive={inactive} />
       <RatingChart athlete={athlete} history={history} places={places} today={today} inactive={inactive} onPeriod={pickPeriod} />
       <Medals history={history} />
       <Contests

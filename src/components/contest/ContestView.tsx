@@ -6,7 +6,7 @@ import { Arrow, Icon } from "@/components/Icon";
 import { isUpset } from "@/components/rankings/Changes";
 import { RowLink } from "@/components/RowLink";
 import type { ContestDetail, HistoryRow } from "@/lib/api";
-import { formatChance, formatDate, monthYear, roundCode, shortCompetition, shortName, signed } from "@/lib/format";
+import { formatChance, formatDate, monthYear, roundCode, roundTitle, shortCompetition, shortName, signed } from "@/lib/format";
 import { WEIGHTS, weightTitle } from "@/lib/weights";
 
 const H2 = "font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight";
@@ -74,10 +74,10 @@ export function ContestView({
           { href: `/tournaments/${c.competition_id}`, label: shortCompetition(c.competition) },
           { href: weight && `/tournaments/${c.competition_id}/${weight.slug}`, label: weightName },
         ]}
-        current={c.round ?? "Contest"}
+        current={c.round ? roundTitle(c.round) : "Contest"}
       />
       <h1 className="sr-only">
-        {athleteOf(c, "white").name} vs {athleteOf(c, "blue").name} — {c.round}, {weightName}, {c.competition}
+        {athleteOf(c, "white").name} vs {athleteOf(c, "blue").name} — {roundTitle(c.round)}, {weightName}, {c.competition}
       </h1>
 
       <Result contest={c} />
@@ -86,7 +86,7 @@ export function ContestView({
       {(roads.white.length > 0 || roads.blue.length > 0) && (
         <section className="mt-14 lg:mt-16">
           <div className={HEAD}>
-            <h2 className={H2}>Road to the {(c.round ?? "contest").toLowerCase()}</h2>
+            <h2 className={H2}>Road to the {c.round ? roundTitle(c.round).replace(/^[A-Z]/, (l) => l.toLowerCase()) : "contest"}</h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-6 lg:gap-x-24 mt-4">
             {SIDES.map((side) => {

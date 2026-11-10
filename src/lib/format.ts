@@ -58,27 +58,44 @@ export function competitionCode(rank: string | null, city: string | null): strin
   return [initials, place].filter(Boolean).join(" ");
 }
 
-// judobase round names -> the short codes of the design (R32, QF, SF, BR, F…)
-const ROUNDS: Record<string, string> = {
-  "Round of 128": "R128",
-  "Round of 64": "R64",
-  "Round of 32": "R32",
-  "Round of 16": "R16",
-  "Quarter-Final": "QF",
-  "Quarter Final": "QF",
-  "Semi-Final": "SF",
-  "Semi Final": "SF",
-  Repechage: "REP",
-  Bronze: "BR",
+// The stage of a draw, as the API gives it (ajr-backend ajr.fill_stages): counted
+// from the final — F, 1/2, 1/4, 1/8 … 1/128; BR (bronze), REP (repechage); R1, R2…
+// a tour of a round robin or of pools. A judobase name from before the stages (a
+// cached page) is turned into one where it can be.
+const LEGACY: Record<string, string> = {
   Final: "F",
+  "Semi-Final": "1/2",
+  "Semi Final": "1/2",
+  "Quarter-Final": "1/4",
+  "Quarter Final": "1/4",
+  Bronze: "BR",
+  Repechage: "REP",
 };
 
 export function roundCode(round: string | null): string {
   if (!round) return "";
-  if (ROUNDS[round]) return ROUNDS[round];
-  const pool = round.match(/^(Repechage )?Round (\d+)$/); // "Round 2", "Repechage Round 1"
-  if (pool) return `${pool[1] ? "REP" : "R"}${pool[2]}`;
-  return round.slice(0, 3).toUpperCase();
+  if (LEGACY[round]) return LEGACY[round];
+  const of = round.match(/^(?:Round of|best) (\d+)$/i); // "Round of 16" -> 1/8
+  if (of) return `1/${Number(of[1]) / 2}`;
+  const tour = round.match(/^(?:Repechage )?Round (\d+)$/);
+  if (tour) return round.startsWith("Repechage") ? "REP" : `R${tour[1]}`;
+  return round;
+}
+
+// The stage written out, for a heading or a title: "Final", "Semi-final", "1/8 final".
+export function roundTitle(round: string | null): string {
+  const code = roundCode(round);
+  const titles: Record<string, string> = {
+    F: "Final",
+    "1/2": "Semi-final",
+    "1/4": "Quarter-final",
+    BR: "Bronze medal contest",
+    REP: "Repechage",
+  };
+  if (titles[code]) return titles[code];
+  if (/^1\/\d+$/.test(code)) return `${code} final`;
+  if (/^R\d+$/.test(code)) return `Round ${code.slice(1)}`;
+  return code;
 }
 
 // "2026-03-14" -> "Mar 2026"

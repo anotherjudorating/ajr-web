@@ -11,22 +11,20 @@ import { Pagination } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
 import type { Competition, CompetitionContest, CompetitionResult, MedalChance } from "@/lib/api";
-import { formatChance, roundCode, shortName, signed } from "@/lib/format";
+import { formatChance, roundCode, roundTitle, shortName, signed } from "@/lib/format";
 import type { Weight } from "@/lib/weights";
 
 const MEDALS: string[] = ["gold", "silver", "bronze"];
-// judobase's round names -> the group rows' titles
-const ROUND_TITLES: Record<string, string> = {
-  Bronze: "Bronze medal",
-  "Semi-Final": "Semi-finals",
-  "Semi Final": "Semi-finals",
-  "Quarter-Final": "Quarter-finals",
-  "Quarter Final": "Quarter-finals",
+// the stages' group rows' titles (several contests each)
+const roundsTitle = (round: string) => {
+  const titles: Record<string, string> = { BR: "Bronze medal", "1/2": "Semi-finals", "1/4": "Quarter-finals" };
+  const title = roundTitle(round);
+  return titles[roundCode(round)] ?? (title.endsWith(" final") ? `${title}s` : title);
 };
 const CELL = "px-2 sm:px-3 py-2 align-middle";
 
 const gainOf = (r: CompetitionResult) => r.score_after - r.score_before;
-const shortRound = (round: string | null) => (round === "Final" ? "Final" : roundCode(round));
+const shortRound = (round: string | null) => (roundCode(round) === "F" ? "Final" : roundCode(round));
 
 // One side of a contest: the athlete and what the contest gave them (a walkover: nothing).
 function sideOf(c: CompetitionContest, white: boolean) {
@@ -60,7 +58,7 @@ export function WeightView({
     rounds.at(-1)!.contests.push(c);
   }
   // judobase numbers the bronze contests with the final: the final first
-  rounds.sort((a, b) => Number(b.round === "Final") - Number(a.round === "Final"));
+  rounds.sort((a, b) => Number(roundCode(b.round) === "F") - Number(roundCode(a.round) === "F"));
 
   // places, then the round lost in, the later first; the score breaks ties
   const order = ["gold", "silver", "bronze", "5th", "7th", ...rounds.map((r) => r.round)];
@@ -348,7 +346,7 @@ function Contests({ rounds, href }: { rounds: { round: string; contests: Competi
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2">
                   <Icon size={18} name="expand_more" className={`text-muted transition-transform duration-150 ${open ? "" : "-rotate-90"}`} />
-                  <span className="text-[12px] font-bold uppercase text-ink">{ROUND_TITLES[round] ?? round}</span>
+                  <span className="text-[12px] font-bold uppercase text-ink">{roundsTitle(round)}</span>
                 </span>
                 <span className="text-[12px] text-muted">
                   {all} {all === 1 ? "contest" : "contests"}

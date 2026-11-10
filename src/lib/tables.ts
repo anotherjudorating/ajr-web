@@ -111,19 +111,18 @@ export async function archive(): Promise<Archive | null> {
   };
 }
 
-// An athlete's place every Monday (the tables job's places/<id>.json; lib/places.ts).
-// The file changes every week: asked for with the manifest's last day, a new week is a
-// new address.
+// An athlete's place every Monday (the tables job's places/<version>/<id>.json;
+// lib/places.ts). The file changes every week: an hour in cache, here and at the edge.
 export async function athletePlaces(id: number): Promise<Places | null> {
   if (!DATA_URL) return null;
   const m = await manifest();
   if (!m) return null;
-  return placesFile(`v/${m.version}/places/${id}.json?w=${m.last_day}`);
+  return placesFile(`places/${m.version}/${id}.json`);
 }
 
 async function placesFile(path: string): Promise<Places | null> {
   "use cache: remote";
-  cacheLife("tables");
+  cacheLife("hours");
   const doc = await get<Places>(path);
   return doc?.from ? { from: doc.from, weeks: doc.weeks } : null;
 }

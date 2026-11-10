@@ -6,8 +6,8 @@ import { formatChance, roundCode, shortName } from "@/lib/format";
 
 type UpsetSide = { family: string | null; country: string | null; chance: number; score: number };
 
-// "Final" written out, the other rounds as codes (SF, QF, R16…).
-const upsetRound = (round: string | null) => (round === "Final" ? "Final" : roundCode(round));
+// "Final" written out, the other stages as codes (1/2, 1/4, 1/8…).
+const upsetRound = (round: string | null) => (roundCode(round) === "F" ? "Final" : roundCode(round));
 
 // A least likely win: the winner and their chance on the left, the beaten favourite
 // on the right, the bar of the winner's chance, and below where it happened and the
