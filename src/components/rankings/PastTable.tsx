@@ -15,7 +15,7 @@ import { athleteRow } from "@/lib/anchors";
 // the row a link pointed at (#athlete-<id>)
 const MARKED = "bg-claret/10";
 
-export function PastTable({ rows, year, marked = null }: { rows: LeaderboardRow[]; year: number; marked?: number | null }) {
+export function PastTable({ rows, year, marked = null, empty = rows.length === 0 }: { rows: LeaderboardRow[]; year: number; marked?: number | null; empty?: boolean }) {
   const router = useRouter();
   return (
     <table className="w-full table-fixed border-collapse text-left">
@@ -60,6 +60,13 @@ export function PastTable({ rows, year, marked = null }: { rows: LeaderboardRow[
             </td>
           </tr>
         ))}
+        {empty && (
+          <tr>
+            <td colSpan={7} className="px-3 py-6 text-[14px] text-muted">
+              No athletes match these filters.
+            </td>
+          </tr>
+        )}
       </tbody>
     </table>
   );

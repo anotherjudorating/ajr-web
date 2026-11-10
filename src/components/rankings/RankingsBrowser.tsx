@@ -235,7 +235,7 @@ export function RankingsBrowser({
       {/* table */}
       <div className="w-full border-b border-rule bg-paper">
         {past ? (
-          <PastTable rows={pageRows} year={year} marked={marked} />
+          <PastTable rows={pageRows} year={year} marked={marked} empty={!waiting && pageRows.length === 0} />
         ) : (
           <table className="rk-table w-full table-fixed border-collapse text-left">
             <thead>
@@ -400,8 +400,8 @@ export function RankingsBrowser({
                 ))}
               {!loading && !waiting && pageRows.length === 0 && (
                 <tr>
-                  <td colSpan={visibleColumns} className="px-3 text-[13px] text-muted">
-                    No athletes match.
+                  <td colSpan={visibleColumns} className="px-3 py-6 text-[14px] text-muted">
+                    No athletes match these filters.
                   </td>
                 </tr>
               )}
