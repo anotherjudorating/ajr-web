@@ -127,9 +127,10 @@ function Medallists({
         <tbody>
           {shown.map(({ weight, live, lines }) =>
             lines.map((line, i) => (
+              // the weight's page at the athlete's row in its results, opened
               <RowLink
                 key={`${weight.slug}-${line.athleteId}`}
-                href={`/tournaments/${id}/${weight.slug}`}
+                href={`/tournaments/${id}/${weight.slug}#athlete-${line.athleteId}`}
                 className={i === lines.length - 1 ? "border-b border-rule" : "border-b border-rule/50"}
               >
                 {i === 0 && (
@@ -154,11 +155,9 @@ function Medallists({
                   </div>
                 </td>
                 <td className="h-9 py-0 px-2 sm:px-3 align-middle text-right whitespace-nowrap w-16">{line.value}</td>
-                {i === 0 && (
-                  <td rowSpan={lines.length} className={`${CHEVRON_CELL} border-b border-rule`}>
-                    <RowChevron />
-                  </td>
-                )}
+                <td className={CHEVRON_CELL}>
+                  <RowChevron />
+                </td>
               </RowLink>
             )),
           )}

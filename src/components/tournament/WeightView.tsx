@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Fragment, useState } from "react";
 
+import { useHash, useRowMark, useRowScroll } from "@/components/anchors";
+
 import { Flag } from "@/components/Flag";
 import { Arrow, CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
@@ -13,6 +15,7 @@ import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/sty
 import type { Competition, CompetitionContest, CompetitionResult, MedalChance } from "@/lib/api";
 import { formatChance, roundCode, roundTitle, shortName, signed } from "@/lib/format";
 import type { Weight } from "@/lib/weights";
+import { athleteRow } from "@/lib/anchors";
 
 const MEDALS: string[] = ["gold", "silver", "bronze"];
 // the stages' group rows' titles (several contests each)
@@ -159,11 +162,24 @@ function Chances({ rows }: { rows: MedalChance[] }) {
 }
 
 // Every athlete, a page at a time; a row opens the athlete's contests below it.
+// #athlete-<id> (a medallist on the tournament's overview): that row opened on its
+// page, marked and scrolled to, as a ranking's row.
 function Results({ rows, places, contests }: { rows: CompetitionResult[]; places: number[]; contests: CompetitionContest[] }) {
   const [open, setOpen] = useState<number | null>(null);
   const [size, setSize] = useState(20);
   const [page, setPage] = useState(1);
   const first = (page - 1) * size;
+  const hash = useHash();
+  const marked = hash.startsWith("athlete-") ? Number(hash.slice("athlete-".length)) || null : null;
+  const [placedFor, setPlacedFor] = useState("");
+  const markedAt = marked === null ? -1 : rows.findIndex((r) => r.athlete_id === marked);
+  if (markedAt >= 0 && placedFor !== hash) {
+    setPlacedFor(hash);
+    setOpen(marked);
+    setPage(Math.floor(markedAt / size) + 1);
+  }
+  const lit = useRowMark(marked !== null, hash);
+  useRowScroll(hash, placedFor === hash);
 
   return (
     <section className="mt-14 lg:mt-16">
@@ -205,7 +221,7 @@ function Results({ rows, places, contests }: { rows: CompetitionResult[]; places
                       <Link
                         key={c.contest_id}
                         href={`/contests/${c.contest_id}`}
-                        className="border-b border-rule/60 last:border-b-0 py-1.5 flex items-center justify-between gap-1.5 hover:bg-paper/50"
+                        className="group border-b border-rule/60 last:border-b-0 py-1.5 flex items-center justify-between gap-1.5 hover:bg-paper/50"
                       >
                         <span className="w-10 shrink-0 text-muted">{shortRound(c.round)}</span>
                         <span className="inline-flex items-center gap-1.5 min-w-0 flex-1">
@@ -229,9 +245,10 @@ function Results({ rows, places, contests }: { rows: CompetitionResult[]; places
             return (
               <Fragment key={r.athlete_id}>
                 <tr
+                  id={athleteRow(r.athlete_id)}
                   onClick={() => setOpen(expanded ? null : r.athlete_id)}
                   aria-expanded={expanded}
-                  className="border-b border-rule hover:bg-panel/40 cursor-pointer"
+                  className={`border-b border-rule hover:bg-panel/40 cursor-pointer ${r.athlete_id === marked ? lit.row : ""}`}
                 >
                   <td className={`${ROW_CELL} text-right font-medium`}>{places[first + i]}</td>
                   <td className={ROW_CELL}>
