@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { Athlete, HistoryRow } from "@/lib/api";
+import type { LastRating } from "@/lib/inactive";
 import { formatDate, monthYear, signed } from "@/lib/format";
 
 // Where things go on the canvas. From md up, the prototype's chart: a 1000×280 canvas
@@ -81,11 +82,13 @@ export function RatingChart({
   athlete,
   history,
   today,
+  inactive,
   onCompetition,
 }: {
   athlete: Athlete;
   history: HistoryRow[];
   today: string;
+  inactive: LastRating | null; // over a year without a contest: the line ends at the last one
   onCompetition: (competition: Competition) => void;
 }) {
   const [hovered, setHovered] = useState<Point | null>(null);
@@ -137,7 +140,9 @@ export function RatingChart({
       points.sort((a, b) => a.day - b.day);
     }
   }
-  points.push({ day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 });
+  // today's point, but not for an inactive athlete: their line ends at the last
+  // contest, the inactive zone runs on to today
+  if (!inactive) points.push({ day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 });
 
   const years = RANGES[range];
   const from = years === null ? points[0].day : now - years * YEAR;
@@ -163,7 +168,7 @@ export function RatingChart({
   // since the last one. The rating holds, its uncertainty grows, so the score drifts
   // down: the zone says why.
   const days = points.filter((p) => p.competition).map((p) => p.day);
-  const inactive = [...days, now]
+  const zones = [...days, now]
     .flatMap((day, i, all) => (i && day - all[i - 1] > AWAY ? [{ from: all[i - 1], to: day }] : []))
     .filter((zone) => zone.to > start)
     .map((zone) => ({ ...zone, x1: x(Math.max(zone.from, start)), x2: x(zone.to) }));
@@ -244,7 +249,7 @@ export function RatingChart({
               <line x1="0" y1="0" x2="0" y2="6" stroke="#D6CFC2" strokeWidth="2" />
             </pattern>
           </defs>
-          {inactive.map((zone) => (
+          {zones.map((zone) => (
             <g key={zone.from}>
               <rect x={zone.x1} y={TOP} width={Math.max(zone.x2 - zone.x1, 0)} height={BOTTOM - TOP} fill="url(#inactive)">
                 <title>

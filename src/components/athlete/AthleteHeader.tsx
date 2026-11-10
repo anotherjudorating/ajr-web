@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Flag } from "@/components/Flag";
 import { changeText, ijfDifference, placesText } from "@/components/rankings/Changes";
 import type { Athlete } from "@/lib/api";
+import type { LastRating } from "@/lib/inactive";
 import { fullName, monthYear } from "@/lib/format";
 
 const LABEL = "text-xs uppercase tracking-wider text-muted font-semibold";
@@ -16,15 +17,20 @@ export function AthleteHeader({
   weight,
   onWeight,
   today,
+  inactive,
 }: {
   athlete: Athlete;
   weight: string | null;
   onWeight: (weight: string) => void;
   today: string;
+  inactive: LastRating | null; // over a year without a contest: the rating then
 }) {
   const age = athlete.birth_year ? Number(today.slice(0, 4)) - athlete.birth_year : null;
-  const rating = athlete.rating ?? 0;
-  const uncertainty = rating - (athlete.score ?? 0); // 3 × RD, rounded as the score is
+  // an inactive athlete: the rating after the last contest, not today's (lowered only
+  // by the uncertainty grown since)
+  const rating = inactive ? inactive.rating : (athlete.rating ?? 0);
+  const score = inactive ? inactive.score : (athlete.score ?? 0);
+  const uncertainty = rating - score; // 3 × RD, rounded as the score is
 
   return (
     <>
@@ -98,8 +104,19 @@ export function AthleteHeader({
 
           <div className="mt-5 flex justify-between items-end gap-4">
             <div className="flex flex-col">
-              <div className="font-serif text-[56px] leading-none font-bold text-ink tabular-nums">{athlete.score}</div>
-              <span className={`${LABEL} mt-2`}>Current rating</span>
+              <div className="font-serif text-[56px] leading-none font-bold text-ink tabular-nums">{score}</div>
+              <span className={`${LABEL} mt-2`}>
+                {inactive ? (
+                  <>
+                    Last rating · {monthYear(inactive.day)}
+                    <span className="ml-2 px-1.5 py-0.5 border border-rule text-[10px] tracking-wider" title="No contest for over a year: out of the tables until the next one">
+                      Inactive
+                    </span>
+                  </>
+                ) : (
+                  "Current rating"
+                )}
+              </span>
             </div>
             <div className="tabular-nums text-xs pb-1">
               <div className="grid grid-cols-3 gap-4 pb-1 text-[11px] uppercase tracking-wider text-muted font-semibold text-right">
@@ -107,8 +124,9 @@ export function AthleteHeader({
                 <span>Rating</span>
                 <span>Rank</span>
               </div>
-              <ChangeRow label="90 days" score={athlete.score_change_90d} places={athlete.places_up_90d} />
-              <ChangeRow label="6 months" score={athlete.score_change_6m} places={athlete.places_up_6m} />
+              {/* no changes for an inactive athlete: only the uncertainty moved */}
+              <ChangeRow label="90 days" score={inactive ? null : athlete.score_change_90d} places={inactive ? null : athlete.places_up_90d} />
+              <ChangeRow label="6 months" score={inactive ? null : athlete.score_change_6m} places={inactive ? null : athlete.places_up_6m} />
             </div>
           </div>
 
@@ -120,7 +138,7 @@ export function AthleteHeader({
               <span className="tabular-nums font-semibold text-ink">{uncertainty}</span>
               <span>uncertainty</span>
               <span className="text-[15px] leading-4 font-medium mx-1">=</span>
-              <span className="tabular-nums font-bold text-ink">{athlete.score}</span>
+              <span className="tabular-nums font-bold text-ink">{score}</span>
             </div>
             <Link href="/methodology" className="font-serif text-[14px] leading-4 font-semibold text-claret hover:underline">
               How it works

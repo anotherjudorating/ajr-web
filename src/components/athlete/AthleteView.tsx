@@ -10,6 +10,7 @@ import { Medals } from "@/components/athlete/Medals";
 import { type Competition, RatingChart } from "@/components/athlete/RatingChart";
 import type { Athlete, HistoryRow } from "@/lib/api";
 import { shortName } from "@/lib/format";
+import { lastRating } from "@/lib/inactive";
 import { WEIGHTS } from "@/lib/weights";
 
 // The athlete page. The weight tabs pick whose contests are listed; the rating is one
@@ -38,6 +39,7 @@ export function AthleteView({
     document.getElementById("contests")?.scrollIntoView({ behavior: "smooth" });
   };
   const current = WEIGHTS.find((w) => w.api === athlete.weight);
+  const inactive = lastRating(history, today);
 
   return (
     <>
@@ -52,8 +54,8 @@ export function AthleteView({
         current={shortName(athlete.family_name, athlete.given_name)}
       />
 
-      <AthleteHeader athlete={athlete} weight={weight} onWeight={pickWeight} today={today} />
-      <RatingChart athlete={athlete} history={history} today={today} onCompetition={pickCompetition} />
+      <AthleteHeader athlete={athlete} weight={weight} onWeight={pickWeight} today={today} inactive={inactive} />
+      <RatingChart athlete={athlete} history={history} today={today} inactive={inactive} onCompetition={pickCompetition} />
       <Medals history={history} />
       <Contests
         key={weight}
