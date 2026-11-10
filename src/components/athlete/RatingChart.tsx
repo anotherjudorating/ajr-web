@@ -29,6 +29,7 @@ type Layout = {
   datesY: number;
   maxDates: number;
   labels: number; // the latest point's labels start this far right of the plot
+  font: number; // the values on the left and the dates under it (as the other charts')
 };
 
 const DESKTOP: Layout = {
@@ -43,22 +44,24 @@ const DESKTOP: Layout = {
   datesY: 255,
   maxDates: 8,
   labels: 16,
+  font: 12,
 };
 
 function phone(width: number): Layout {
-  const right = width - 86; // "Rating 2276" after it
+  const right = width - 80; // "Rating 2276" after it
   return {
     width,
     height: 226,
-    gridLeft: 34,
-    valuesX: 30,
-    left: 44,
+    gridLeft: 32,
+    valuesX: 28,
+    left: 42, // as the other charts' (H2HChart, NationChart)
     right,
     top: 14,
     rowGap: 34,
     datesY: 206,
-    maxDates: Math.max(2, Math.floor((right - 44) / 80)),
+    maxDates: Math.max(2, Math.floor((right - 42) / 80)),
     labels: 6,
+    font: 11,
   };
 }
 
@@ -265,7 +268,7 @@ export function RatingChart({
               <line key={i} x1={at.gridLeft} x2={RIGHT} y1={TOP + i * at.rowGap} y2={TOP + i * at.rowGap} />
             ))}
           </g>
-          <g fill="#66605C" fontFamily={FONT} fontSize="12" textAnchor="end">
+          <g fill="#66605C" fontFamily={FONT} fontSize={at.font} textAnchor="end">
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <text key={i} x={at.valuesX} y={TOP + i * at.rowGap + 4}>
                 {low + (5 - i) * step}
@@ -364,7 +367,7 @@ export function RatingChart({
               Rating {last.score}
             </text>
           </g>
-          <g fill="#66605C" fontFamily={FONT} fontSize="12" textAnchor="middle">
+          <g fill="#66605C" fontFamily={FONT} fontSize={at.font} textAnchor="middle">
             {ticks.map((tick) => (
               <text key={tick} x={x(tick)} y={at.datesY}>
                 {monthYear(new Date(tick).toISOString())}

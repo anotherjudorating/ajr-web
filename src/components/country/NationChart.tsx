@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ChartTip, dotsFit, useChartPointer, INK, LABEL_ROOM, monthTicks, nearest, PEAK, PERIOD, PeakLabel, peakShift, periodName, type Range, scale, TipBody } from "@/components/chart";
 import { Icon } from "@/components/Icon";
@@ -15,11 +15,11 @@ const YEAR = 365.25 * 24 * 3600 * 1000;
 const FONT = "var(--font-ibm-plex-sans), sans-serif";
 
 // Desktop and phone drawings: the plot's box in the viewBox (six grid lines, as on
-// the athlete's chart), the font size and how many dates to write under it.
-const LAYOUTS = [
-  { className: "hidden sm:block", width: 1000, height: 260, left: 50, right: 920, top: 28, bottom: 226, font: 11, dates: 8 },
-  { className: "sm:hidden", width: 500, height: 300, left: 46, right: 440, top: 28, bottom: 266, font: 14, dates: 3 },
-];
+// the athlete's chart), the font size and how many dates to write under it. The
+// phone's is in pixels of its width (until it is known, a phone's 358), its plot
+// starting where the other charts' do (RatingChart, H2HChart).
+const DESKTOP = { className: "hidden sm:block", width: 1000, height: 260, left: 50, right: 920, top: 28, bottom: 226, font: 12, dates: 8 };
+const phone = (width: number) => ({ className: "sm:hidden", width, height: 216, left: 42, right: width - 44, top: 20, bottom: 190, font: 11, dates: 3 });
 
 // A point: the last week of a period (a week, a month or a quarter, by the range),
 // with the period's start: the last week before it (for the change, and its
@@ -37,6 +37,13 @@ export type PeriodPick = { title: string; after: number; until: number }; // day
 export function NationChart({ ioc, history, today, rating }: { ioc: string; history: CountryWeek[]; today: string; rating: number }) {
   const [range, setRange] = useState<Range>("4Y");
   const box = useRef<HTMLElement>(null);
+  const [boxWidth, setBoxWidth] = useState<number | null>(null);
+  useEffect(() => {
+    const observer = new ResizeObserver(([entry]) => setBoxWidth(entry.contentRect.width));
+    if (box.current) observer.observe(box.current);
+    return () => observer.disconnect();
+  }, []);
+  const layouts = [DESKTOP, phone(Math.round(boxWidth ?? 358))];
   const now = new Date(today).getTime();
   const weeks = [
     ...history.map((w) => ({ day: new Date(w.day).getTime(), rating: w.rating, place: w.place as number | null })),
@@ -110,13 +117,13 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
           ))}
         </div>
       </div>
-      {LAYOUTS.map((l) => {
+      {layouts.map((l) => {
         const x = (day: number) => l.left + ((day - start) / Math.max(now - start, 1)) * (l.right - l.left);
         const y = (value: number) => l.bottom - ((value - low) / (5 * step)) * (l.bottom - l.top);
         const ticks = monthTicks(start, now, l.dates);
         const text = { fill: "currentColor", fontFamily: FONT, fontSize: l.font };
         return (
-          <div key={l.width} className={`relative py-2 overflow-x-clip ${l.className}`}>
+          <div key={l.className} className={`relative py-2 overflow-x-clip ${l.className}`}>
             <svg className="w-full h-auto overflow-visible block" style={{ touchAction: "pan-y" }} viewBox={`0 0 ${l.width} ${l.height}`} role="img" aria-label={label}>
               <g stroke="#D6CFC2" strokeWidth="0.8">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
