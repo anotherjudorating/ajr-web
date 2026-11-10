@@ -10,6 +10,7 @@ import { HEAD_CELL, ROW_CELL } from "@/components/tournament/styles";
 import type { HistoryRow } from "@/lib/api";
 import { SECTION } from "@/lib/anchors";
 import { formatDate } from "@/lib/format";
+import { LEVELS, levelOf } from "@/lib/levels";
 import { WEIGHTS } from "@/lib/weights";
 
 const H2 = "font-serif text-[20px] sm:text-[24px] font-bold text-ink border-b-2 border-ink pb-2";
@@ -21,18 +22,6 @@ const PLACES = [
   ["other", "Other", "Out earlier, or a result judobase does not give"],
 ] as const;
 const WIDE = "hidden md:table-cell";
-
-// The levels, most important first, and which judobase levels (rank_name) each holds.
-const LEVELS: { title: string; holds: (rank: string) => boolean }[] = [
-  { title: "Olympic Games", holds: (r) => r === "Olympic Games" },
-  { title: "World Championships", holds: (r) => r.startsWith("World Championships") },
-  { title: "Continental Championships", holds: (r) => r.endsWith("Championships") },
-  { title: "Masters", holds: (r) => r === "Masters" },
-  { title: "Grand Slam", holds: (r) => r === "Grand Slam" },
-  { title: "Grand Prix", holds: (r) => r === "Grand Prix" },
-  { title: "Continental Opens & Cups", holds: (r) => r.endsWith("Open") || r.endsWith("Cup") },
-  { title: "Other", holds: () => true },
-];
 
 type Entry = {
   competition_id: number;
@@ -59,7 +48,7 @@ function entries(history: HistoryRow[]): (Entry & { level: string })[] {
       day: row.fought_on,
       weight: row.weight,
       result: row.result,
-      level: LEVELS.find((l) => l.holds(rank))!.title,
+      level: levelOf(rank),
     });
   }
   return [...byKey.values()].sort((a, b) => (a.day < b.day ? 1 : -1));
