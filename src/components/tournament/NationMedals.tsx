@@ -6,7 +6,7 @@ import { Fragment, useState } from "react";
 import { goToRow, useHash, useRowMark, useRowScroll } from "@/components/anchors";
 
 import { Flag } from "@/components/Flag";
-import { CHEVRON_CELL, Icon } from "@/components/Icon";
+import { CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
 import { HashScroll } from "@/components/HashScroll";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { HEAD_CELL, Pagination, ROW_CELL } from "@/components/rankings/TableParts";
@@ -22,7 +22,8 @@ const SIZES = [10, 20, 50];
 
 // Medals by nation, golds first, a page at a time: 20 rows on wider screens and 10
 // on phones until a size is picked. A nation opens to its medallists (a click on one
-// goes up to them in the weights' results); its flag and code open the nation's page.
+// glides up to them in the weights' results, the name opens the athlete's page); its
+// flag and code open the nation's page.
 // #nation-<IOC> (a tournament on the nation's page): that nation opened and marked.
 export function NationMedals({ medallists }: { medallists: CompetitionResult[] }) {
   const [size, setSize] = useState<number | null>(null);
@@ -141,17 +142,23 @@ export function NationMedals({ medallists }: { medallists: CompetitionResult[] }
                       <tr
                         key={`${r.weight}-${r.athlete_id}`}
                         // up to the medallist in the weights' results
-                        onClick={() => weight && goToRow(medallistRow(weight.slug, r.athlete_id))}
-                        className="h-9 bg-panel/50 border-b border-rule text-[12px] sm:text-[13px] cursor-pointer hover:bg-panel"
+                        onClick={(e) => {
+                          if (weight && !(e.target as HTMLElement).closest("a")) goToRow(medallistRow(weight.slug, r.athlete_id));
+                        }}
+                        className="group bg-panel/50 border-b border-rule text-[12px] sm:text-[13px] cursor-pointer hover:bg-panel"
                       >
                         <td colSpan={KINDS.length + 2} className="pl-4 sm:pl-6 pr-2 py-1.5">
-                          <span className="inline-flex items-center gap-2 min-w-0">
-                            <Medal kind={r.result as MedalKind} className="w-3.5 h-4" />
+                          <span className="flex items-center gap-2 min-w-0">
+                            <Medal kind={r.result as MedalKind} className="w-3.5 h-4 shrink-0" />
                             <span className="text-muted tabular-nums w-12 shrink-0">{weight?.label ?? r.weight}</span>
-                            <span className="text-ink truncate">{shortName(r.family_name, r.given_name)}</span>
+                            <Link href={`/athletes/${r.athlete_id}`} className="text-ink truncate hover:underline">
+                              {shortName(r.family_name, r.given_name)}
+                            </Link>
                           </span>
                         </td>
-                        <td />
+                        <td className={`${CHEVRON_CELL} h-9`}>
+                          <RowChevron />
+                        </td>
                       </tr>
                     );
                   })}

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
+import { glideToTop } from "@/components/anchors";
 import { Flag } from "@/components/Flag";
 import { CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
 import { countMatchup } from "@/lib/browser-api";
@@ -140,7 +141,7 @@ export function H2HBrowser({
       {(loading || (both && !current)) && <ResultSkeleton />}
       {!loading && !both && <PopularMatchups matchups={popular} onPick={(m) => {
         go(m.weight, { a: m.a, b: m.b });
-        window.scrollTo(0, 0);
+        glideToTop();
       }} />}
       {current && result}
     </>

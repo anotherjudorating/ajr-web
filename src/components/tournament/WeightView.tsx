@@ -324,7 +324,6 @@ function Contests({ rounds, href }: { rounds: { round: string; contests: Competi
   const shown = rounds
     .map((r, i) => ({
       ...r,
-      all: r.contests.length,
       contests: r.contests.slice(Math.max(0, first - starts[i]), Math.max(0, first + size - starts[i])),
     }))
     .filter((r) => r.contests.length > 0);
@@ -357,18 +356,13 @@ function Contests({ rounds, href }: { rounds: { round: string; contests: Competi
           </tr>
         </thead>
         <tbody>
-          {shown.map(({ round, all, contests }) => {
+          {shown.map(({ round, contests }) => {
             const open = !folded.has(round);
             const title = (
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-2">
-                  <Icon size={18} name="expand_more" className={`text-muted transition-transform duration-150 ${open ? "" : "-rotate-90"}`} />
-                  <span className="text-[12px] font-bold uppercase text-ink">{roundsTitle(round)}</span>
-                </span>
-                <span className="text-[12px] text-muted">
-                  {all} {all === 1 ? "contest" : "contests"}
-                </span>
-              </div>
+              <span className="inline-flex items-center gap-2">
+                <Icon size={18} name="expand_more" className={`text-muted transition-transform duration-150 ${open ? "" : "-rotate-90"}`} />
+                <span className="text-[12px] font-bold uppercase text-ink">{roundsTitle(round)}</span>
+              </span>
             );
             return (
               <Fragment key={round}>

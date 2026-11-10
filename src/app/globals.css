@@ -28,6 +28,8 @@
    (Header.tsx: 84px on a phone, 64px from md), with a little air. */
 html {
   scroll-padding-top: 96px;
+  /* a link to a section of the same page glides there (Next: not between pages, layout.tsx) */
+  scroll-behavior: smooth;
   /* no sideways rubber band (or back swipe) when a finger slides along a chart */
   overscroll-behavior-x: none;
 }

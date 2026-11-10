@@ -114,10 +114,13 @@ function Medallists({
   groups: { weight: Weight; live: boolean; lines: Line[] }[];
 }) {
   // a medallist picked in the medals by nation (#medallist-<weight>-<id>): marked, scrolled to
+  // (in this section only: the men's and the women's would both scroll)
   const hash = useHash();
-  const lit = useRowMark(hash.startsWith("medallist-"), hash);
-  useRowScroll(hash, hash.startsWith("medallist-"));
   const shown = groups.filter((g) => g.lines.length > 0);
+  const marks = (g: { weight: Weight; lines: Line[] }) => g.lines.some((line) => medallistRow(g.weight.slug, line.athleteId) === hash);
+  const mine = shown.some(marks);
+  const lit = useRowMark(mine, hash);
+  useRowScroll(hash, mine);
   if (shown.length === 0) return null;
   const anchorId = title === "Men" ? SECTION.men : title === "Women" ? SECTION.women : undefined;
   return (
@@ -140,7 +143,7 @@ function Medallists({
                 {i === 0 && (
                   <td
                     rowSpan={lines.length}
-                    className="relative h-10 py-2.5 px-2 sm:px-3 w-14 sm:w-16 whitespace-nowrap text-muted align-top border-b border-rule"
+                    className={`relative h-10 py-2.5 px-2 sm:px-3 w-14 sm:w-16 whitespace-nowrap text-muted align-top border-b border-rule ${marks({ weight, lines }) ? lit.row : ""}`}
                   >
                     {/* the weight's cell opens the weight's page (the rows: the athlete's row there) */}
                     <Link href={`/tournaments/${id}/${weight.slug}`} className="absolute inset-0" aria-label={`${weight.label} kg`} />
@@ -157,7 +160,10 @@ function Medallists({
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Medal kind={line.kind} predicted={line.predicted} className="w-3.5 h-4" />
                     <Flag ioc={line.country} />
-                    <span className="truncate">{line.name}</span>
+                    {/* the name: the athlete's page */}
+                    <Link href={`/athletes/${line.athleteId}`} className="truncate hover:underline">
+                      {line.name}
+                    </Link>
                   </div>
                 </td>
                 <td className="h-9 py-0 px-2 sm:px-3 align-middle text-right whitespace-nowrap w-16">{line.value}</td>
