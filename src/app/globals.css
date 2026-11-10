@@ -24,6 +24,17 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* A section opened by its #anchor (lib/anchors.ts) stops below the fixed header
+   (Header.tsx: 84px on a phone, 64px from md), with a little air. */
+html {
+  scroll-padding-top: 96px;
+}
+@media (min-width: 768px) {
+  html {
+    scroll-padding-top: 80px;
+  }
+}
+
 /* Rankings table, as in the prototype: header 36px, rows 40px (44px from sm), and
    columns appear as the screen grows. Columns: 1 # 2 ↑↓ 3 Athlete 4 NAT 5 Rating
    6 +/- 7 6m 8 +/-6m 9 Trend 10 IJF 11 ± 12 Age 13 Last 14 ⌄ */
