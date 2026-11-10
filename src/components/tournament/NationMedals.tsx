@@ -1,26 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { Fragment, useState } from "react";
+
+import { goToRow, useHash, useRowMark, useRowScroll } from "@/components/anchors";
 
 import { Flag } from "@/components/Flag";
-import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
+import { CHEVRON_CELL, Icon } from "@/components/Icon";
 import { HashScroll } from "@/components/HashScroll";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { HEAD_CELL, Pagination, ROW_CELL } from "@/components/rankings/TableParts";
-import { RowLink } from "@/components/RowLink";
 import { H2, HEAD, LINK } from "@/components/tournament/styles";
 import type { CompetitionResult } from "@/lib/api";
-import { SECTION } from "@/lib/anchors";
+import { medallistRow, nationRow, SECTION } from "@/lib/anchors";
+import { shortName } from "@/lib/format";
+import { WEIGHTS } from "@/lib/weights";
 
 const KINDS: MedalKind[] = ["gold", "silver", "bronze"];
+const weightIndex = (api: string) => WEIGHTS.findIndex((w) => w.api === api);
 const SIZES = [10, 20, 50];
 
 // Medals by nation, golds first, a page at a time: 20 rows on wider screens and 10
-// on phones until a size is picked.
+// on phones until a size is picked. A nation opens to its medallists (a click on one
+// goes up to them in the weights' results); its flag and code open the nation's page.
+// #nation-<IOC> (a tournament on the nation's page): that nation opened and marked.
 export function NationMedals({ medallists }: { medallists: CompetitionResult[] }) {
   const [size, setSize] = useState<number | null>(null);
   const [page, setPage] = useState(1);
+  const [open, setOpen] = useState<string | null>(null);
 
   const counts = new Map<string, Record<MedalKind, number>>();
   for (const r of medallists) {
@@ -32,6 +39,18 @@ export function NationMedals({ medallists }: { medallists: CompetitionResult[] }
   const nations = [...counts]
     .map(([country, medals]) => ({ country, ...medals, total: medals.gold + medals.silver + medals.bronze }))
     .sort((a, b) => b.gold - a.gold || b.silver - a.silver || b.bronze - a.bronze || a.country.localeCompare(b.country));
+  const hash = useHash();
+  const marked = hash.startsWith("nation-") ? hash.slice("nation-".length) : null;
+  const [placedFor, setPlacedFor] = useState("");
+  const markedAt = marked === null ? -1 : nations.findIndex((n) => n.country === marked);
+  if (markedAt >= 0 && placedFor !== hash) {
+    setPlacedFor(hash);
+    setOpen(marked);
+    setSize(markedAt >= 10 ? 20 : size);
+    setPage(Math.floor(markedAt / (size ?? 20)) + 1);
+  }
+  const lit = useRowMark(marked !== null, hash);
+  useRowScroll(hash, placedFor === hash && marked !== null);
   if (nations.length === 0) return null;
 
   const shown = size ?? 20;
@@ -83,29 +102,62 @@ export function NationMedals({ medallists }: { medallists: CompetitionResult[] }
           </tr>
         </thead>
         <tbody>
-          {rows.map((n, i) => (
-            <RowLink
-              key={n.country}
-              href={`/countries/${n.country.toLowerCase()}`}
-              className={`border-b border-rule hover:bg-panel/40 ${size === null && i >= 10 ? "hidden sm:table-row" : ""}`}
-            >
-              <td className={ROW_CELL}>
-                <div className="flex items-center gap-1.5">
-                  <Flag ioc={n.country} />
-                  <span className="font-medium">{n.country}</span>
-                </div>
-              </td>
-              {KINDS.map((kind) => (
-                <td key={kind} className={`${ROW_CELL} text-center`}>
-                  {n[kind]}
-                </td>
-              ))}
-              <td className={`${ROW_CELL} text-right font-semibold`}>{n.total}</td>
-              <td className={`${CHEVRON_CELL}`}>
-                <RowChevron />
-              </td>
-            </RowLink>
-          ))}
+          {rows.map((n, i) => {
+            const isOpen = open === n.country;
+            const own = medallists
+              .filter((r) => r.country === n.country && KINDS.includes(r.result as MedalKind))
+              .sort((a, b) => KINDS.indexOf(a.result as MedalKind) - KINDS.indexOf(b.result as MedalKind) || weightIndex(a.weight) - weightIndex(b.weight));
+            return (
+              <Fragment key={n.country}>
+                <tr
+                  id={nationRow(n.country)}
+                  onClick={(e) => {
+                    if (!(e.target as HTMLElement).closest("a")) setOpen(isOpen ? null : n.country);
+                  }}
+                  aria-expanded={isOpen}
+                  className={`border-b border-rule hover:bg-panel/40 cursor-pointer ${size === null && i >= 10 ? "hidden sm:table-row" : ""} ${n.country === marked ? lit.row : ""}`}
+                >
+                  <td className={ROW_CELL}>
+                    {/* the flag and code: the nation's page */}
+                    <Link href={`/countries/${n.country.toLowerCase()}`} className="inline-flex items-center gap-1.5 hover:underline">
+                      <Flag ioc={n.country} />
+                      <span className="font-medium">{n.country}</span>
+                    </Link>
+                  </td>
+                  {KINDS.map((kind) => (
+                    <td key={kind} className={`${ROW_CELL} text-center`}>
+                      {n[kind]}
+                    </td>
+                  ))}
+                  <td className={`${ROW_CELL} text-right font-semibold`}>{n.total}</td>
+                  <td className={`${CHEVRON_CELL} h-10 sm:h-11`}>
+                    <Icon size={18} name={isOpen ? "expand_less" : "expand_more"} className="align-middle" />
+                  </td>
+                </tr>
+                {isOpen &&
+                  own.map((r) => {
+                    const weight = WEIGHTS.find((w) => w.api === r.weight);
+                    return (
+                      <tr
+                        key={`${r.weight}-${r.athlete_id}`}
+                        // up to the medallist in the weights' results
+                        onClick={() => weight && goToRow(medallistRow(weight.slug, r.athlete_id))}
+                        className="h-9 bg-panel/50 border-b border-rule text-[12px] sm:text-[13px] cursor-pointer hover:bg-panel"
+                      >
+                        <td colSpan={KINDS.length + 2} className="pl-4 sm:pl-6 pr-2 py-1.5">
+                          <span className="inline-flex items-center gap-2 min-w-0">
+                            <Medal kind={r.result as MedalKind} className="w-3.5 h-4" />
+                            <span className="text-muted tabular-nums w-12 shrink-0">{weight?.label ?? r.weight}</span>
+                            <span className="text-ink truncate">{shortName(r.family_name, r.given_name)}</span>
+                          </span>
+                        </td>
+                        <td />
+                      </tr>
+                    );
+                  })}
+              </Fragment>
+            );
+          })}
         </tbody>
       </table>
       {/* a short table (a tournament under way) needs no pages */}

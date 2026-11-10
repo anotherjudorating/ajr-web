@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { liveWeights } from "@/components/tournament/Overview";
+import { liveWeights } from "@/lib/live";
 import { stateOf, TournamentHeader, tournamentName } from "@/components/tournament/TournamentHeader";
 import { WeightView } from "@/components/tournament/WeightView";
 import { competition, competitionChances, competitionContests, competitionResults, competitions, lastUpdate } from "@/lib/api";

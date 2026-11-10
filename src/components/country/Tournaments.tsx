@@ -14,6 +14,7 @@ import { RowLink } from "@/components/RowLink";
 import { H2, HEAD_CELL, ROW_CELL } from "@/components/tournament/styles";
 import type { CountryTournament } from "@/lib/api";
 import { formatDate, shortCompetition } from "@/lib/format";
+import { nationRow } from "@/lib/anchors";
 import { LEVELS, levelOf } from "@/lib/levels";
 
 const KINDS: MedalKind[] = ["gold", "silver", "bronze"];
@@ -123,7 +124,7 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
             <RowLink
               key={t.id}
               id={`tournament-${t.id}`}
-              href={`/tournaments/${t.id}`}
+              href={`/tournaments/${t.id}#${nationRow(ioc)}`} // its medals by nation, this nation opened
               className={`border-b border-rule hover:bg-panel/40 ${marked?.ids.includes(t.id) ? lit.row : ""}`}
             >
               <td className={ROW_CELL}>

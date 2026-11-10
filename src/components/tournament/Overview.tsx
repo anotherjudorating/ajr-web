@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 
+import { useHash, useRowMark, useRowScroll } from "@/components/anchors";
 import { HashScroll } from "@/components/HashScroll";
-import { SECTION } from "@/lib/anchors";
+import { medallistRow, SECTION } from "@/lib/anchors";
 
 import { Flag } from "@/components/Flag";
 import { Arrow, CHEVRON_CELL, RowChevron } from "@/components/Icon";
@@ -12,6 +15,7 @@ import { NationMedals } from "@/components/tournament/NationMedals";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
 import type { Competition, CompetitionContest, CompetitionResult, MedalChance } from "@/lib/api";
 import { formatChance, shortName, signed } from "@/lib/format";
+import { liveWeights } from "@/lib/live";
 import { MEN, type Weight, WEIGHTS, weightTitle, WOMEN } from "@/lib/weights";
 
 const MEDALS: string[] = ["gold", "silver", "bronze"];
@@ -26,11 +30,6 @@ const gainOf = (r: CompetitionResult) => r.score_after - r.score_before;
 type Line = { athleteId: number; kind: MedalKind; predicted: boolean; country: string | null; name: string; value: React.ReactNode };
 const PLACES: MedalKind[] = ["gold", "silver", "bronze", "bronze"];
 
-// Weights fought at least once but not over: under way.
-export function liveWeights(results: CompetitionResult[]): Set<string> {
-  const over = new Set(results.filter((r) => r.result === "gold").map((r) => r.weight));
-  return new Set(results.map((r) => r.weight).filter((w) => !over.has(w)));
-}
 
 function linesOf(weight: Weight, medallists: CompetitionResult[], chances: MedalChance[]): Line[] {
   const won = medallists.filter((r) => r.weight === weight.api);
@@ -114,6 +113,10 @@ function Medallists({
   title: string;
   groups: { weight: Weight; live: boolean; lines: Line[] }[];
 }) {
+  // a medallist picked in the medals by nation (#medallist-<weight>-<id>): marked, scrolled to
+  const hash = useHash();
+  const lit = useRowMark(hash.startsWith("medallist-"), hash);
+  useRowScroll(hash, hash.startsWith("medallist-"));
   const shown = groups.filter((g) => g.lines.length > 0);
   if (shown.length === 0) return null;
   const anchorId = title === "Men" ? SECTION.men : title === "Women" ? SECTION.women : undefined;
@@ -130,8 +133,9 @@ function Medallists({
               // the weight's page at the athlete's row in its results, opened
               <RowLink
                 key={`${weight.slug}-${line.athleteId}`}
+                id={medallistRow(weight.slug, line.athleteId)}
                 href={`/tournaments/${id}/${weight.slug}#athlete-${line.athleteId}`}
-                className={i === lines.length - 1 ? "border-b border-rule" : "border-b border-rule/50"}
+                className={`${i === lines.length - 1 ? "border-b border-rule" : "border-b border-rule/50"} ${hash === medallistRow(weight.slug, line.athleteId) ? lit.row : ""}`}
               >
                 {i === 0 && (
                   <td

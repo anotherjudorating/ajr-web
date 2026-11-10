@@ -130,3 +130,11 @@ export function useRowScroll(id: string, ready: boolean, key = id): void {
     scrollWhileGrowing(row, start && table ? rowTarget(row, start, table) : undefined);
   });
 }
+
+// Go to a row of this page by its id: the address gets the hash (pushState sends no
+// hashchange, so one is sent), and useHash, useRowMark and useRowScroll mark and
+// scroll it as a link from another page would.
+export function goToRow(id: string): void {
+  window.history.pushState(null, "", `#${id}`);
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
+}
