@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Fragment, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { Arrow } from "@/components/Icon";
 import type { HistoryRow } from "@/lib/api";
+import { placesText } from "@/components/rankings/Changes";
 import { type Places, placeOn } from "@/lib/places";
 import { formatDate, monthYear, signed } from "@/lib/format";
 
@@ -356,16 +356,12 @@ export function TipHeading({ name, day }: { name: string; day: string }) {
   );
 }
 
-// The rating before → after, and the change.
+// The rating at the period's end, and its change over the period.
 export function TipChange({ before, after, muted = false }: { before: number; after: number; muted?: boolean }) {
   const change = after - before;
   return (
     <span className="tabular-nums">
-      <span className="text-ink">
-        {before}
-        <Arrow />
-        {after}
-      </span>{" "}
+      <span className="font-bold text-ink">{after}</span>{" "}
       <span className={`font-bold ${muted || change === 0 ? "text-muted" : change > 0 ? "text-gain" : "text-drop"}`}>
         {signed(change)}
       </span>
@@ -426,25 +422,23 @@ export function TipBody({ title, href, day, lines, places = [], action, children
   );
 }
 
-// The places rows of a tip (Rank, P4P: at the start › at the end).
+// The places of a tip, in one row: at the period's end and the places gained over it
+// (Rank #3 ↑2  P4P #12 ↓1).
 export function TipPlaces({ places }: { places: TipPlace[] }) {
   return (
-    <>
+    <div className="mt-0.5 mb-2 flex items-center gap-3 text-muted tabular-nums empty:hidden">
       {places
         .filter((place) => place.after !== null)
         .map((place) => (
-          <div key={place.label} className="mt-0.5 flex items-center gap-1.5 text-muted tabular-nums">
-            <span className="w-8">{place.label}</span>
-            {place.before !== null && place.before !== place.after && (
-              <span>
-                #{place.before}
-                <Arrow />
-              </span>
+          <span key={place.label}>
+            {place.label} <span className="text-ink">#{place.after}</span>
+            {/* places gained over the period, as the tables' ↑2 / ↓3 */}
+            {place.before !== null && place.after !== null && place.before !== place.after && (
+              <span className={`ml-1 font-bold ${placesText(place.before - place.after).color}`}>{placesText(place.before - place.after).text}</span>
             )}
-            <span className="text-ink">#{place.after}</span>
-          </div>
+          </span>
         ))}
-    </>
+    </div>
   );
 }
 
