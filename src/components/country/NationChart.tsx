@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 
-import { ChartTip, dotsFit, useChartPointer, INK, monthTicks, nearest, PEAK, PERIOD, PeakLabel, peakShift, periodName, type Range, scale, TipBody } from "@/components/chart";
+import { ChartTip, dotsFit, useChartPointer, INK, LABEL_ROOM, monthTicks, nearest, PEAK, PERIOD, PeakLabel, peakShift, periodName, type Range, scale, TipBody } from "@/components/chart";
 import { Icon } from "@/components/Icon";
 import { H2, HEAD } from "@/components/tournament/styles";
 import type { CountryWeek } from "@/lib/api";
@@ -86,6 +86,8 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
     },
     showTournaments,
   );
+  // the hovered point is the peak (by its day: the points are made anew every render)
+  const onPeak = peak !== undefined && hovered?.day === peak.day;
 
   const values = shown.map((p) => p.rating);
   const [low, step] = scale(Math.min(...values), Math.max(...values));
@@ -153,7 +155,7 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
               {hovered && (
                 <g pointerEvents="none">
                   <line x1={x(hovered.day)} x2={x(hovered.day)} y1={l.top} y2={l.bottom} stroke={INK} strokeOpacity="0.35" />
-                  <circle cx={x(hovered.day)} cy={y(hovered.rating)} r="5" fill={hovered === peak ? PEAK : INK} />
+                  <circle cx={x(hovered.day)} cy={y(hovered.rating)} r="5" fill={onPeak ? PEAK : INK} />
                 </g>
               )}
               {peak && <circle cx={x(peak.day)} cy={y(peak.rating)} fill={PEAK} r="4" pointerEvents="none" />}
@@ -197,7 +199,7 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
               </button>
             )}
             {hovered && (
-              <ChartTip left={(x(hovered.day) / l.width) * 100} top={(y(hovered.rating) / l.height) * 100} hold={hold} docked={touched}>
+              <ChartTip left={(x(hovered.day) / l.width) * 100} top={((y(hovered.rating) - (onPeak && peak !== last ? LABEL_ROOM : 0)) / l.height) * 100} hold={hold} docked={touched}>
                 <TipBody
                   action={
                     touched

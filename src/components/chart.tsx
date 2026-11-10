@@ -497,6 +497,10 @@ export function PeakLabel({ x, y, score, shift = 0, href, title, font }: {
   );
 }
 
+// The room the peak label takes over its point (in the drawing's units): the peak's
+// tip goes above it, so that the label stays in reach.
+export const LABEL_ROOM = 26;
+
 // How far the 68-wide peak label moves left so that it ends before `right` and
 // starts after `left`.
 export function peakShift(center: number, left: number, right: number): number {
