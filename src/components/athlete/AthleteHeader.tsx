@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Flag } from "@/components/Flag";
 import { changeText, ijfDifference, placesText } from "@/components/rankings/Changes";
 import type { Athlete } from "@/lib/api";
-import { fullName, monthYear } from "@/lib/format";
+import type { LastRating } from "@/lib/inactive";
+import { fullName, ijfProfile, monthYear } from "@/lib/format";
 
 const LABEL = "text-xs uppercase tracking-wider text-muted font-semibold";
 const BIG = "font-serif text-[28px] leading-tight font-bold text-ink";
@@ -16,15 +17,20 @@ export function AthleteHeader({
   weight,
   onWeight,
   today,
+  inactive,
 }: {
   athlete: Athlete;
   weight: string | null;
   onWeight: (weight: string) => void;
   today: string;
+  inactive: LastRating | null; // over a year without a contest: the rating then
 }) {
   const age = athlete.birth_year ? Number(today.slice(0, 4)) - athlete.birth_year : null;
-  const rating = athlete.rating ?? 0;
-  const uncertainty = rating - (athlete.score ?? 0); // 3 × RD, rounded as the score is
+  // an inactive athlete: the rating after the last contest, not today's (lowered only
+  // by the uncertainty grown since)
+  const rating = inactive ? inactive.rating : (athlete.rating ?? 0);
+  const score = inactive ? inactive.score : (athlete.score ?? 0);
+  const uncertainty = rating - score; // 3 × RD, rounded as the score is
 
   return (
     <>
@@ -61,6 +67,7 @@ export function AthleteHeader({
                 <span>{age} y.o.</span>
               </>
             )}
+
           </div>
         </div>
 
@@ -68,7 +75,17 @@ export function AthleteHeader({
           <div className="flex justify-between items-start gap-2 sm:gap-4">
             <div className="flex flex-col">
               <span className={LABEL}>Rank</span>
-              <span className={`${BIG} mt-1`}>{athlete.place ? `#${athlete.place}` : "–"}</span>
+              {inactive ? (
+                // why there is no rank: no contest in any weight for a year
+                <span
+                  className="font-serif text-[22px] leading-[38px] font-bold text-ink mt-1"
+                  title="No contest for over a year: out of the tables until the next one"
+                >
+                  Inactive
+                </span>
+              ) : (
+                <span className={`${BIG} mt-1`}>{athlete.place ? `#${athlete.place}` : "–"}</span>
+              )}
             </div>
             <div className="flex flex-col items-start">
               <span className={LABEL}>Peak</span>
@@ -84,11 +101,14 @@ export function AthleteHeader({
             </div>
             <div
               className="flex flex-col items-start"
-              title="Position in the IJF World Ranking List. ↑ higher in IJF than in AJR, ↓ lower."
+              title="Position in the IJF World Ranking List. ↑ higher in IJF than in AJR, ↓ lower. Opens the athlete's IJF profile."
             >
               <span className={LABEL}>IJF</span>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className={BIG}>{athlete.wrl_place ? `#${athlete.wrl_place}` : "–"}</span>
+                {/* our ids are the IJF's: the profile with its ranking and results */}
+                <a href={ijfProfile(athlete.id)} target="_blank" rel="noopener" className={`${BIG} underline decoration-rule decoration-2 underline-offset-4 hover:decoration-ink`}>
+                  {athlete.wrl_place ? `#${athlete.wrl_place}` : "–"}
+                </a>
                 {athlete.place && athlete.wrl_place && (
                   <span className="text-xs text-muted">{ijfDifference(athlete.place, athlete.wrl_place)}</span>
                 )}
@@ -98,8 +118,10 @@ export function AthleteHeader({
 
           <div className="mt-5 flex justify-between items-end gap-4">
             <div className="flex flex-col">
-              <div className="font-serif text-[56px] leading-none font-bold text-ink tabular-nums">{athlete.score}</div>
-              <span className={`${LABEL} mt-2`}>Current rating</span>
+              <div className="font-serif text-[56px] leading-none font-bold text-ink tabular-nums">{score}</div>
+              <span className={`${LABEL} mt-2`}>
+                {inactive ? `Last rating · ${monthYear(inactive.day)}` : "Current rating"}
+              </span>
             </div>
             <div className="tabular-nums text-xs pb-1">
               <div className="grid grid-cols-3 gap-4 pb-1 text-[11px] uppercase tracking-wider text-muted font-semibold text-right">
@@ -107,8 +129,9 @@ export function AthleteHeader({
                 <span>Rating</span>
                 <span>Rank</span>
               </div>
-              <ChangeRow label="90 days" score={athlete.score_change_90d} places={athlete.places_up_90d} />
-              <ChangeRow label="6 months" score={athlete.score_change_6m} places={athlete.places_up_6m} />
+              {/* no changes for an inactive athlete: only the uncertainty moved */}
+              <ChangeRow label="90 days" score={inactive ? null : athlete.score_change_90d} places={inactive ? null : athlete.places_up_90d} />
+              <ChangeRow label="6 months" score={inactive ? null : athlete.score_change_6m} places={inactive ? null : athlete.places_up_6m} />
             </div>
           </div>
 
@@ -120,7 +143,7 @@ export function AthleteHeader({
               <span className="tabular-nums font-semibold text-ink">{uncertainty}</span>
               <span>uncertainty</span>
               <span className="text-[15px] leading-4 font-medium mx-1">=</span>
-              <span className="tabular-nums font-bold text-ink">{athlete.score}</span>
+              <span className="tabular-nums font-bold text-ink">{score}</span>
             </div>
             <Link href="/methodology" className="font-serif text-[14px] leading-4 font-semibold text-claret hover:underline">
               How it works

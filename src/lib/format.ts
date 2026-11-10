@@ -103,3 +103,8 @@ export function shortCompetition(name: string): string {
 export function formatChance(value: number, digits = 2): string {
   return `${(value * 100).toFixed(digits)}%`;
 }
+
+// An athlete's profile on the IJF's site (our athlete ids are judobase's).
+export function ijfProfile(id: number): string {
+  return `https://www.ijf.org/judoka/${id}`;
+}

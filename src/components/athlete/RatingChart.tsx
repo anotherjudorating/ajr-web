@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { Athlete, HistoryRow } from "@/lib/api";
+import type { LastRating } from "@/lib/inactive";
 import { formatDate, monthYear, signed } from "@/lib/format";
 
 // Where things go on the canvas. From md up, the prototype's chart: a 1000×280 canvas
@@ -59,6 +60,9 @@ const RANGES = { "1Y": 1, "4Y": 4, All: null } as const;
 type Range = keyof typeof RANGES;
 const FONT = "'IBM Plex Sans', sans-serif";
 const YEAR = 365.25 * 24 * 3600 * 1000;
+const DAY = 24 * 3600 * 1000;
+// No contest for this long: out of the tables (hide_after_days in the rating settings).
+const AWAY = 365 * DAY;
 
 export type Competition = {
   id: number;
@@ -78,11 +82,13 @@ export function RatingChart({
   athlete,
   history,
   today,
+  inactive,
   onCompetition,
 }: {
   athlete: Athlete;
   history: HistoryRow[];
   today: string;
+  inactive: LastRating | null; // over a year without a contest: the line ends at the last one
   onCompetition: (competition: Competition) => void;
 }) {
   const [hovered, setHovered] = useState<Point | null>(null);
@@ -98,7 +104,11 @@ export function RatingChart({
     return () => observer.disconnect();
   }, []);
   const page = typeof window === "undefined" ? MD : window.innerWidth;
-  const at = boxWidth !== null && page < MD ? phone(Math.round(boxWidth)) : DESKTOP;
+  const base = boxWidth !== null && page < MD ? phone(Math.round(boxWidth)) : DESKTOP;
+  const desktop = base === DESKTOP;
+  // the column on the right is for the labels of today's point; an inactive athlete's
+  // line ends earlier, the labels go with it, and the plot takes the whole width
+  const at = inactive ? { ...base, right: base.width - (desktop ? 20 : 8) } : base;
   const { left: LEFT, right: RIGHT, top: TOP } = at;
   const BOTTOM = TOP + 5 * at.rowGap;
 
@@ -134,7 +144,9 @@ export function RatingChart({
       points.sort((a, b) => a.day - b.day);
     }
   }
-  points.push({ day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 });
+  // today's point, but not for an inactive athlete: their line ends at the last
+  // contest, the inactive zone runs on to today
+  if (!inactive) points.push({ day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 });
 
   const years = RANGES[range];
   const from = years === null ? points[0].day : now - years * YEAR;
@@ -155,13 +167,26 @@ export function RatingChart({
   // the all-time peak of the header, when it is in the window
   const peak = athlete.peak_on ? real.find((p) => p.day === new Date(athlete.peak_on!).getTime()) : undefined;
   const ticks = monthTicks(start, now, at.maxDates);
+  // the end labels (Skill, −RD, Rating) next to the line's last point: at today's edge,
+  // or, for an inactive athlete whose line ends earlier, right after that point (over
+  // the inactive zone, on a paper halo)
+  const labelX = inactive ? Math.min(x(last.day) + 12, at.width - (desktop ? 130 : 88)) : RIGHT + at.labels;
+
+  // Inactive: no contest for over a year (out of the tables), between competitions or
+  // since the last one. The rating holds, its uncertainty grows, so the score drifts
+  // down: the zone says why.
+  const days = points.filter((p) => p.competition).map((p) => p.day);
+  const zones = [...days, now]
+    .flatMap((day, i, all) => (i && day - all[i - 1] > AWAY ? [{ from: all[i - 1], to: day }] : []))
+    .filter((zone) => zone.to > start)
+    .map((zone) => ({ ...zone, x1: x(Math.max(zone.from, start)), x2: x(zone.to) }));
 
   return (
     <section className="mb-0 mt-14 lg:mt-16">
       <div className="flex justify-between items-end mb-3 border-b-2 border-ink pb-2">
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 min-w-0">
           <h2 className="font-serif font-bold text-[20px] sm:text-[24px] text-ink">Rating</h2>
-          <div className="flex items-center gap-3 text-xs text-muted">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
             <span className="inline-flex items-center gap-1.5">
               <svg width="16" height="4" aria-hidden>
                 <line x1="0" y1="2" x2="16" y2="2" stroke="#66605C" strokeWidth="1.2" strokeDasharray="4,3" />
@@ -177,6 +202,17 @@ export function RatingChart({
             <span className="inline-flex items-center gap-1.5">
               <span className="w-3 h-2.5 bg-ink/[0.08] border border-rule inline-block" />
               Uncertainty
+            </span>
+            <span className="inline-flex items-center gap-1.5" title="No contest for over a year: out of the tables">
+              <svg width="12" height="10" aria-hidden className="border border-rule">
+                <rect width="12" height="10" fill="url(#inactive-legend)" />
+                <defs>
+                  <pattern id="inactive-legend" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <line x1="0" y1="0" x2="0" y2="4" stroke="#D6CFC2" strokeWidth="1.5" />
+                  </pattern>
+                </defs>
+              </svg>
+              Inactive
             </span>
           </div>
         </div>
@@ -216,6 +252,26 @@ export function RatingChart({
               </text>
             ))}
           </g>
+          <defs>
+            <pattern id="inactive" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="6" stroke="#D6CFC2" strokeWidth="2" />
+            </pattern>
+          </defs>
+          {zones.map((zone) => (
+            <g key={zone.from}>
+              <rect x={zone.x1} y={TOP} width={Math.max(zone.x2 - zone.x1, 0)} height={BOTTOM - TOP} fill="url(#inactive)">
+                <title>
+                  No contest for over a year: out of the tables until the next one. The rating holds; its uncertainty
+                  grows, so the score drifts down.
+                </title>
+              </rect>
+              {zone.x2 - zone.x1 > 70 && (
+                <text x={(zone.x1 + zone.x2) / 2} y={BOTTOM - 8} textAnchor="middle" fill="#66605C" fontFamily={FONT} fontSize="11">
+                  Inactive
+                </text>
+              )}
+            </g>
+          ))}
           <polygon
             fill="#33302E"
             fillOpacity="0.08"
@@ -223,7 +279,7 @@ export function RatingChart({
           />
           <polyline fill="none" points={line("rating")} stroke="#66605C" strokeDasharray="4,3" strokeWidth="1.2" />
           <polyline fill="none" points={line("score")} stroke="#33302E" strokeWidth="2.5" />
-          {at === DESKTOP && (
+          {desktop && (
             <g fill="#33302E">
               {real
                 .filter((p) => p.competition && p !== peak)
@@ -242,22 +298,22 @@ export function RatingChart({
               </text>
             </g>
           )}
-          <g fontFamily={FONT} fontSize="12">
-            <text fill="#66605C" x={RIGHT + at.labels} y={y(last.rating) + 4}>
+          <g fontFamily={FONT} fontSize="12" stroke="#F3EEE3" strokeWidth={inactive ? 4 : 0} paintOrder="stroke" strokeLinejoin="round">
+            <text fill="#66605C" x={labelX} y={y(last.rating) + 4}>
               Skill {last.rating}
             </text>
             <line
               stroke="#D6CFC2"
               strokeWidth="0.8"
-              x1={RIGHT + at.labels + 12}
-              x2={RIGHT + at.labels + 12}
+              x1={labelX + 4}
+              x2={labelX + 4}
               y1={y(last.rating) + 11}
               y2={y(last.score) - 11}
             />
-            <text fill="#66605C" x={RIGHT + at.labels + 20} y={(y(last.rating) + y(last.score)) / 2 + 4}>
-              −{last.rating - last.score}
+            <text fill="#66605C" x={labelX + 12} y={(y(last.rating) + y(last.score)) / 2 + 4}>
+              −{last.rating - last.score}{desktop ? " uncertainty" : ""}
             </text>
-            <text fill="#33302E" fontWeight="700" x={RIGHT + at.labels + 12} y={y(last.score) + 4}>
+            <text fill="#33302E" fontWeight="700" x={labelX} y={y(last.score) + 4}>
               Rating {last.score}
             </text>
           </g>
@@ -267,11 +323,12 @@ export function RatingChart({
                 {monthYear(new Date(tick).toISOString())}
               </text>
             ))}
-            <text x={RIGHT} y={at.datesY}>
+            {/* at the plot's right edge: when it is the canvas's (inactive), ends there */}
+            <text x={RIGHT} y={at.datesY} textAnchor={inactive ? "end" : "middle"}>
               {monthYear(new Date(now).toISOString())}
             </text>
           </g>
-          {at === DESKTOP && (
+          {desktop && (
             <g fill="transparent" className="cursor-pointer">
               {real
                 .filter((p) => p.competition)
