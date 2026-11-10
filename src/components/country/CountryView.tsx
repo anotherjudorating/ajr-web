@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { Leaders } from "@/components/country/Leaders";
 import { NationChart } from "@/components/country/NationChart";
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
@@ -9,8 +10,8 @@ import { RowLink } from "@/components/RowLink";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
 import type { Country, CountryLeader, CountryTournament, CountryWeek } from "@/lib/api";
 import { CONTINENTS } from "@/lib/continents";
-import { shortCompetition, shortDate, shortName, signed } from "@/lib/format";
-import { MEN, type Weight, WOMEN } from "@/lib/weights";
+import { shortCompetition, shortDate, signed } from "@/lib/format";
+import { MEN, WOMEN } from "@/lib/weights";
 
 const LABEL = "text-[12px] uppercase tracking-wider text-muted font-semibold";
 const DIVIDER = <span className="inline-block w-px h-3 bg-rule mx-3 align-middle" />;
@@ -136,52 +137,6 @@ export function CountryView({
         <Tournaments rows={tournaments} />
       </div>
     </>
-  );
-}
-
-// Its best athlete in every weight of a gender and their place in the weight.
-function Leaders({ title, weights, leaders, href }: { title: string; weights: Weight[]; leaders: CountryLeader[]; href: string }) {
-  const rows = weights
-    .map((weight) => ({ weight, leader: leaders.find((l) => l.weight === weight.api) }))
-    .filter((row) => row.leader !== undefined);
-  if (rows.length === 0) return null;
-  return (
-    <section>
-      <div className={HEAD}>
-        <h2 className={H2}>{title}</h2>
-        <Link href={href} className={LINK}>
-          All athletes
-        </Link>
-      </div>
-      <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
-        <thead>
-          <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-left w-14 sm:w-16`}>Weight</th>
-            <th className={`${HEAD_CELL} text-left`}>Athlete</th>
-            <th className={`${HEAD_CELL} text-right w-16`} title="World rank in the weight">
-              Rank
-            </th>
-            <th className={`${HEAD_CELL} text-right w-16 sm:w-20`}>Rating</th>
-            <th className="w-6 h-9 py-0 pl-1 pr-0" />
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(({ weight, leader }) => (
-            <RowLink key={weight.slug} href={`/athletes/${leader!.athlete_id}`} className="border-b border-rule hover:bg-panel/40">
-              <td className={`${ROW_CELL} text-muted`}>{weight.label}</td>
-              <td className={ROW_CELL}>
-                <span className="font-medium truncate block">{shortName(leader!.family_name, leader!.given_name)}</span>
-              </td>
-              <td className={`${ROW_CELL} text-right ${leader!.place === 1 ? "font-semibold" : "text-muted"}`}>#{leader!.place}</td>
-              <td className={`${ROW_CELL} text-right font-bold`}>{leader!.score}</td>
-              <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-                <Icon size={18} name="chevron_right" className="align-middle" />
-              </td>
-            </RowLink>
-          ))}
-        </tbody>
-      </table>
-    </section>
   );
 }
 
