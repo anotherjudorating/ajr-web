@@ -84,7 +84,7 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
                   onClick={(e) => {
                     if (!(e.target as HTMLElement).closest("a")) router.push(`/contests/${contest.contest_id}`);
                   }}
-                  className="border-b border-rule/60 last:border-b-0 py-1.5 flex items-center justify-between gap-1.5 cursor-pointer hover:bg-paper/50"
+                  className="group border-b border-rule/60 last:border-b-0 py-1.5 flex items-center justify-between gap-1.5 cursor-pointer hover:bg-paper/50"
                 >
                   <span className="w-10 text-muted shrink-0">{roundCode(contest.round)}</span>
                   <div className="inline-flex items-center gap-1.5 min-w-0 flex-1 truncate">
@@ -108,7 +108,7 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
                   </span>
                   <span className={`w-6 text-center font-bold shrink-0 ${result}`}>{contest.won ? "W" : "L"}</span>
                   <span className={`w-10 text-right font-bold shrink-0 tabular-nums ${result}`}>{signed(delta)}</span>
-                  <Link href={`/contests/${contest.contest_id}`} aria-label="The contest" className="group shrink-0 mr-[3px] sm:mr-[7px]">
+                  <Link href={`/contests/${contest.contest_id}`} aria-label="The contest" className="shrink-0 mr-[3px] sm:mr-[7px]">
                     <RowChevron className="text-muted" />
                   </Link>
                 </div>

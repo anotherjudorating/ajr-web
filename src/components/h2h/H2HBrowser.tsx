@@ -322,7 +322,7 @@ function PopularMatchups({ matchups, onPick }: { matchups: Matchup[]; onPick: (m
             <tr
               key={`${m.a.id}-${m.b.id}`}
               onClick={() => onPick(m)}
-              className="border-b border-rule hover:bg-panel/40 cursor-pointer"
+              className="group border-b border-rule hover:bg-panel/40 cursor-pointer"
             >
               <td className={TD}>
                 <div className="flex items-center gap-1.5 min-w-0">
