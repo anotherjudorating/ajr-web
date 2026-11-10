@@ -608,12 +608,7 @@ export async function countryLeaders(ioc: string): Promise<CountryLeader[]> {
 
 export type CountryWeek = { day: string; place: number; rating: number };
 
-// Its mixed rating and place every week (Sundays), the earliest first.
-export async function countryHistory(ioc: string): Promise<CountryWeek[]> {
-  "use cache: remote";
-  dataCache();
-  return rpc<CountryWeek[]>("country_history", { ioc });
-}
+// Its weeks: lib/tables.ts nationWeeks (R2).
 
 export type CountryTournament = {
   id: number;

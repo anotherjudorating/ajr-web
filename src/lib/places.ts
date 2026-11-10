@@ -1,4 +1,4 @@
-// An athlete's place every Monday, from the tables job's places/<id>.json in R2
+// An athlete's place every Monday, from the tables job's places/<version>/athletes/<id>.json in R2
 // (lib/tables.ts athletePlaces): the first week, then a week a row — the place in the
 // weight's table, the weight, the place pound for pound (null outside the top) — null
 // for a week outside every table.
