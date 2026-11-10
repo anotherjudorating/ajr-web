@@ -5,7 +5,7 @@ import { Fragment, useMemo, useState } from "react";
 
 import { CsvButton, ExploreTitle, SearchBox, Select, ToolbarRow } from "@/components/explore/Controls";
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
 import { HEAD_CELL, PlaceholderRows, ROW_CELL, saveCsv } from "@/components/rankings/TableParts";
 import type { CompetitionRow } from "@/lib/api";
 import { dateRange, shortCompetition } from "@/lib/format";
@@ -104,7 +104,7 @@ export function TournamentsBrowser({
             <th className={`${HEAD_CELL} hidden sm:table-cell w-40 text-right`}>Rating accuracy</th>
             {/* on a phone the name takes the room: upsets on wider screens */}
             <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-24 text-right`}>Upsets</th>
-            <th className="w-6 sm:w-8 h-9 py-0" />
+            <th className="w-8 sm:w-10 h-9 py-0" />
           </tr>
         </thead>
         <tbody className="text-[13px] sm:text-[14px]">
@@ -143,7 +143,7 @@ export function TournamentsBrowser({
                 {!hidden && (
                   <tr
                     onClick={() => router.push(`/tournaments/${row.id}`)}
-                    className="border-b border-rule hover:bg-panel/40 cursor-pointer"
+                    className="group border-b border-rule hover:bg-panel/40 cursor-pointer"
                   >
                     <td className={`${ROW_CELL} text-muted tabular-nums whitespace-nowrap`}>{dateRange(row.date_from, row.date_to)}</td>
                     <td className={`${ROW_CELL} font-semibold text-ink`}>
@@ -168,8 +168,8 @@ export function TournamentsBrowser({
                       {row.accuracy === null ? "–" : `${Math.round(row.accuracy * 100)}%`}
                     </td>
                     <td className={`${ROW_CELL} hidden sm:table-cell text-right text-ink tabular-nums`}>{row.upsets}</td>
-                    <td className="h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-muted">
-                      <Icon size={18} name="chevron_right" className="align-middle" />
+                    <td className={`${CHEVRON_CELL}`}>
+                      <RowChevron />
                     </td>
                   </tr>
                 )}

@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable} antialiased`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${serif.variable} ${sans.variable} antialiased`}>
       <head>
         {/* Icons used by the design (search, close, download, arrows). "block": an icon
             font must not show its ligature names ("search") while loading. */}

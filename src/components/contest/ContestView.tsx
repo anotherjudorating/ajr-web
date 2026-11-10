@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Flag } from "@/components/Flag";
-import { Arrow, Icon } from "@/components/Icon";
+import { Arrow, CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { isUpset } from "@/components/rankings/Changes";
 import { RowLink } from "@/components/RowLink";
 import type { ContestDetail, HistoryRow } from "@/lib/api";
@@ -156,9 +156,9 @@ export function ContestView({
                           <span className="font-medium truncate">{winner.name}</span>
                         </div>
                       </td>
-                      <td className="w-6 pl-1 pr-0 h-10 sm:h-11 py-0 align-middle text-right text-muted">
+                      <td className={`${CHEVRON_CELL}`}>
                         <Link href={`/contests/${row.contest_id}`} aria-label="The contest">
-                          <Icon size={18} name="chevron_right" className="align-middle" />
+                          <RowChevron />
                         </Link>
                       </td>
                     </RowLink>
@@ -405,9 +405,9 @@ function RoadRow({ row }: { row: HistoryRow }) {
         </span>
       </td>
       <td className={`w-12 ${CELL} text-right font-bold ${row.won ? "text-gain" : "text-drop"}`}>{signed(gain)}</td>
-      <td className="w-6 pl-1 pr-0 h-10 sm:h-11 py-0 align-middle text-right text-muted">
+      <td className={`${CHEVRON_CELL}`}>
         <Link href={`/contests/${row.contest_id}`} aria-label="The contest">
-          <Icon size={18} name="chevron_right" className="align-middle" />
+          <RowChevron />
         </Link>
       </td>
     </RowLink>

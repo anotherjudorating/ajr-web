@@ -51,17 +51,32 @@ export function useHashTarget(id: string): {
 // it there while the page settles: the rest may still be arriving (too short to
 // scroll that far), and fonts or a chart above may change height after the first
 // scroll. Every change of the page's size puts it back, for 5 seconds or until the
-// reader scrolls, clicks or types.
+// reader scrolls, clicks or types. It glides there, briefly (GLIDE), so the reader
+// sees where on the page it is; the target is read every frame, as the page grows.
 export function scrollWhileGrowing(section: HTMLElement, target: () => number = () => topOf(section)): void {
-  const place = () => {
-    const y = target();
-    if (Math.abs(window.scrollY - y) >= 2) window.scrollTo(0, y);
+  const from = window.scrollY;
+  const begin = performance.now();
+  const duration = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : GLIDE;
+  let frame = 0;
+  let gliding = true;
+  const step = (now: number) => {
+    const t = duration === 0 ? 1 : Math.min(1, (now - begin) / duration);
+    window.scrollTo({ top: from + (target() - from) * (1 - (1 - t) ** 3), behavior: "instant" });
+    if (t < 1) frame = requestAnimationFrame(step);
+    else gliding = false;
   };
-  place();
+  const place = () => {
+    if (gliding) return;
+    const y = target();
+    if (Math.abs(window.scrollY - y) >= 2) window.scrollTo({ top: y, behavior: "instant" });
+  };
+  frame = requestAnimationFrame(step);
   const observer = new ResizeObserver(place);
   const events = ["wheel", "touchstart", "keydown", "mousedown"] as const;
   const timer = window.setTimeout(stop, 5000);
   function stop() {
+    cancelAnimationFrame(frame);
+    gliding = false;
     observer.disconnect();
     window.clearTimeout(timer);
     for (const e of events) window.removeEventListener(e, stop);
@@ -69,6 +84,13 @@ export function scrollWhileGrowing(section: HTMLElement, target: () => number = 
   observer.observe(document.body);
   document.fonts?.ready.then(place);
   for (const e of events) window.addEventListener(e, stop, { passive: true });
+}
+
+const GLIDE = 450; // ms
+
+// Glide to the page's top (a new pick on the same page).
+export function glideToTop(): void {
+  scrollWhileGrowing(document.body, () => 0);
 }
 
 const padding = () => parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
@@ -125,8 +147,28 @@ export function useRowScroll(id: string, ready: boolean, key = id): void {
     const row = ready ? document.getElementById(id) : null;
     if (!row || scrolledFor.current === key) return;
     scrolledFor.current = key;
-    const start = document.getElementById(TABLE_START) ?? row.closest("section");
-    const table = row.closest("table");
-    scrollWhileGrowing(row, start && table ? rowTarget(row, start, table) : undefined);
+    if (goingTo !== id) scrollToRow(row);
+  });
+}
+
+function scrollToRow(row: HTMLElement): void {
+  const start = document.getElementById(TABLE_START) ?? row.closest("section");
+  const table = row.closest("table");
+  scrollWhileGrowing(row, start && table ? rowTarget(row, start, table) : undefined);
+}
+
+let goingTo = ""; // the row goToRow scrolls to itself (useRowScroll leaves it)
+
+// Go to a row of this page by its id: the address gets the hash (pushState sends no
+// hashchange, so one is sent), and useHash, useRowMark and useRowScroll mark and
+// scroll it as a link from another page would.
+export function goToRow(id: string): void {
+  goingTo = id;
+  window.history.pushState(null, "", `#${id}`);
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
+  requestAnimationFrame(() => {
+    const row = document.getElementById(id);
+    if (row) scrollToRow(row);
+    goingTo = "";
   });
 }

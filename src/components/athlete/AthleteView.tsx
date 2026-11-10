@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { scrollWhileGrowing } from "@/components/anchors";
 import { AthleteHeader } from "@/components/athlete/AthleteHeader";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Contests, type ContestsPreset } from "@/components/athlete/Contests";
@@ -54,7 +55,10 @@ export function AthleteView({
       value: kind === "wins" ? { result: "w", sort: "chance-asc" } : { result: "l", sort: "chance-desc" },
       n: (p?.n ?? 0) + 1,
     }));
-    requestAnimationFrame(() => document.getElementById("contests")?.scrollIntoView({ behavior: "smooth" }));
+    requestAnimationFrame(() => {
+      const contests = document.getElementById("contests");
+      if (contests) scrollWhileGrowing(contests);
+    });
   };
   const current = WEIGHTS.find((w) => w.api === athlete.weight);
   const inactive = lastRating(history, today);

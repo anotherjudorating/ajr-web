@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { Fragment, useState } from "react";
 
+import { useHash, useRowMark, useRowScroll } from "@/components/anchors";
+
 import { Flag } from "@/components/Flag";
-import { Arrow, Icon } from "@/components/Icon";
+import { Arrow, CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { isUpset } from "@/components/rankings/Changes";
 import { Pagination } from "@/components/rankings/TableParts";
@@ -13,6 +15,7 @@ import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/sty
 import type { Competition, CompetitionContest, CompetitionResult, MedalChance } from "@/lib/api";
 import { formatChance, roundCode, roundTitle, shortName, signed } from "@/lib/format";
 import type { Weight } from "@/lib/weights";
+import { athleteRow } from "@/lib/anchors";
 
 const MEDALS: string[] = ["gold", "silver", "bronze"];
 // the stages' group rows' titles (several contests each)
@@ -133,7 +136,7 @@ function Chances({ rows }: { rows: MedalChance[] }) {
             <th className={`${HEAD_CELL} text-left`}>Athlete</th>
             <th className={`${HEAD_CELL} text-right w-16 sm:w-20`}>Gold</th>
             <th className={`${HEAD_CELL} text-right w-16 sm:w-20`}>Medal</th>
-            <th className="w-6 h-9 py-0 pl-1 pr-0" />
+            <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
         <tbody>
@@ -147,8 +150,8 @@ function Chances({ rows }: { rows: MedalChance[] }) {
               </td>
               <td className={`${ROW_CELL} text-right text-muted`}>{percent(r.gold)}</td>
               <td className={`${ROW_CELL} text-right font-semibold`}>{percent(r.medal)}</td>
-              <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-                <Icon size={18} name="chevron_right" className="align-middle" />
+              <td className={`${CHEVRON_CELL}`}>
+                <RowChevron />
               </td>
             </RowLink>
           ))}
@@ -159,11 +162,24 @@ function Chances({ rows }: { rows: MedalChance[] }) {
 }
 
 // Every athlete, a page at a time; a row opens the athlete's contests below it.
+// #athlete-<id> (a medallist on the tournament's overview): that row opened on its
+// page, marked and scrolled to, as a ranking's row.
 function Results({ rows, places, contests }: { rows: CompetitionResult[]; places: number[]; contests: CompetitionContest[] }) {
   const [open, setOpen] = useState<number | null>(null);
   const [size, setSize] = useState(20);
   const [page, setPage] = useState(1);
   const first = (page - 1) * size;
+  const hash = useHash();
+  const marked = hash.startsWith("athlete-") ? Number(hash.slice("athlete-".length)) || null : null;
+  const [placedFor, setPlacedFor] = useState("");
+  const markedAt = marked === null ? -1 : rows.findIndex((r) => r.athlete_id === marked);
+  if (markedAt >= 0 && placedFor !== hash) {
+    setPlacedFor(hash);
+    setOpen(marked);
+    setPage(Math.floor(markedAt / size) + 1);
+  }
+  const lit = useRowMark(marked !== null, hash);
+  useRowScroll(hash, placedFor === hash);
 
   return (
     <section className="mt-14 lg:mt-16">
@@ -205,7 +221,7 @@ function Results({ rows, places, contests }: { rows: CompetitionResult[]; places
                       <Link
                         key={c.contest_id}
                         href={`/contests/${c.contest_id}`}
-                        className="border-b border-rule/60 last:border-b-0 py-1.5 flex items-center justify-between gap-1.5 hover:bg-paper/50"
+                        className="group border-b border-rule/60 last:border-b-0 py-1.5 flex items-center justify-between gap-1.5 hover:bg-paper/50"
                       >
                         <span className="w-10 shrink-0 text-muted">{shortRound(c.round)}</span>
                         <span className="inline-flex items-center gap-1.5 min-w-0 flex-1">
@@ -219,7 +235,7 @@ function Results({ rows, places, contests }: { rows: CompetitionResult[]; places
                         <span className={`w-10 shrink-0 text-right font-bold tabular-nums ${(self.change ?? 0) >= 0 ? "text-gain" : "text-drop"}`}>
                           {self.change === null ? "" : signed(self.change)}
                         </span>
-                        <Icon size={18} name="chevron_right" className="text-muted shrink-0 -mr-1" />
+                        <RowChevron className="text-muted shrink-0 mr-[3px] sm:mr-[7px]" />
                       </Link>
                     );
                   })}
@@ -229,9 +245,10 @@ function Results({ rows, places, contests }: { rows: CompetitionResult[]; places
             return (
               <Fragment key={r.athlete_id}>
                 <tr
+                  id={athleteRow(r.athlete_id)}
                   onClick={() => setOpen(expanded ? null : r.athlete_id)}
                   aria-expanded={expanded}
-                  className="border-b border-rule hover:bg-panel/40 cursor-pointer"
+                  className={`border-b border-rule hover:bg-panel/40 cursor-pointer ${r.athlete_id === marked ? lit.row : ""}`}
                 >
                   <td className={`${ROW_CELL} text-right font-medium`}>{places[first + i]}</td>
                   <td className={ROW_CELL}>
@@ -307,7 +324,6 @@ function Contests({ rounds, href }: { rounds: { round: string; contests: Competi
   const shown = rounds
     .map((r, i) => ({
       ...r,
-      all: r.contests.length,
       contests: r.contests.slice(Math.max(0, first - starts[i]), Math.max(0, first + size - starts[i])),
     }))
     .filter((r) => r.contests.length > 0);
@@ -336,22 +352,17 @@ function Contests({ rounds, href }: { rounds: { round: string; contests: Competi
             <th className="p-0 h-0 w-14 sm:w-16" />
             <th className="p-0 h-0 w-8 sm:w-10" />
             <th className="p-0 h-0 w-12 sm:w-16" />
-            <th className="w-6 p-0 h-0" />
+            <th className="w-8 sm:w-10 p-0 h-0" />
           </tr>
         </thead>
         <tbody>
-          {shown.map(({ round, all, contests }) => {
+          {shown.map(({ round, contests }) => {
             const open = !folded.has(round);
             const title = (
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-2">
-                  <Icon size={18} name="expand_more" className={`text-muted transition-transform duration-150 ${open ? "" : "-rotate-90"}`} />
-                  <span className="text-[12px] font-bold uppercase text-ink">{roundsTitle(round)}</span>
-                </span>
-                <span className="text-[12px] text-muted">
-                  {all} {all === 1 ? "contest" : "contests"}
-                </span>
-              </div>
+              <span className="inline-flex items-center gap-2">
+                <Icon size={18} name="expand_more" className={`text-muted transition-transform duration-150 ${open ? "" : "-rotate-90"}`} />
+                <span className="text-[12px] font-bold uppercase text-ink">{roundsTitle(round)}</span>
+              </span>
             );
             return (
               <Fragment key={round}>
@@ -447,8 +458,8 @@ function ContestRow({ contest: c }: { contest: CompetitionContest }) {
           </div>
         ))}
       </td>
-      <td className="w-6 py-2 align-middle pl-1 pr-0 text-right text-muted">
-        <Icon size={18} name="chevron_right" className="align-middle" />
+      <td className={`${CHEVRON_CELL}`}>
+        <RowChevron />
       </td>
     </RowLink>
   );

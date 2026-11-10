@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Fragment, useLayoutEffect, useState } from "react";
 
 import { useHashTarget } from "@/components/anchors";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, Icon } from "@/components/Icon";
 import { Medal, MEDAL_BADGE, type MedalKind } from "@/components/Medal";
 import { HEAD_CELL, ROW_CELL } from "@/components/tournament/styles";
 import type { HistoryRow } from "@/lib/api";
@@ -100,7 +100,7 @@ export function Medals({ history }: { history: HistoryRow[] }) {
             <th className={`${HEAD_CELL} text-right w-14 sm:w-16`} title="Tournaments entered">
               Total
             </th>
-            <th className="w-6 h-9 py-0 pl-1 pr-0" />
+            <th className="w-8 sm:w-10 h-9 py-0" />
           </tr>
         </thead>
         <tbody>
@@ -135,7 +135,7 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                     </td>
                   ))}
                   <td className={`${ROW_CELL} text-right font-semibold`}>{level.list.length}</td>
-                  <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
+                  <td className={`${CHEVRON_CELL} h-10 sm:h-11`}>
                     <Icon size={18} name={isOpen ? "expand_less" : "expand_more"} className="align-middle" />
                   </td>
                 </tr>

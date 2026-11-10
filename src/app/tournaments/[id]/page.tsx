@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { liveWeights, Overview } from "@/components/tournament/Overview";
+import { Overview } from "@/components/tournament/Overview";
+import { liveWeights } from "@/lib/live";
 import { stateOf, TournamentHeader, tournamentName, type TournamentState } from "@/components/tournament/TournamentHeader";
 import { type Competition, competition, competitionChances, competitionContests, competitionResults, competitions, lastUpdate } from "@/lib/api";
 

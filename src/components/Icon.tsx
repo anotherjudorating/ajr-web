@@ -20,3 +20,11 @@ export function Icon({ name, size, className = "" }: { name: string; size: numbe
 export function Arrow() {
   return <Icon size={14} name="chevron_right" className="align-[-2px] text-muted" />;
 }
+
+// The chevron at the end of a row (or a card) that opens a page: as far from the edge
+// as the cells' text (8px, 12px from sm: the glyph sits 5px inside its 18px box), and
+// nudged right when the row is hovered (the row carries `group`).
+export const CHEVRON_CELL = "w-8 sm:w-10 py-0 pl-1 pr-[3px] sm:pr-[7px] align-middle text-right text-muted";
+export function RowChevron({ className = "" }: { className?: string }) {
+  return <Icon size={18} name="chevron_right" className={`align-middle transition-transform group-hover:translate-x-0.5 ${className}`} />;
+}

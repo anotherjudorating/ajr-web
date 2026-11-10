@@ -41,7 +41,7 @@ export function RowLink({ href, label = "Open", className = "", id, children }: 
       onAuxClick={(e) => {
         if (e.button === 1 && !inLink(e.target)) window.open(href, "_blank");
       }}
-      className={`cursor-pointer has-[>td>a.sr-only:focus-visible]:outline-2 has-[>td>a.sr-only:focus-visible]:outline-claret ${className}`}
+      className={`group cursor-pointer has-[>td>a.sr-only:focus-visible]:outline-2 has-[>td>a.sr-only:focus-visible]:outline-claret ${className}`}
     >
       {cells}
     </tr>

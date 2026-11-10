@@ -5,7 +5,7 @@ import { SECTION } from "@/lib/anchors";
 
 import { Flag } from "@/components/Flag";
 import { type ChartAthlete, H2HChart } from "@/components/h2h/H2HChart";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { changeText, isUpset } from "@/components/rankings/Changes";
 import { RowLink } from "@/components/RowLink";
 import type { Athlete, HistoryRow } from "@/lib/api";
@@ -126,7 +126,7 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
                 <th className="w-32 h-0 p-0 hidden sm:table-cell">
                   <span className="sr-only">Winner&apos;s chance</span>
                 </th>
-                <th className="w-6 h-0 p-0" />
+                <th className="w-8 sm:w-10 h-0 p-0" />
               </tr>
             </thead>
             <tbody>
@@ -163,9 +163,9 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
                         {formatChance(chance)}
                       </span>
                     </td>
-                    <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
+                    <td className={`${CHEVRON_CELL}`}>
                       <Link href={`/contests/${contest.contest_id}`} aria-label="The contest">
-                        <Icon size={18} name="chevron_right" className="align-middle" />
+                        <RowChevron />
                       </Link>
                     </td>
                   </RowLink>

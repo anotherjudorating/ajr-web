@@ -1,10 +1,13 @@
+"use client";
+
 import Link from "next/link";
 
+import { useHash, useRowMark, useRowScroll } from "@/components/anchors";
 import { HashScroll } from "@/components/HashScroll";
-import { SECTION } from "@/lib/anchors";
+import { medallistRow, SECTION } from "@/lib/anchors";
 
 import { Flag } from "@/components/Flag";
-import { Arrow, Icon } from "@/components/Icon";
+import { Arrow, CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { RowLink } from "@/components/RowLink";
 import { UpsetCard } from "@/components/UpsetCard";
@@ -12,6 +15,7 @@ import { NationMedals } from "@/components/tournament/NationMedals";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
 import type { Competition, CompetitionContest, CompetitionResult, MedalChance } from "@/lib/api";
 import { formatChance, shortName, signed } from "@/lib/format";
+import { liveWeights } from "@/lib/live";
 import { MEN, type Weight, WEIGHTS, weightTitle, WOMEN } from "@/lib/weights";
 
 const MEDALS: string[] = ["gold", "silver", "bronze"];
@@ -26,11 +30,6 @@ const gainOf = (r: CompetitionResult) => r.score_after - r.score_before;
 type Line = { athleteId: number; kind: MedalKind; predicted: boolean; country: string | null; name: string; value: React.ReactNode };
 const PLACES: MedalKind[] = ["gold", "silver", "bronze", "bronze"];
 
-// Weights fought at least once but not over: under way.
-export function liveWeights(results: CompetitionResult[]): Set<string> {
-  const over = new Set(results.filter((r) => r.result === "gold").map((r) => r.weight));
-  return new Set(results.map((r) => r.weight).filter((w) => !over.has(w)));
-}
 
 function linesOf(weight: Weight, medallists: CompetitionResult[], chances: MedalChance[]): Line[] {
   const won = medallists.filter((r) => r.weight === weight.api);
@@ -114,7 +113,14 @@ function Medallists({
   title: string;
   groups: { weight: Weight; live: boolean; lines: Line[] }[];
 }) {
+  // a medallist picked in the medals by nation (#medallist-<weight>-<id>): marked, scrolled to
+  // (in this section only: the men's and the women's would both scroll)
+  const hash = useHash();
   const shown = groups.filter((g) => g.lines.length > 0);
+  const marks = (g: { weight: Weight; lines: Line[] }) => g.lines.some((line) => medallistRow(g.weight.slug, line.athleteId) === hash);
+  const mine = shown.some(marks);
+  const lit = useRowMark(mine, hash);
+  useRowScroll(hash, mine);
   if (shown.length === 0) return null;
   const anchorId = title === "Men" ? SECTION.men : title === "Women" ? SECTION.women : undefined;
   return (
@@ -127,16 +133,20 @@ function Medallists({
         <tbody>
           {shown.map(({ weight, live, lines }) =>
             lines.map((line, i) => (
+              // the weight's page at the athlete's row in its results, opened
               <RowLink
                 key={`${weight.slug}-${line.athleteId}`}
-                href={`/tournaments/${id}/${weight.slug}`}
-                className={i === lines.length - 1 ? "border-b border-rule" : "border-b border-rule/50"}
+                id={medallistRow(weight.slug, line.athleteId)}
+                href={`/tournaments/${id}/${weight.slug}#athlete-${line.athleteId}`}
+                className={`${i === lines.length - 1 ? "border-b border-rule" : "border-b border-rule/50"} ${hash === medallistRow(weight.slug, line.athleteId) ? lit.row : ""}`}
               >
                 {i === 0 && (
                   <td
                     rowSpan={lines.length}
-                    className="h-10 py-2.5 px-2 sm:px-3 w-14 sm:w-16 whitespace-nowrap text-muted align-top border-b border-rule"
+                    className={`relative h-10 py-2.5 px-2 sm:px-3 w-14 sm:w-16 whitespace-nowrap text-muted align-top border-b border-rule ${marks({ weight, lines }) ? lit.row : ""}`}
                   >
+                    {/* the weight's cell opens the weight's page (the rows: the athlete's row there) */}
+                    <Link href={`/tournaments/${id}/${weight.slug}`} className="absolute inset-0" aria-label={`${weight.label} kg`} />
                     <span className="block">{weight.label}</span>
                     {live && (
                       <span className="flex items-center gap-1 text-[11px] leading-[14px] font-semibold text-claret">
@@ -150,15 +160,16 @@ function Medallists({
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Medal kind={line.kind} predicted={line.predicted} className="w-3.5 h-4" />
                     <Flag ioc={line.country} />
-                    <span className="truncate">{line.name}</span>
+                    {/* the name: the athlete's page */}
+                    <Link href={`/athletes/${line.athleteId}`} className="truncate hover:underline">
+                      {line.name}
+                    </Link>
                   </div>
                 </td>
                 <td className="h-9 py-0 px-2 sm:px-3 align-middle text-right whitespace-nowrap w-16">{line.value}</td>
-                {i === 0 && (
-                  <td rowSpan={lines.length} className="w-6 py-0 align-middle pl-1 pr-0 text-right text-muted border-b border-rule">
-                    <Icon size={18} name="chevron_right" className="align-middle" />
-                  </td>
-                )}
+                <td className={CHEVRON_CELL}>
+                  <RowChevron />
+                </td>
               </RowLink>
             )),
           )}
@@ -236,7 +247,7 @@ function Gains({ results, href }: { results: CompetitionResult[]; href: string }
             <th className={`${HEAD_CELL} text-left`}>Athlete</th>
             <th className={`${HEAD_CELL} text-right w-28`}>Rating</th>
             <th className={`${HEAD_CELL} text-right w-14`}>+/−</th>
-            <th className="w-6 h-9 py-0 pl-1 pr-0" />
+            <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
         <tbody>
@@ -256,8 +267,8 @@ function Gains({ results, href }: { results: CompetitionResult[]; href: string }
               <td className={`${ROW_CELL} text-right font-semibold ${gainOf(r) >= 0 ? "text-gain" : "text-drop"}`}>
                 {signed(gainOf(r))}
               </td>
-              <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-                <Icon size={18} name="chevron_right" className="align-middle" />
+              <td className={`${CHEVRON_CELL}`}>
+                <RowChevron />
               </td>
             </RowLink>
           ))}

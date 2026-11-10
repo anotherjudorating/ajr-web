@@ -5,7 +5,7 @@ import { Fragment, useLayoutEffect, useMemo, useState } from "react";
 
 import { useHashTarget, useRowMark, useRowScroll } from "@/components/anchors";
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
 import { MEDAL_BADGE } from "@/components/Medal";
 import { isUpset } from "@/components/rankings/Changes";
 import { PAGE_SIZES } from "@/components/rankings/TableParts";
@@ -220,7 +220,7 @@ export function Contests({
               <th className={`${TH} w-28 text-right hidden sm:table-cell`}>Chance</th>
               <th className={`${TH} w-10 text-center`}>Result</th>
               <th className={`${TH} w-14 text-right`}>+/−</th>
-              <th className="w-6 px-1 text-right align-middle h-9 py-0" />
+              <th className="w-8 sm:w-10 px-1 text-right align-middle h-9 py-0" />
             </tr>
           </thead>
           <tbody className="text-[13px] sm:text-[14px]">
@@ -381,9 +381,9 @@ function ContestRow({ contest, dated, mark }: { contest: HistoryRow; dated: bool
       </td>
       <td className={`${CELL} text-center font-bold ${color}`}>{contest.won ? "W" : "L"}</td>
       <td className={`${CELL} text-right font-bold ${color}`}>{signed(gain(contest))}</td>
-      <td className="px-1 text-right text-muted h-10 sm:h-11 py-0 align-middle">
+      <td className={`${CHEVRON_CELL}`}>
         <Link href={`/contests/${contest.contest_id}`} aria-label="The contest">
-          <Icon size={18} name="chevron_right" className="align-middle" />
+          <RowChevron />
         </Link>
       </td>
     </RowLink>

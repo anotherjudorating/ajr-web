@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { RowChevron } from "@/components/Icon";
 import { formatChance, roundCode, shortName } from "@/lib/format";
 
 type UpsetSide = { family: string | null; country: string | null; chance: number; score: number };
@@ -37,7 +37,7 @@ export function UpsetCard({
           <span className="text-muted tabular-nums mr-2">{formatChance(loser.chance)}</span>
           <span className="text-muted truncate">{shortName(loser.family, null)}</span>
           <Flag ioc={loser.country} />
-          <Icon size={18} name="chevron_right" className="text-muted ml-1 group-hover:translate-x-0.5 transition-transform" />
+          <RowChevron className="text-muted ml-1 mr-[3px] sm:mr-[7px]" />
         </div>
       </div>
       <div className="mt-1.5">

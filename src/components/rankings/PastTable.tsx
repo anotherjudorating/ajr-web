@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HEAD_CELL, ROW_CELL } from "@/components/rankings/TableParts";
 import type { LeaderboardRow } from "@/lib/api";
 import { fullName, shortName } from "@/lib/format";
@@ -23,7 +23,7 @@ export function PastTable({ rows, year, mark = () => "", empty = rows.length ===
           <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-28 text-left`}>NAT</th>
           <th className={`${HEAD_CELL} w-14 sm:w-20 text-right`}>Rating</th>
           <th className={`${HEAD_CELL} w-12 sm:w-16 text-right`}>Age</th>
-          <th className="w-6 sm:w-8 h-9 py-0" />
+          <th className="w-8 sm:w-10 h-9 py-0" />
         </tr>
       </thead>
       <tbody className="text-ink text-[14px] leading-[20px]">
@@ -52,8 +52,8 @@ export function PastTable({ rows, year, mark = () => "", empty = rows.length ===
             <td className={`${ROW_CELL} text-right tabular-nums text-muted`}>
               {row.birth_year ? year - row.birth_year : "–"}
             </td>
-            <td className={`${ROW_CELL} pl-1 text-right text-muted`}>
-              <Icon size={18} name="chevron_right" className="align-middle" />
+            <td className={`${CHEVRON_CELL}`}>
+              <RowChevron />
             </td>
           </tr>
         ))}

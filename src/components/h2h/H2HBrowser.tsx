@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
+import { glideToTop } from "@/components/anchors";
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
 import { countMatchup } from "@/lib/browser-api";
 import { monthYear, shortName } from "@/lib/format";
 import { COLORS, h2hPath, type Picked } from "@/lib/h2h";
@@ -140,7 +141,7 @@ export function H2HBrowser({
       {(loading || (both && !current)) && <ResultSkeleton />}
       {!loading && !both && <PopularMatchups matchups={popular} onPick={(m) => {
         go(m.weight, { a: m.a, b: m.b });
-        window.scrollTo(0, 0);
+        glideToTop();
       }} />}
       {current && result}
     </>
@@ -314,7 +315,7 @@ function PopularMatchups({ matchups, onPick }: { matchups: Matchup[]; onPick: (m
             <th className={`${TH} text-left`}>Athletes</th>
             <th className={`${TH} text-right w-14 sm:w-20`}>Score</th>
             <th className={`${TH} text-right w-28 hidden sm:table-cell`}>Last meeting</th>
-            <th className="w-6 h-9 py-0 pl-1 pr-0" />
+            <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
         <tbody>
@@ -322,7 +323,7 @@ function PopularMatchups({ matchups, onPick }: { matchups: Matchup[]; onPick: (m
             <tr
               key={`${m.a.id}-${m.b.id}`}
               onClick={() => onPick(m)}
-              className="border-b border-rule hover:bg-panel/40 cursor-pointer"
+              className="group border-b border-rule hover:bg-panel/40 cursor-pointer"
             >
               <td className={TD}>
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -335,8 +336,8 @@ function PopularMatchups({ matchups, onPick }: { matchups: Matchup[]; onPick: (m
                 {m.wins}–{m.losses}
               </td>
               <td className={`${TD} w-28 text-right text-muted hidden sm:table-cell`}>{m.last ? monthYear(m.last) : "–"}</td>
-              <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-                <Icon size={18} name="chevron_right" className="align-middle" />
+              <td className={`${CHEVRON_CELL}`}>
+                <RowChevron />
               </td>
             </tr>
           ))}

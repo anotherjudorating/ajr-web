@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HEAD_CELL, PlaceholderRows, ROW_CELL, saveCsv, Tip, Toolbar } from "@/components/rankings/TableParts";
 import type { P4PRow } from "@/lib/api";
 import { shortName, signed } from "@/lib/format";
@@ -126,8 +126,8 @@ export function P4PBrowser({
                 <td className={`${ROW_CELL} hidden sm:table-cell text-[13px] text-muted`}>{weightLabel(row.weight)}</td>
                 <td className={`${ROW_CELL} text-right tabular-nums text-gain font-medium`}>{signed(row.gap)}</td>
                 <td className={`${ROW_CELL} text-right tabular-nums font-bold`}>{row.score}</td>
-                <td className={`${ROW_CELL} hidden sm:table-cell text-right text-muted`}>
-                  <Icon size={18} name="chevron_right" className="align-middle" />
+                <td className={`${CHEVRON_CELL} hidden sm:table-cell`}>
+                  <RowChevron />
                 </td>
               </tr>
             ))}

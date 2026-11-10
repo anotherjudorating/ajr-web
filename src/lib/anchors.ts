@@ -54,8 +54,10 @@ export function peakTableLink(athlete: { id: number; peak_on: string | null; pea
 
 // A table row's id: the anchor of an athlete in a ranking table.
 export const athleteRow = (id: number) => `athlete-${id}`;
-// and of a nation in the nations' table
+// and of a nation in the nations' table (and in a tournament's medals by nation)
 export const nationRow = (ioc: string) => `nation-${ioc}`;
+// a medallist on a tournament's page: their weight and id
+export const medallistRow = (weightSlug: string, athleteId: number) => `medallist-${weightSlug}-${athleteId}`;
 
 // The nations' (mixed) table of the week of a nation's peak, at its row: the week's
 // own table (its day is the chart's), today's when that week is the current one.
