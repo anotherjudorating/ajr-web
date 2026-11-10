@@ -67,14 +67,7 @@ export function AthleteHeader({
                 <span>{age} y.o.</span>
               </>
             )}
-            {inactive && (
-              <span
-                className="ml-3 px-1.5 py-0.5 border border-rule text-[10px] font-semibold uppercase tracking-wider text-muted"
-                title="No contest for over a year: out of the tables until the next one"
-              >
-                Inactive
-              </span>
-            )}
+
           </div>
         </div>
 
@@ -114,7 +107,20 @@ export function AthleteHeader({
             <div className="flex flex-col">
               <div className="font-serif text-[56px] leading-none font-bold text-ink tabular-nums">{score}</div>
               <span className={`${LABEL} mt-2`}>
-                {inactive ? `Last rating · ${monthYear(inactive.day)}` : "Current rating"}
+                {inactive ? (
+                  // the athlete's, not a weight's: no contest in any weight for a year
+                  <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                    Last rating · {monthYear(inactive.day)}
+                    <span
+                      className="px-1.5 py-0.5 border border-rule text-[10px] tracking-wider"
+                      title="No contest for over a year: out of the tables until the next one"
+                    >
+                      Inactive
+                    </span>
+                  </span>
+                ) : (
+                  "Current rating"
+                )}
               </span>
             </div>
             <div className="tabular-nums text-xs pb-1">
