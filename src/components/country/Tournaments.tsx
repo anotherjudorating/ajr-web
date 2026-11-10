@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { Icon } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { Pagination } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
-import { H2, HEAD, HEAD_CELL, ROW_CELL } from "@/components/tournament/styles";
+import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
 import type { CountryTournament } from "@/lib/api";
 import { formatDate, shortCompetition } from "@/lib/format";
 
@@ -25,6 +26,9 @@ export function Tournaments({ rows }: { rows: CountryTournament[] }) {
     <section>
       <div className={HEAD}>
         <h2 className={H2}>Tournaments</h2>
+        <Link href="/explore/tournaments" className={LINK}>
+          All tournaments
+        </Link>
       </div>
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <thead>
