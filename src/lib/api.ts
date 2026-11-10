@@ -622,11 +622,12 @@ export type CountryTournament = {
   bronze: number;
 };
 
-// The latest tournaments its athletes fought at, with their medals.
+// Every tournament its athletes fought at, newest first, with their medals (at most
+// ~550 for the busiest nations, ~10 ms: the index stops the scan at `top`).
 export async function countryTournaments(ioc: string): Promise<CountryTournament[]> {
   "use cache: remote";
   dataCache();
-  return rpc<CountryTournament[]>("country_tournaments", { ioc, top: 5 });
+  return rpc<CountryTournament[]>("country_tournaments", { ioc, top: 1000 });
 }
 
 export type HomeRow = {
