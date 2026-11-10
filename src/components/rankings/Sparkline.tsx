@@ -1,6 +1,6 @@
 // The score over the last five months, 80×20: a line and a claret dot today.
-export function Sparkline({ values }: { values: (number | null)[] }) {
-  const points = values
+export function Sparkline({ values }: { values: (number | null)[] | null }) {
+  const points = (values ?? [])
     .map((value, index) => ({ value, x: 4 + index * 14 }))
     .filter((point): point is { value: number; x: number } => point.value !== null);
   if (points.length === 0) return null;
