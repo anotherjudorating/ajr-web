@@ -3,19 +3,18 @@
 import Link from "next/link";
 import { Fragment, useLayoutEffect, useMemo, useState } from "react";
 
-import { useHashTarget } from "@/components/anchors";
+import { useHashTarget, useRowMark, useRowScroll } from "@/components/anchors";
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { MEDAL_BADGE } from "@/components/Medal";
 import { isUpset } from "@/components/rankings/Changes";
 import { PAGE_SIZES } from "@/components/rankings/TableParts";
-import type { Competition } from "@/components/athlete/RatingChart";
 import { RowLink } from "@/components/RowLink";
 import { SECTION } from "@/lib/anchors";
 import type { HistoryRow } from "@/lib/api";
 import { formatChance, roundCode, shortDate, shortName, signed } from "@/lib/format";
 import { LEVELS, levelOf } from "@/lib/levels";
-import { WEIGHTS } from "@/lib/weights";
+import { tournamentPath, WEIGHTS } from "@/lib/weights";
 import { pageNumbers } from "@/lib/pages";
 
 const SORTS = {
@@ -36,6 +35,8 @@ const RESULTS = {
   ul: "Upset losses",
 } as const;
 type Result = keyof typeof RESULTS;
+// Filters another part of the page can open the list with (Best wins, Toughest losses).
+export type ContestsPreset = { result: Result; sort: Sort };
 
 const CONTROL =
   "h-8 py-0 px-2.5 bg-paper border border-rule text-[12px] text-ink focus:outline-none focus:border-ink cursor-pointer min-w-0";
@@ -44,23 +45,24 @@ const TH = "px-2 sm:px-3 align-middle h-9 py-0";
 
 const gain = (contest: HistoryRow) => contest.rating_after - contest.rating_before;
 
-// Every contest of the athlete, grouped by competition while sorted by date; only
-// one competition's when it was picked on the chart. The weight filter starts at the
+// Every contest of the athlete, grouped by competition while sorted by date; a
+// point picked on the chart marks its competitions' contests (the filters cleared,
+// their page opened and scrolled to, as a ranking's row). The weight filter starts at the
 // weight picked in the header (the page remounts this with every pick, so the other
 // filters start over); "All weights" shows the whole career.
 export function Contests({
   contests: all,
   weights,
   weight: picked,
-  competition,
-  onClearCompetition,
+  preset,
+  mark,
   fileName,
 }: {
   contests: HistoryRow[]; // every contest, latest first
   weights: string[]; // the athlete's, the latest first
   weight: string | null; // picked in the header
-  competition: Competition | null;
-  onClearCompetition: () => void;
+  preset?: ContestsPreset | null; // the result and sort to start with
+  mark: { ids: number[]; n: number } | null;
   fileName: string;
 }) {
   const [query, setQuery] = useState("");
@@ -69,8 +71,8 @@ export function Contests({
   const [level, setLevel] = useState("");
   const contests = useMemo(() => all.filter((c) => !weight || c.weight === weight), [all, weight]);
   const levels = LEVELS.map((l) => l.title).filter((title) => all.some((c) => levelOf(c.competition_rank) === title));
-  const [result, setResult] = useState<Result>("");
-  const [sort, setSort] = useState<Sort>("date-desc");
+  const [result, setResult] = useState<Result>(preset?.result ?? "");
+  const [sort, setSort] = useState<Sort>(preset?.sort ?? "date-desc");
   const [pageSize, setPageSize] = useState(20);
   const [page, setPage] = useState(1);
 
@@ -80,7 +82,6 @@ export function Contests({
     const filtered = contests.filter((c) => {
       const upset = isUpset(c.won, c.win_probability);
       return (
-        (!competition || c.competition_id === competition.id) &&
         (!year || c.fought_on.startsWith(year)) &&
         (!level || levelOf(c.competition_rank) === level) &&
         (result === "" ||
@@ -101,7 +102,23 @@ export function Contests({
     if (sort === "gain-desc") return [...filtered].sort((a, b) => gain(b) - gain(a));
     if (sort === "gain-asc") return [...filtered].sort((a, b) => gain(a) - gain(b));
     return filtered;
-  }, [contests, competition, query, year, level, result, sort]);
+  }, [contests, query, year, level, result, sort]);
+  // a new mark: the filters cleared, its first contest's page
+  const [markFor, setMarkFor] = useState(0);
+  if (mark && mark.n !== markFor) {
+    setMarkFor(mark.n);
+    setQuery("");
+    setYear("");
+    setLevel("");
+    setResult("");
+    setSort("date-desc");
+    const index = contests.findIndex((c) => mark.ids.includes(c.competition_id));
+    setPage(index < 0 ? 1 : Math.floor(index / pageSize) + 1);
+  }
+  const lit = useRowMark(mark !== null, String(mark?.n ?? 0));
+  const firstMarked = mark ? contests.find((c) => mark.ids.includes(c.competition_id)) : undefined;
+  useRowScroll(firstMarked ? `contest-${firstMarked.contest_id}` : "", markFor === mark?.n && !!firstMarked, String(mark?.n ?? 0));
+  const marks = (c: HistoryRow) => (mark?.ids.includes(c.competition_id) ? lit.row : "");
 
   const pages = Math.max(1, Math.ceil(shown.length / pageSize));
   const currentPage = Math.min(page, pages);
@@ -139,17 +156,6 @@ export function Contests({
           />
         </div>
         <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
-          {competition && (
-            <button
-              type="button"
-              onClick={onClearCompetition}
-              title="Show all contests"
-              className="col-span-2 h-8 px-2.5 inline-flex items-center gap-1.5 bg-panel border border-ink text-[12px] text-ink max-w-full cursor-pointer"
-            >
-              <span className="truncate">{competition.name}</span>
-              <Icon size={14} name="close" className="text-muted shrink-0" />
-            </button>
-          )}
           <select value={year} onChange={(e) => reset(setYear)(e.target.value)} className={CONTROL}>
             <option value="">All years</option>
             {years.map((y) => (
@@ -209,6 +215,7 @@ export function Contests({
             <tr className="h-9 bg-panel border-b border-rule text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted">
               <th className={`${TH} w-14 sm:w-16`}>Round</th>
               <th className={TH}>Opponent</th>
+              {!grouped && <th className={`${TH} w-28 hidden sm:table-cell`}>Date</th>}
               <th className={`${TH} w-20 text-right hidden sm:table-cell`}>Opp.</th>
               <th className={`${TH} w-28 text-right hidden sm:table-cell`}>Chance</th>
               <th className={`${TH} w-10 text-center`}>Result</th>
@@ -222,15 +229,15 @@ export function Contests({
                 grouped && (index === 0 || pageRows[index - 1].competition_id !== contest.competition_id);
               return (
                 <Fragment key={contest.contest_id}>
-                  {opensGroup && <CompetitionRow contest={contest} total={totals.get(contest.competition_id) ?? 0} />}
-                  <ContestRow contest={contest} />
+                  {opensGroup && <CompetitionRow contest={contest} total={totals.get(contest.competition_id) ?? 0} mark={marks(contest)} />}
+                  <ContestRow contest={contest} dated={!grouped} mark={marks(contest)} />
                 </Fragment>
               );
             })}
             {pageRows.length === 0 && (
-              <tr className="h-10">
-                <td colSpan={7} className="px-3 text-[13px] text-muted">
-                  No contests match.
+              <tr>
+                <td colSpan={grouped ? 7 : 8} className="px-3 py-6 text-[14px] text-muted">
+                  No contests match these filters.
                 </td>
               </tr>
             )}
@@ -303,15 +310,18 @@ export function Contests({
 
 const MEDALS: Record<string, string> = MEDAL_BADGE;
 
-function CompetitionRow({ contest, total }: { contest: HistoryRow; total: number }) {
+function CompetitionRow({ contest, total, mark }: { contest: HistoryRow; total: number; mark: string }) {
   const medal = contest.result ? MEDALS[contest.result] : undefined;
   return (
-    <tr className="h-8 bg-panel border-b border-rule">
+    // marked: the mark's colour for the panel's (fading back to it)
+    <tr className={`h-8 border-b border-rule ${mark.includes("bg-claret") ? mark : `bg-panel ${mark}`}`}>
       <td colSpan={7} className="px-2 sm:px-3 h-8 py-0 align-middle">
         {/* w-0 min-w-full: a long name is cut, it does not widen the table */}
         <div className="flex items-center justify-between w-0 min-w-full">
           <div className="flex items-baseline gap-2 truncate pr-2">
-            <span className="text-[12px] font-bold uppercase text-ink truncate">{contest.competition}</span>
+            <Link href={tournamentPath(contest.competition_id, contest.weight)} className="text-[12px] font-bold uppercase text-ink truncate hover:underline">
+              {contest.competition}
+            </Link>
             <span className="text-[11px] text-muted shrink-0">{shortDate(contest.fought_on)}</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -334,12 +344,14 @@ function CompetitionRow({ contest, total }: { contest: HistoryRow; total: number
   );
 }
 
-function ContestRow({ contest }: { contest: HistoryRow }) {
+// dated: not grouped by tournament (sorted by chance or change), so the row says
+// when and where, on wider screens
+function ContestRow({ contest, dated, mark }: { contest: HistoryRow; dated: boolean; mark: string }) {
   const chance = formatChance(contest.win_probability);
   const upset = isUpset(contest.won, contest.win_probability);
   const color = contest.won ? "text-gain" : "text-drop";
   return (
-    <RowLink href={`/contests/${contest.contest_id}`} className="h-10 sm:h-11 border-b border-rule hover:bg-panel/40">
+    <RowLink id={`contest-${contest.contest_id}`} href={`/contests/${contest.contest_id}`} className={`h-10 sm:h-11 border-b border-rule hover:bg-panel/40 ${mark}`}>
       <td className={`${CELL} text-muted`}>{roundCode(contest.round)}</td>
       <td className={CELL}>
         <div className="flex items-center gap-2 min-w-0">
@@ -349,6 +361,11 @@ function ContestRow({ contest }: { contest: HistoryRow }) {
           </Link>
         </div>
       </td>
+      {dated && (
+        <td className={`${CELL} text-muted whitespace-nowrap hidden sm:table-cell`} title={contest.competition}>
+          {shortDate(contest.fought_on)} {contest.fought_on.slice(0, 4)}
+        </td>
+      )}
       <td className={`${CELL} text-right tabular-nums hidden sm:table-cell text-ink`}>{contest.opponent_score}</td>
       <td className={`${CELL} text-right hidden sm:table-cell`}>
         <span className="inline-flex items-center justify-end gap-3">

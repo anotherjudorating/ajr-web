@@ -28,6 +28,8 @@
    (Header.tsx: 84px on a phone, 64px from md), with a little air. */
 html {
   scroll-padding-top: 96px;
+  /* no sideways rubber band (or back swipe) when a finger slides along a chart */
+  overscroll-behavior-x: none;
 }
 @media (min-width: 768px) {
   html {

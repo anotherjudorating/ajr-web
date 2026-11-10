@@ -130,7 +130,7 @@ export function AthleteHeader({
             <div className="flex flex-col">
               <div className="font-serif text-[56px] leading-none font-bold text-ink tabular-nums">{score}</div>
               <span className={`${LABEL} mt-2`}>
-                {inactive ? `Last rating · ${monthYear(inactive.day)}` : "Current rating"}
+                {inactive ? `Last rating, ${monthYear(inactive.day)}` : "Current rating"}
               </span>
             </div>
             <div className="tabular-nums text-xs pb-1">

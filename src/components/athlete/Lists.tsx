@@ -4,16 +4,18 @@ import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
 import { HashScroll } from "@/components/HashScroll";
 import { RowLink } from "@/components/RowLink";
-import { SECTION } from "@/lib/anchors";
+import { anchor, SECTION } from "@/lib/anchors";
 import type { HistoryRow } from "@/lib/api";
 import { formatChance, shortCompetition, shortName } from "@/lib/format";
 
 const H2 = "font-serif text-[20px] sm:text-[24px] font-bold text-ink border-b-2 border-ink pb-2";
+const H2_PLAIN = "font-serif text-[20px] sm:text-[24px] font-bold text-ink";
+const ALL = "font-serif shrink-0 whitespace-nowrap text-[14px] font-semibold text-claret hover:underline cursor-pointer";
 const ROW = "h-10 sm:h-11 border-b border-rule hover:bg-panel/40";
 const CELL = "h-10 sm:h-11 py-0 align-middle";
 
 // Best wins (the least likely ones) and toughest losses (the most likely wins lost).
-export function Standouts({ contests }: { contests: HistoryRow[] }) {
+export function Standouts({ contests, onAll }: { contests: HistoryRow[]; onAll: (kind: "wins" | "losses") => void }) {
   const bestWins = contests
     .filter((c) => c.won)
     .sort((a, b) => a.win_probability - b.win_probability)
@@ -24,17 +26,25 @@ export function Standouts({ contests }: { contests: HistoryRow[] }) {
     .slice(0, 5);
   return (
     <section className="mt-14 md:mt-16 grid grid-cols-1 lg:grid-cols-2 lg:gap-x-24 gap-y-14">
-      <ContestList id={SECTION.bestWins} title="Best wins" contests={bestWins} />
-      <ContestList id={SECTION.toughestLosses} title="Toughest losses" contests={toughestLosses} />
+      <ContestList id={SECTION.bestWins} title="Best wins" contests={bestWins} onAll={() => onAll("wins")} />
+      <ContestList id={SECTION.toughestLosses} title="Toughest losses" contests={toughestLosses} onAll={() => onAll("losses")} />
     </section>
   );
 }
 
-function ContestList({ id, title, contests }: { id: string; title: string; contests: HistoryRow[] }) {
+function ContestList({ id, title, contests, onAll }: { id: string; title: string; contests: HistoryRow[]; onAll: () => void }) {
   return (
     <div id={id}>
       <HashScroll id={id} />
-      <h2 className={H2}>{title}</h2>
+      <div className="flex items-baseline justify-between gap-3 border-b-2 border-ink pb-2">
+        <h2 className={H2_PLAIN}>{title}</h2>
+        {/* the contests list below, with these filters (the address stays) */}
+        {contests.length > 0 && (
+          <button type="button" onClick={onAll} className={ALL}>
+            All
+          </button>
+        )}
+      </div>
       <table className="w-full border-collapse text-[13px] sm:text-[14px]">
         <tbody>
           {contests.map((c) => (
@@ -74,7 +84,7 @@ function ContestList({ id, title, contests }: { id: string; title: string; conte
 }
 
 // The five opponents met most often, with the athlete's wins and losses against them.
-export function FrequentOpponents({ contests }: { contests: HistoryRow[] }) {
+export function FrequentOpponents({ athleteId, contests }: { athleteId: number; contests: HistoryRow[] }) {
   const byOpponent = new Map<number, { contest: HistoryRow; wins: number; losses: number }>();
   for (const c of contests) {
     const entry = byOpponent.get(c.opponent_id) ?? { contest: c, wins: 0, losses: 0 };
@@ -91,30 +101,37 @@ export function FrequentOpponents({ contests }: { contests: HistoryRow[] }) {
     <div id={SECTION.opponents}>
       <HashScroll id={SECTION.opponents} />
       <h2 className={H2}>Frequent opponents</h2>
-      <div>
-        {frequent.map(({ contest: c, wins, losses }) => (
-          <div
-            key={c.opponent_id}
-            className={`${ROW} flex items-center justify-between px-2 sm:px-3 text-[13px] sm:text-[14px] py-0`}
-          >
-            <div className="inline-flex items-center gap-2 min-w-0">
-              <Flag ioc={c.opponent_country} />
-              <Link href={`/athletes/${c.opponent_id}`} className="font-medium text-ink truncate hover:underline">
-                {shortName(c.opponent_family_name, c.opponent_given_name)}
-              </Link>
-            </div>
-            <div className="inline-flex items-center gap-3 shrink-0">
-              <span
-                className={`font-bold tabular-nums ${wins > losses ? "text-gain" : wins < losses ? "text-drop" : "text-ink"}`}
+      {/* a row opens the pair's head-to-head at their meetings; the name, the opponent */}
+      <table className="w-full border-collapse text-[13px] sm:text-[14px]">
+        <tbody>
+          {frequent.map(({ contest: c, wins, losses }) => (
+            <RowLink
+              key={c.opponent_id}
+              href={anchor(`/head-to-head?a=${athleteId}&b=${c.opponent_id}`, SECTION.meetings)}
+              label="Head-to-head"
+              className={ROW}
+            >
+              <td className={`px-2 sm:px-3 ${CELL}`}>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Flag ioc={c.opponent_country} />
+                  <Link href={`/athletes/${c.opponent_id}`} className="font-medium text-ink truncate hover:underline">
+                    {shortName(c.opponent_family_name, c.opponent_given_name)}
+                  </Link>
+                </div>
+              </td>
+              <td
+                className={`px-2 text-right font-bold tabular-nums ${CELL} ${wins > losses ? "text-gain" : wins < losses ? "text-drop" : "text-ink"}`}
               >
                 {wins}–{losses}
-              </span>
-              <Icon size={18} name="chevron_right" className="text-muted" />
-            </div>
-          </div>
-        ))}
-        {frequent.length === 0 && <p className="h-10 flex items-center text-[13px] text-muted">No repeat opponents yet.</p>}
-      </div>
+              </td>
+              <td className={`pl-2 pr-2 sm:pr-3 text-right text-muted w-6 ${CELL}`}>
+                <Icon size={18} name="chevron_right" className="align-middle" />
+              </td>
+            </RowLink>
+          ))}
+        </tbody>
+      </table>
+      {frequent.length === 0 && <p className="py-6 text-[14px] text-muted">No repeat opponents yet.</p>}
     </div>
   );
 }
@@ -135,7 +152,7 @@ export function NextTournaments() {
           </tr>
         </thead>
       </table>
-      <p className="mt-4 text-[12px] text-muted">Coming tournaments and medal chances will appear here.</p>
+      <p className="py-6 text-[14px] text-muted">Coming tournaments and medal chances will appear here.</p>
     </div>
   );
 }

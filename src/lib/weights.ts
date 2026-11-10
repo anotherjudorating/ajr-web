@@ -25,3 +25,10 @@ export function weightBySlug(slug: string): Weight | undefined {
 export function weightTitle(w: Weight): string {
   return `${w.gender === "men" ? "Men" : "Women"} ${w.label} kg`;
 }
+
+// A tournament's page of a weight (its draw and results there), or the tournament's
+// when the weight is not one of ours.
+export function tournamentPath(competitionId: number, weight: string | null): string {
+  const found = WEIGHTS.find((w) => w.api === weight);
+  return found ? `/tournaments/${competitionId}/${found.slug}` : `/tournaments/${competitionId}`;
+}

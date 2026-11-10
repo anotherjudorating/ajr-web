@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { AthleteView } from "@/components/athlete/AthleteView";
+import { athletePlaces } from "@/lib/tables";
 import { athlete, athleteHistory, canonicalAthlete, homeLeaders, lastUpdate } from "@/lib/api";
 import { fullName, ijfProfile } from "@/lib/format";
 import type { Athlete } from "@/lib/api";
@@ -68,13 +69,13 @@ export default function AthletePage({ params }: PageProps<"/athletes/[id]">) {
 async function Athlete({ params }: { params: PageProps<"/athletes/[id]">["params"] }) {
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
-  const [found, history, updated] = await Promise.all([athlete(id), athleteHistory(id), lastUpdate()]);
+  const [found, history, updated, places] = await Promise.all([athlete(id), athleteHistory(id), lastUpdate(), athletePlaces(id)]);
   if (!found || found.rating === null) return missing(id);
   // "today" is the day of the latest rating run, as on the rankings page
   return (
     <>
       <PersonData athlete={found} />
-      <AthleteView athlete={found} history={history} today={(updated ?? "1970-01-01").slice(0, 10)} />
+      <AthleteView athlete={found} history={history} places={places} today={(updated ?? "1970-01-01").slice(0, 10)} />
     </>
   );
 }

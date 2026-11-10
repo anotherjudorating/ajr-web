@@ -11,6 +11,7 @@ import { WEIGHTS } from "@/lib/weights";
 
 export const SECTION = {
   // athlete
+  rating: "rating",
   results: "results",
   contests: "contests",
   bestWins: "best-wins",
@@ -53,3 +54,12 @@ export function peakTableLink(athlete: { id: number; peak_on: string | null; pea
 
 // A table row's id: the anchor of an athlete in a ranking table.
 export const athleteRow = (id: number) => `athlete-${id}`;
+// and of a nation in the nations' table
+export const nationRow = (ioc: string) => `nation-${ioc}`;
+
+// The nations' (mixed) table of the week of a nation's peak, at its row: the week's
+// own table (its day is the chart's), today's when that week is the current one.
+export function nationPeakLink(ioc: string, day: string, latest: string): string {
+  const path = day >= latest ? "/rankings/teams/mixed" : `/rankings/teams/mixed/${day}`;
+  return `${path}#${nationRow(ioc)}`;
+}

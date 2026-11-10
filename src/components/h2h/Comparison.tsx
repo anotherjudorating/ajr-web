@@ -9,15 +9,17 @@ import { Icon } from "@/components/Icon";
 import { changeText, isUpset } from "@/components/rankings/Changes";
 import { RowLink } from "@/components/RowLink";
 import type { Athlete, HistoryRow } from "@/lib/api";
+import type { Places } from "@/lib/places";
 import { formatChance, formatDate, monthYear, roundCode, shortCompetition, shortName } from "@/lib/format";
 import { COLORS, winChance } from "@/lib/h2h";
+import { tournamentPath } from "@/lib/weights";
 
 const TH = "h-9 py-0 align-middle px-2 sm:px-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted";
 const TD = "h-10 sm:h-11 py-0 align-middle px-2 sm:px-3";
 const H2 = "font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight";
 const YEAR = 365 * 24 * 3600 * 1000;
 
-type Side = { athlete: Athlete; history: HistoryRow[] };
+type Side = { athlete: Athlete; history: HistoryRow[]; places: Places | null };
 
 // Two athletes side by side: their chances today, both ratings over time and every
 // meeting between them.
@@ -31,6 +33,7 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
     given_name: side.athlete.given_name,
     score: side.athlete.score ?? 0,
     history: side.history,
+    places: side.places,
   }));
 
   return (
@@ -137,8 +140,11 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
                       <span className="hidden sm:inline">{formatDate(contest.fought_on)}</span>
                     </td>
                     <td className={`${TD} whitespace-nowrap overflow-hidden`}>
-                      <span className="sm:hidden">{shortCompetition(contest.competition)}</span>
-                      <span className="hidden sm:inline">{contest.competition}</span>
+                      {/* the tournament's page of that weight, the row the contest's */}
+                      <Link href={tournamentPath(contest.competition_id, contest.weight)} className="hover:underline">
+                        <span className="sm:hidden">{shortCompetition(contest.competition)}</span>
+                        <span className="hidden sm:inline">{contest.competition}</span>
+                      </Link>
                     </td>
                     <td className={`${TD} text-muted`}>{roundCode(contest.round)}</td>
                     <td className={TD}>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
@@ -12,7 +12,7 @@ import { PastTable } from "@/components/rankings/PastTable";
 import { Sparkline } from "@/components/rankings/Sparkline";
 import { CELL, Pagination, TH, Tip, Toolbar } from "@/components/rankings/TableParts";
 import type { LeaderboardRow } from "@/lib/api";
-import { scrollWhileGrowing, useHash } from "@/components/anchors";
+import { TABLE_START, useHash, useRowMark, useRowScroll } from "@/components/anchors";
 import { athleteRow } from "@/lib/anchors";
 import { fetchAthleteHistory } from "@/lib/browser-api";
 import { competitionCode, fullName, shortDate, shortName, signed } from "@/lib/format";
@@ -63,6 +63,7 @@ function useVisibleColumns() {
   }, []);
   return [header, count] as const;
 }
+
 
 function downloadCsv(rows: LeaderboardRow[], asOf: string, fileName: string) {
   const year = new Date(asOf).getUTCFullYear();
@@ -133,6 +134,8 @@ export function RankingsBrowser({
   const hash = useHash();
   const marked = hash.startsWith("athlete-") ? Number(hash.slice("athlete-".length)) || null : null;
   const markedMissing = marked !== null && !firstRows.some((r) => r.athlete_id === marked);
+  const lit = useRowMark(marked !== null);
+  const mark = (id: number) => (id === marked ? lit.row : "");
   const needsAll =
     partial &&
     (!!query.trim() || !!country || sort !== "rating-desc" || page > 1 || pageSize > firstRows.length || markedMissing);
@@ -180,13 +183,7 @@ export function RankingsBrowser({
     setPlacedFor(hash);
     setPage(Math.floor(markedAt / pageSize) + 1);
   }
-  const scrolledFor = useRef("");
-  useLayoutEffect(() => {
-    const row = placedFor === hash ? document.getElementById(hash) : null;
-    if (!row || scrolledFor.current === hash) return;
-    scrolledFor.current = hash;
-    scrollWhileGrowing(row);
-  });
+  useRowScroll(hash, placedFor === hash);
   const pages = Math.max(1, Math.ceil(count / pageSize));
   const currentPage = Math.min(page, pages);
   const first = (currentPage - 1) * pageSize;
@@ -222,6 +219,8 @@ export function RankingsBrowser({
         }}
         asOf={asOf}
         latest={latest}
+        id={TABLE_START}
+        dayMark={lit.day}
         onDay={setDay}
         sorts={past ? PAST_SORTS : SORTS}
         sort={sort}
@@ -235,7 +234,7 @@ export function RankingsBrowser({
       {/* table */}
       <div className="w-full border-b border-rule bg-paper">
         {past ? (
-          <PastTable rows={pageRows} year={year} marked={marked} />
+          <PastTable rows={pageRows} year={year} mark={mark} empty={!waiting && pageRows.length === 0} />
         ) : (
           <table className="rk-table w-full table-fixed border-collapse text-left">
             <thead>
@@ -286,7 +285,7 @@ export function RankingsBrowser({
                     <tr
                       id={athleteRow(row.athlete_id)}
                       onClick={() => router.push(`/athletes/${row.athlete_id}`)}
-                      className={`athlete-row border-b border-rule hover:bg-panel/60 transition-colors cursor-pointer ${row.athlete_id === marked ? "bg-claret/10" : ""}`}
+                      className={`athlete-row border-b border-rule hover:bg-panel/60 transition-colors cursor-pointer ${mark(row.athlete_id)}`}
                     >
                       <td className={`${CELL} px-1 w-9 sm:w-12 text-right tabular-nums whitespace-nowrap font-medium`}>
                         {row.place}
@@ -400,8 +399,8 @@ export function RankingsBrowser({
                 ))}
               {!loading && !waiting && pageRows.length === 0 && (
                 <tr>
-                  <td colSpan={visibleColumns} className="px-3 text-[13px] text-muted">
-                    No athletes match.
+                  <td colSpan={visibleColumns} className="px-3 py-6 text-[14px] text-muted">
+                    No athletes match these filters.
                   </td>
                 </tr>
               )}

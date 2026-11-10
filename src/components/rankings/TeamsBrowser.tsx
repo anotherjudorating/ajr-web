@@ -3,10 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { TABLE_START, useHash, useRowMark, useRowScroll } from "@/components/anchors";
+
 import { Flag } from "@/components/Flag";
 import { Icon } from "@/components/Icon";
+import { RowLink } from "@/components/RowLink";
 import { HEAD_CELL, Pagination, PlaceholderRows, ROW_CELL, saveCsv, Tip, Toolbar } from "@/components/rankings/TableParts";
 import type { TeamRow } from "@/lib/api";
+import { nationRow } from "@/lib/anchors";
 
 const SORTS = {
   "rating-desc": "Sort: rating ↓",
@@ -65,6 +69,19 @@ export function TeamsBrowser({
     return [...filtered].sort((a, b) => value[sort](a) - value[sort](b));
   }, [rows, query, country, sort]);
 
+  // #nation-<ioc> (a country page's peak): that nation's row, opened at its page,
+  // marked and scrolled to, as an athlete's in the weights' tables
+  const hash = useHash();
+  const marked = hash.startsWith("nation-") ? hash.slice("nation-".length) : null;
+  const lit = useRowMark(marked !== null);
+  const markedAt = marked === null ? -1 : shown.findIndex((r) => r.country === marked);
+  const [placedFor, setPlacedFor] = useState("");
+  if (markedAt >= 0 && placedFor !== hash) {
+    setPlacedFor(hash);
+    setPage(Math.floor(markedAt / pageSize) + 1);
+  }
+  useRowScroll(hash, placedFor === hash);
+
   const pages = Math.max(1, Math.ceil(shown.length / pageSize));
   const currentPage = Math.min(page, pages);
   const first = (currentPage - 1) * pageSize;
@@ -85,6 +102,8 @@ export function TeamsBrowser({
         onCountry={reset(setCountry)}
         asOf={asOf}
         latest={latest}
+        id={TABLE_START}
+        dayMark={lit.day}
         onDay={(day) => router.push(day >= latest ? path : `${path}/${day}`)}
         sorts={SORTS}
         sort={sort}
@@ -119,7 +138,13 @@ export function TeamsBrowser({
           <tbody className="text-ink text-[14px] leading-[20px]">
             {loading && <PlaceholderRows columns={6} count={15} />}
             {pageRows.map((row, index) => (
-              <tr key={row.country ?? index} className="border-b border-rule hover:bg-panel/60">
+              <RowLink
+                key={row.country ?? index}
+                href={row.country ? `/countries/${row.country.toLowerCase()}` : "/rankings/teams/mixed"}
+                label={row.country_name ?? row.country ?? "Open"}
+                id={row.country ? nationRow(row.country) : undefined}
+                className={`border-b border-rule hover:bg-panel/60 ${row.country === marked ? lit.row : ""}`}
+              >
                 <td className={`${ROW_CELL} text-right tabular-nums font-medium`}>
                   {sort === "rating-desc" ? row.place : first + index + 1}
                 </td>
@@ -135,12 +160,12 @@ export function TeamsBrowser({
                 <td className="pl-1 pr-2 sm:pr-3 h-10 sm:h-11 py-0 align-middle text-right text-muted">
                   <Icon size={18} name="chevron_right" className="align-middle" />
                 </td>
-              </tr>
+              </RowLink>
             ))}
             {!loading && shown.length === 0 && (
               <tr>
-                <td colSpan={6} className={`${ROW_CELL} text-[13px] text-muted`}>
-                  No nations match.
+                <td colSpan={6} className="px-3 py-6 text-[14px] text-muted">
+                  No nations match these filters.
                 </td>
               </tr>
             )}

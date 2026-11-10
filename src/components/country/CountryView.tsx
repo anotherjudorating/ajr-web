@@ -123,14 +123,14 @@ export function CountryView({
         )}
       </header>
 
-      {c.rating !== null && <NationChart history={history} today={today} rating={c.rating} />}
+      {c.rating !== null && <NationChart ioc={c.country} history={history} today={today} rating={c.rating} />}
 
       <div className="mt-14 lg:mt-16 grid grid-cols-1 lg:grid-cols-2 gap-y-14 lg:gap-x-24">
         <Leaders title="Men leaders" weights={MEN} leaders={leaders} href={`/explore/athletes?country=${c.country}&weight=men`} />
         <Leaders title="Women leaders" weights={WOMEN} leaders={leaders} href={`/explore/athletes?country=${c.country}&weight=women`} />
       </div>
       <div className="mt-14 lg:mt-16">
-        <Tournaments rows={tournaments} />
+        <Tournaments rows={tournaments} ioc={c.country} />
       </div>
     </>
   );

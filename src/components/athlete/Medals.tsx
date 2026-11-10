@@ -11,7 +11,7 @@ import type { HistoryRow } from "@/lib/api";
 import { SECTION } from "@/lib/anchors";
 import { formatDate } from "@/lib/format";
 import { LEVELS, levelOf } from "@/lib/levels";
-import { WEIGHTS } from "@/lib/weights";
+import { tournamentPath, WEIGHTS } from "@/lib/weights";
 
 const H2 = "font-serif text-[20px] sm:text-[24px] font-bold text-ink border-b-2 border-ink pb-2";
 const KINDS: MedalKind[] = ["gold", "silver", "bronze"];
@@ -144,7 +144,7 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                     <tr key={`${e.competition_id}/${e.weight}`} className="h-9 bg-panel/50 border-b border-rule text-[12px] sm:text-[13px]">
                       <td colSpan={4} className="pl-4 sm:pl-6 pr-2 py-1.5">
                         <span className="text-muted tabular-nums mr-2 sm:mr-3">{formatDate(e.day)}</span>
-                        <Link href={tournamentLink(e)} className="text-ink hover:underline">
+                        <Link href={tournamentPath(e.competition_id, e.weight)} className="text-ink hover:underline">
                           {e.competition}
                         </Link>
                         {e.weight && <span className="text-muted ml-2 whitespace-nowrap">{weightLabel(e.weight)}</span>}
@@ -180,8 +180,3 @@ function Result({ result }: { result: string | null }) {
 
 // −73 with the minus sign, as everywhere on the site
 const weightLabel = (api: string) => WEIGHTS.find((w) => w.api === api)?.label ?? api;
-
-function tournamentLink(e: Entry): string {
-  const weight = WEIGHTS.find((w) => w.api === e.weight);
-  return weight ? `/tournaments/${e.competition_id}/${weight.slug}` : `/tournaments/${e.competition_id}`;
-}

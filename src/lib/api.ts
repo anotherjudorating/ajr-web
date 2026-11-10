@@ -259,6 +259,7 @@ export type RecordRow = {
   opponent_id: number | null;
   opponent_family_name: string | null;
   opponent_given_name: string | null;
+  opponent_country: string | null; // the opponent's nation
   country: string | null;
   country_name: string | null;
   competition_id: number | null;

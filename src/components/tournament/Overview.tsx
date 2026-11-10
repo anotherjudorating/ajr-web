@@ -4,7 +4,7 @@ import { HashScroll } from "@/components/HashScroll";
 import { SECTION } from "@/lib/anchors";
 
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { Arrow, Icon } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { RowLink } from "@/components/RowLink";
 import { UpsetCard } from "@/components/UpsetCard";
@@ -249,7 +249,9 @@ function Gains({ results, href }: { results: CompetitionResult[]; href: string }
                 </div>
               </td>
               <td className={`${ROW_CELL} text-right whitespace-nowrap text-muted`}>
-                {r.score_before} → {r.score_after}
+                {r.score_before}
+                <Arrow />
+                {r.score_after}
               </td>
               <td className={`${ROW_CELL} text-right font-semibold ${gainOf(r) >= 0 ? "text-gain" : "text-drop"}`}>
                 {signed(gainOf(r))}

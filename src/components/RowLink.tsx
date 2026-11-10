@@ -8,8 +8,9 @@ import { Children, cloneElement, isValidElement } from "react";
 // the row (an athlete's name) still opens its own page, and Cmd/Ctrl or the middle
 // button opens the row's page in a new tab. The first cell holds a real link to it,
 // out of sight: search engines follow it, and the keyboard reaches the row by it.
-export function RowLink({ href, label = "Open", className = "", children }: {
+export function RowLink({ href, label = "Open", className = "", id, children }: {
   href: string;
+  id?: string; // an anchor on the row
   label?: string; // the hidden link's text
   className?: string;
   children: React.ReactNode;
@@ -31,6 +32,7 @@ export function RowLink({ href, label = "Open", className = "", children }: {
   const inLink = (target: EventTarget) => (target as HTMLElement).closest("a") !== null;
   return (
     <tr
+      id={id}
       onClick={(e) => {
         if (inLink(e.target)) return;
         if (e.metaKey || e.ctrlKey) window.open(href, "_blank");

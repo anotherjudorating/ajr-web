@@ -133,8 +133,8 @@ export function P4PBrowser({
             ))}
             {!loading && shown.length === 0 && (
               <tr>
-                <td colSpan={7} className={`${ROW_CELL} text-[13px] text-muted`}>
-                  No athletes match.
+                <td colSpan={7} className="px-3 py-6 text-[14px] text-muted">
+                  No athletes match these filters.
                 </td>
               </tr>
             )}
