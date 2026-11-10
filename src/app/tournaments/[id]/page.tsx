@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: PageProps<"/tournaments/[id]"
   if (!found) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const name = tournamentName(found.name);
   return {
-    title: `${name} — results and rating changes`,
-    description: `Medallists, upsets and rating changes at the ${name}.`,
+    title: `${name} judo results`,
+    description: `${name}: medallists of every weight, medals by nation, the biggest upsets and rating changes.`,
   };
 }
 

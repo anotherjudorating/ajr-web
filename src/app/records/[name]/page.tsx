@@ -19,7 +19,7 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/rec
   if (MOVED[slug]) permanentRedirect(`/records/${MOVED[slug]}`); // a record renamed or dropped
   const info = recordBySlug(slug);
   if (!info) notFound(); // a crawler is sent the head first: only here does a 404 get its status
-  const metadata = { title: `${info.title} — judo records`, description: `${info.description} Since 2009, from IJF contest data.` };
+  const metadata = { title: `${info.title}, judo record`, description: info.description };
   return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata; // a gender or weight picked
 }
 

@@ -6,9 +6,9 @@ import { SITE } from "@/lib/seo";
 import { archive, type Archive } from "@/lib/tables";
 
 export const metadata: Metadata = {
-  title: "Export data",
+  title: "Judo rating data, CSV download",
   description:
-    "Download the full rating history of every IJF World Tour judoka as CSV: every contest since 2009 with win chances and ratings before and after. CC BY 4.0.",
+    "Download the full rating history of every World Tour judoka as CSV: every contest since 2009 with win chances and ratings before and after. CC BY 4.0.",
 };
 
 const LICENSE = "https://creativecommons.org/licenses/by/4.0/";

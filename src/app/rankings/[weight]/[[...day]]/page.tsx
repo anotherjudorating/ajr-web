@@ -7,8 +7,8 @@ import { RankingsBrowser } from "@/components/rankings/RankingsBrowser";
 import { countryNames, leaderboard } from "@/lib/api";
 import { tableDay } from "@/lib/days";
 import { WEIGHTS, weightBySlug, weightTitle } from "@/lib/weights";
-import { shortName } from "@/lib/format";
-import { NOINDEX } from "@/lib/seo";
+import { formatDate } from "@/lib/format";
+import { NOINDEX, podium } from "@/lib/seo";
 
 // All 14 tables are rendered ahead of time and refreshed with the data (next.config.ts).
 export function generateStaticParams() {
@@ -19,14 +19,14 @@ export async function generateMetadata({ params }: PageProps<"/rankings/[weight]
   const { weight: slug, day } = await params;
   const weight = weightBySlug(slug);
   if (!weight) notFound(); // a crawler is sent the head first: only here does a 404 get its status
-  const title = weightTitle(weight);
-  if (day?.length) return { title: `${title} judo ranking on ${day[0]}`, robots: NOINDEX }; // a past day
-  const top = (await leaderboard(weight.api)).slice(0, 3);
-  const leaders = top.map((r) => `${r.place}. ${shortName(r.family_name, r.given_name)} (${r.country ?? "—"})`).join(", ");
-  return {
-    title: `${title} — judo world ranking`,
-    description: `The strongest ${title} judoka by Glicko-2 rating: ${leaders}. Every IJF contest counts; compared with the IJF World Ranking List.`,
-  };
+  const title = `${weightTitle(weight)} judo world ranking`;
+  const { past } = await tableDay(day);
+  const leaders = podium(await leaderboard(weight.api, past));
+  const strongest = `The strongest ${weightTitle(weight).toLowerCase()} judoka${past ? ` on ${formatDate(past)}` : ""}`;
+  const description = leaders ? `${strongest}: ${leaders}.` : `${strongest}.`;
+  return past
+    ? { title: `${title} on ${formatDate(past)}`, description, robots: NOINDEX } // a past day
+    : { title, description };
 }
 
 // The rows sent with the page: the first page of the table (the whole of it, ~600 rows,
@@ -56,7 +56,7 @@ async function Rankings({ params }: { params: PageProps<"/rankings/[weight]/[[..
 
   return (
     <>
-      <h1 className="sr-only">{weightTitle(weight)} — judo world ranking</h1>
+      <h1 className="sr-only">{weightTitle(weight)} judo world ranking</h1>
       <BreadcrumbData trail={[{ href: "/rankings", label: "Rankings" }]} current={weightTitle(weight)} />
       <RankingsBrowser
         key={`${path}-${asOf}`}

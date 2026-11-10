@@ -9,7 +9,10 @@ import { hasParams, NOINDEX } from "@/lib/seo";
 
 // The list is indexed; a filtered or sorted state of it is not.
 export async function generateMetadata({ searchParams }: PageProps<"/explore/athletes">): Promise<Metadata> {
-  const metadata: Metadata = { title: "Athletes — every rated judoka" };
+  const metadata: Metadata = {
+    title: "Every rated judoka, search by name, nation and weight",
+    description: "Every judoka with a rating since 2009: search by name, filter by nation and weight, sort by rating, name or age.",
+  };
   return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata;
 }
 

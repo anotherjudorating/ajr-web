@@ -6,10 +6,12 @@ import { BreadcrumbData } from "@/components/Breadcrumbs";
 import { TeamsBrowser } from "@/components/rankings/TeamsBrowser";
 import { teams } from "@/lib/api";
 import { tableDay } from "@/lib/days";
+import { formatDate } from "@/lib/format";
 import { NOINDEX } from "@/lib/seo";
 
 const KINDS = { men: "Men", women: "Women", mixed: "Mixed" } as const;
 type Kind = keyof typeof KINDS;
+const WHO: Record<Kind, string> = { men: "men", women: "women", mixed: "men and women" };
 
 export function generateStaticParams() {
   return Object.keys(KINDS).map((kind) => ({ kind, day: [] }));
@@ -18,10 +20,13 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/rankings/teams/[kind]/[[...day]]">): Promise<Metadata> {
   const { kind, day } = await params;
   if (!(kind in KINDS)) notFound(); // a crawler is sent the head first: only here does a 404 get its status
-  const title = `${KINDS[kind as Kind]} nations — judo team ranking`;
-  return day?.length
-    ? { title: `${title} on ${day[0]}`, robots: NOINDEX } // a past day
-    : { title, description: "Which country has the strongest judo team: each nation rated by its best athlete in every weight." };
+  const title = `Judo nations ranking, ${WHO[kind as Kind]}`;
+  const { past } = await tableDay(day);
+  const top = (await teams(kind, past)).slice(0, 3).map((r) => `${r.place}. ${r.country_name ?? r.country}`).join(", ");
+  const description = `Which country has the strongest judo team: each nation rated by its best athlete in every weight.${top ? ` ${top}.` : ""}`;
+  return past
+    ? { title: `${title} on ${formatDate(past)}`, description, robots: NOINDEX } // a past day
+    : { title, description };
 }
 
 export default function Page({ params }: PageProps<"/rankings/teams/[kind]/[[...day]]">) {
@@ -43,7 +48,7 @@ async function Table({ params }: { params: PageProps<"/rankings/teams/[kind]/[[.
   const rows = await teams(kind, past);
   return (
     <>
-      <h1 className="sr-only">{KINDS[kind as Kind]} nations — judo team ranking</h1>
+      <h1 className="sr-only">Judo nations ranking, {WHO[kind as Kind]}</h1>
       <BreadcrumbData trail={[{ href: "/rankings", label: "Rankings" }]} current={`${KINDS[kind as Kind]} nations`} />
       <TeamsBrowser
         key={asOf}

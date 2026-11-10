@@ -22,8 +22,8 @@ export async function generateMetadata({ params }: PageProps<"/countries/[ioc]">
   const found = code ? await country(code) : null;
   if (!found) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   return {
-    title: `${found.name} — judo nation rating, best athletes by weight`,
-    description: `${found.name} in judo: its place among the nations, its strongest judoka in every weight, its tournaments and medals, by Glicko-2 rating.`,
+    title: `${found.name} judo team rating and best athletes`,
+    description: `${found.name} in judo:${found.place ? ` #${found.place} among the nations,` : ""} its strongest judoka in every weight, its tournaments and medals.`,
   };
 }
 

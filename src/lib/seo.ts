@@ -3,6 +3,8 @@
 
 import type { Metadata } from "next";
 
+import { shortName } from "@/lib/format";
+
 export const SITE = "https://www.anotherjudorating.com";
 
 // Pages that stay reachable and linked but out of the index: a filtered list, a
@@ -16,6 +18,14 @@ export function indexableAthlete(contests: number, lastContest: string | null, t
   if (!lastContest) return false;
   const fourYearsAgo = `${Number(today.slice(0, 4)) - 4}${today.slice(4, 10)}`;
   return lastContest >= fourYearsAgo;
+}
+
+// A table's first three for a description: "1. Grigalashvili T. (GEO), 2. …".
+export function podium(rows: { place: number; family_name: string | null; given_name: string | null; country: string | null }[]): string {
+  return rows
+    .slice(0, 3)
+    .map((r) => `${r.place}. ${shortName(r.family_name, r.given_name)}${r.country ? ` (${r.country})` : ""}`)
+    .join(", ");
 }
 
 // Any query parameter makes a list page a filtered state of it.

@@ -7,7 +7,11 @@ import { hasParams, NOINDEX } from "@/lib/seo";
 
 // The list is indexed; a filtered or sorted state of it is not.
 export async function generateMetadata({ searchParams }: PageProps<"/explore/tournaments">): Promise<Metadata> {
-  const metadata: Metadata = { title: "Tournaments — judo results and rating accuracy" };
+  const metadata: Metadata = {
+    title: "Judo tournament results",
+    description:
+      "Every judo World Tour tournament since 2009: Olympics, Worlds, Grand Slams and Grand Prix, with results, upsets and how often the favourite won.",
+  };
   return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata;
 }
 

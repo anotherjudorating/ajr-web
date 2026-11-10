@@ -8,16 +8,35 @@ import { athletePlaces } from "@/lib/tables";
 import type { Picked } from "@/lib/h2h";
 import { popularMatchups } from "@/lib/matchups";
 import { WEIGHTS } from "@/lib/weights";
+import { fullName } from "@/lib/format";
 import { hasParams, NOINDEX } from "@/lib/seo";
 
 const METADATA: Metadata = {
-  title: "Head-to-head — judo ratings compared",
-  description: "Compare two judoka: ratings, win chance and every meeting.",
+  title: "Judo head-to-head, compare two judoka",
+  description: "Compare any two judoka: their ratings over time, the chance of each to win today and every contest between them.",
 };
 
-// The form is indexed; a pair (?a=&b=) is one of millions: not indexed.
+// The form is indexed; so is a pair that has met (the other way round, or with a
+// weight, is the same page: one address, the lower id first). A pair that never
+// met, or a filtered state, is reachable, not indexed.
 export async function generateMetadata({ searchParams }: PageProps<"/head-to-head">): Promise<Metadata> {
-  return hasParams(await searchParams) ? { ...METADATA, robots: NOINDEX } : METADATA;
+  const query = await searchParams;
+  const id = (key: string) => {
+    const value = Number(query[key]);
+    return Number.isInteger(value) && value > 0 ? value : null;
+  };
+  const [idA, idB] = [id("a"), id("b")];
+  if (!idA || !idB || idA === idB) return hasParams(query) ? { ...METADATA, robots: NOINDEX } : METADATA;
+  const [first, second, history] = await Promise.all([athlete(idA), athlete(idB), athleteHistory(idA)]);
+  if (!first || !second) return { ...METADATA, robots: NOINDEX };
+  const met = history.some((contest) => contest.opponent_id === idB);
+  const [low, high] = idA < idB ? [idA, idB] : [idB, idA];
+  return {
+    title: `${fullName(first.family_name, first.given_name)} vs ${fullName(second.family_name, second.given_name)}`,
+    description: "Head-to-head: their ratings, the chance of each to win today and every contest between them.",
+    alternates: { canonical: `/head-to-head?a=${low}&b=${high}` },
+    ...(met ? {} : { robots: NOINDEX }),
+  };
 }
 
 export default function Page({ searchParams }: PageProps<"/head-to-head">) {

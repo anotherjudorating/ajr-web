@@ -10,20 +10,27 @@ import { H2, LINK } from "@/components/tournament/styles";
 import { UpsetCard } from "@/components/UpsetCard";
 import { biggestMovers, homeLeaders, recentUpsets, upcoming } from "@/lib/api";
 import { dateRange, shortCompetition } from "@/lib/format";
+import { SITE } from "@/lib/seo";
 import { MEN, WOMEN } from "@/lib/weights";
 
 export const metadata: Metadata = {
-  title: "Another Judo Rating — who is the strongest judoka right now?",
-  description: "A Glicko-2 rating for every IJF World Tour athlete: the leaders of every weight, the biggest movers and upsets.",
+  title: "Alternative judo world ranking",
+  description:
+    "An open, statistics-based judo ranking: a Glicko-2 rating from every World Tour contest since 2009, the leaders of every weight, the biggest movers and upsets.",
 };
 
 const HEAD = "flex items-baseline justify-between border-b-2 border-ink pb-2";
 
 // The home page, as in the prototype (index.html): the question, the leaders of
 // every weight, the biggest movers, the month's upsets and the coming tournaments.
+// The site's name, which Google writes over the address in its results (the titles
+// do not repeat it: app/layout.tsx).
+const WEBSITE = { "@context": "https://schema.org", "@type": "WebSite", name: "Another Judo Rating", url: `${SITE}/` };
+
 export default function Home() {
   return (
     <div className="w-full bg-paper pt-[37.25px] sm:pt-[47.25px] md:pt-[48.75px] pb-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE) }} />
       <section className="mb-10 md:mb-12 lg:mb-16">
         <h1 className="font-serif text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold tracking-[-0.015em] text-ink mb-2">
           Who is the strongest judoka right now?
