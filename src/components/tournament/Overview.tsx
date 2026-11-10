@@ -136,8 +136,10 @@ function Medallists({
                 {i === 0 && (
                   <td
                     rowSpan={lines.length}
-                    className="h-10 py-2.5 px-2 sm:px-3 w-14 sm:w-16 whitespace-nowrap text-muted align-top border-b border-rule"
+                    className="relative h-10 py-2.5 px-2 sm:px-3 w-14 sm:w-16 whitespace-nowrap text-muted align-top border-b border-rule"
                   >
+                    {/* the weight's cell opens the weight's page (the rows: the athlete's row there) */}
+                    <Link href={`/tournaments/${id}/${weight.slug}`} className="absolute inset-0" aria-label={`${weight.label} kg`} />
                     <span className="block">{weight.label}</span>
                     {live && (
                       <span className="flex items-center gap-1 text-[11px] leading-[14px] font-semibold text-claret">
