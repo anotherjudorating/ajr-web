@@ -24,6 +24,18 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Selected text: claret with the paper's colour, readable on every background (the
+   browser's pale blue barely shows on the paper and the panels) */
+::selection {
+  background-color: var(--color-claret);
+  color: var(--color-paper);
+  -webkit-text-fill-color: var(--color-paper); /* else Safari, and the charts' svg text, keep their own */
+}
+/* the charts' text (svg: its fill) */
+svg text::selection {
+  fill: var(--color-paper);
+}
+
 /* A section opened by its #anchor (lib/anchors.ts) stops below the fixed header
    (Header.tsx: 84px on a phone, 64px from md), with a little air. */
 html {
