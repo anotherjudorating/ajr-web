@@ -307,7 +307,7 @@ export function RatingChart({
               y2={y(last.score) - 11}
             />
             <text fill="#66605C" x={labelX + 12} y={(y(last.rating) + y(last.score)) / 2 + 4}>
-              −{last.rating - last.score}
+              −{last.rating - last.score}{at === DESKTOP ? " uncertainty" : ""}
             </text>
             <text fill="#33302E" fontWeight="700" x={labelX} y={y(last.score) + 4}>
               Rating {last.score}
