@@ -14,6 +14,7 @@
 
 import { cacheLife } from "next/cache";
 
+import type { CountryWeek } from "@/lib/api";
 import type { Places } from "@/lib/places";
 
 const DATA_URL = process.env.AJR_DATA_URL; // https://data.anotherjudorating.com
@@ -111,13 +112,30 @@ export async function archive(): Promise<Archive | null> {
   };
 }
 
-// An athlete's place every Monday (the tables job's places/<version>/<id>.json;
+// An athlete's place every Monday (the tables job's places/<version>/athletes/<id>.json;
 // lib/places.ts). The file changes every week: an hour in cache, here and at the edge.
 export async function athletePlaces(id: number): Promise<Places | null> {
   if (!DATA_URL) return null;
   const m = await manifest();
   if (!m) return null;
-  return placesFile(`places/${m.version}/${id}.json`);
+  return placesFile(`places/${m.version}/athletes/${id}.json`);
+}
+
+// A nation's mixed rating and place every week (Sundays), the earliest first: the
+// tables job's places/<version>/nations/<IOC>.json (the database keeps them no more);
+// none when it is missing. An hour in cache, as an athlete's places.
+export async function nationWeeks(ioc: string): Promise<CountryWeek[]> {
+  if (!DATA_URL) return [];
+  const m = await manifest();
+  if (!m) return [];
+  return nationFile(`places/${m.version}/nations/${ioc}.json`);
+}
+
+async function nationFile(path: string): Promise<CountryWeek[]> {
+  "use cache: remote";
+  cacheLife("hours");
+  const doc = await get<{ weeks: [string, number, number][] }>(path);
+  return (doc?.weeks ?? []).map(([day, place, rating]) => ({ day, place, rating }));
 }
 
 async function placesFile(path: string): Promise<Places | null> {

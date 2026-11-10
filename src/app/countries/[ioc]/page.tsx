@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { CountryView } from "@/components/country/CountryView";
-import { country, countryHistory, countryLeaders, countryTournaments, lastUpdate, nations } from "@/lib/api";
+import { country, countryLeaders, countryTournaments, lastUpdate, nations } from "@/lib/api";
+import { nationWeeks } from "@/lib/tables";
 
 // /countries/jpn: the IOC code, in lower case as in the prototype's links.
 const codeOf = (ioc: string) => (/^[a-z]{3}$/i.test(ioc) ? ioc.toUpperCase() : null);
@@ -42,7 +43,7 @@ async function CountryContent({ params }: { params: PageProps<"/countries/[ioc]"
   const [found, leaders, history, tournaments, updated] = await Promise.all([
     country(code),
     countryLeaders(code),
-    countryHistory(code),
+    nationWeeks(code),
     countryTournaments(code),
     lastUpdate(),
   ]);
