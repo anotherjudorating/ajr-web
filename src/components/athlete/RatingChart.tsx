@@ -104,7 +104,11 @@ export function RatingChart({
     return () => observer.disconnect();
   }, []);
   const page = typeof window === "undefined" ? MD : window.innerWidth;
-  const at = boxWidth !== null && page < MD ? phone(Math.round(boxWidth)) : DESKTOP;
+  const base = boxWidth !== null && page < MD ? phone(Math.round(boxWidth)) : DESKTOP;
+  const desktop = base === DESKTOP;
+  // the column on the right is for the labels of today's point; an inactive athlete's
+  // line ends earlier, the labels go with it, and the plot takes the whole width
+  const at = inactive ? { ...base, right: base.width - (desktop ? 20 : 8) } : base;
   const { left: LEFT, right: RIGHT, top: TOP } = at;
   const BOTTOM = TOP + 5 * at.rowGap;
 
@@ -166,7 +170,7 @@ export function RatingChart({
   // the end labels (Skill, −RD, Rating) next to the line's last point: at today's edge,
   // or, for an inactive athlete whose line ends earlier, right after that point (over
   // the inactive zone, on a paper halo)
-  const labelX = inactive ? Math.min(x(last.day) + 12, RIGHT + at.labels) : RIGHT + at.labels;
+  const labelX = inactive ? Math.min(x(last.day) + 12, at.width - (desktop ? 130 : 88)) : RIGHT + at.labels;
 
   // Inactive: no contest for over a year (out of the tables), between competitions or
   // since the last one. The rating holds, its uncertainty grows, so the score drifts
@@ -275,7 +279,7 @@ export function RatingChart({
           />
           <polyline fill="none" points={line("rating")} stroke="#66605C" strokeDasharray="4,3" strokeWidth="1.2" />
           <polyline fill="none" points={line("score")} stroke="#33302E" strokeWidth="2.5" />
-          {at === DESKTOP && (
+          {desktop && (
             <g fill="#33302E">
               {real
                 .filter((p) => p.competition && p !== peak)
@@ -307,7 +311,7 @@ export function RatingChart({
               y2={y(last.score) - 11}
             />
             <text fill="#66605C" x={labelX + 12} y={(y(last.rating) + y(last.score)) / 2 + 4}>
-              −{last.rating - last.score}{at === DESKTOP ? " uncertainty" : ""}
+              −{last.rating - last.score}{desktop ? " uncertainty" : ""}
             </text>
             <text fill="#33302E" fontWeight="700" x={labelX} y={y(last.score) + 4}>
               Rating {last.score}
@@ -319,11 +323,12 @@ export function RatingChart({
                 {monthYear(new Date(tick).toISOString())}
               </text>
             ))}
-            <text x={RIGHT} y={at.datesY}>
+            {/* at the plot's right edge: when it is the canvas's (inactive), ends there */}
+            <text x={RIGHT} y={at.datesY} textAnchor={inactive ? "end" : "middle"}>
               {monthYear(new Date(now).toISOString())}
             </text>
           </g>
-          {at === DESKTOP && (
+          {desktop && (
             <g fill="transparent" className="cursor-pointer">
               {real
                 .filter((p) => p.competition)
