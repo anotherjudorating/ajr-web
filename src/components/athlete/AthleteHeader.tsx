@@ -62,8 +62,15 @@ export function AthleteHeader({
             {fullName(athlete.family_name, athlete.given_name)}
           </h1>
           <div className="text-sm text-muted mt-1.5 flex items-center">
-            <Flag ioc={athlete.country} className="mr-2" />
-            <span>{athlete.country_name ?? athlete.country}</span>
+            {/* the nation's page */}
+            {athlete.country ? (
+              <Link href={`/countries/${athlete.country.toLowerCase()}`} className="inline-flex items-center hover:text-ink hover:underline">
+                <Flag ioc={athlete.country} className="mr-2" />
+                <span>{athlete.country_name ?? athlete.country}</span>
+              </Link>
+            ) : (
+              <span>{athlete.country_name}</span>
+            )}
             {age !== null && (
               <>
                 <span className="inline-block w-px h-3 bg-rule mx-3 align-middle" />
