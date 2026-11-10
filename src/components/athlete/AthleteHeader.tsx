@@ -106,7 +106,7 @@ export function AthleteHeader({
               <span className={LABEL}>IJF</span>
               <div className="flex items-baseline gap-1.5 mt-1">
                 {/* our ids are the IJF's: the profile with its ranking and results */}
-                <a href={ijfProfile(athlete.id)} target="_blank" rel="noopener" className={`${BIG} hover:underline`}>
+                <a href={ijfProfile(athlete.id)} target="_blank" rel="noopener" className={`${BIG} underline decoration-rule decoration-2 underline-offset-4 hover:decoration-ink`}>
                   {athlete.wrl_place ? `#${athlete.wrl_place}` : "–"}
                 </a>
                 {athlete.place && athlete.wrl_place && (
