@@ -414,7 +414,7 @@ export function TipBody({ title, href, day, lines, places = [], action, children
       <TipPlaces places={places} />
       {children}
       {action && (
-        <button type="button" onClick={action.onClick} className="mt-1.5 text-[12px] font-semibold text-claret cursor-pointer">
+        <button type="button" onClick={action.onClick} className="mt-2 text-[12px] font-semibold text-claret cursor-pointer">
           {action.label}
         </button>
       )}
