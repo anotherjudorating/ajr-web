@@ -1,15 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { Fragment, useLayoutEffect, useState } from "react";
 
 import { useHashTarget } from "@/components/anchors";
-import { CHEVRON_CELL, Icon } from "@/components/Icon";
-import { Medal, MEDAL_BADGE, type MedalKind } from "@/components/Medal";
+import { Flag } from "@/components/Flag";
+import { CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
+import { Medal, type MedalKind } from "@/components/Medal";
+import { RowLink } from "@/components/RowLink";
 import { HEAD_CELL, ROW_CELL } from "@/components/tournament/styles";
 import type { HistoryRow } from "@/lib/api";
 import { SECTION } from "@/lib/anchors";
-import { formatDate } from "@/lib/format";
+import { formatDate, shortCompetition } from "@/lib/format";
 import { LEVELS, levelOf } from "@/lib/levels";
 import { tournamentPath, WEIGHTS } from "@/lib/weights";
 
@@ -26,6 +27,7 @@ const WIDE = "hidden md:table-cell";
 type Entry = {
   competition_id: number;
   competition: string;
+  country: string | null; // the tournament's
   day: string; // the first contest
   weight: string | null;
   result: string | null;
@@ -45,6 +47,7 @@ function entries(history: HistoryRow[]): (Entry & { level: string })[] {
     byKey.set(key, {
       competition_id: row.competition_id,
       competition: row.competition,
+      country: row.competition_country,
       day: row.fought_on,
       weight: row.weight,
       result: row.result,
@@ -139,24 +142,36 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                     <Icon size={18} name={isOpen ? "expand_less" : "expand_more"} className="align-middle" />
                   </td>
                 </tr>
+                {/* its tournaments, as the tournaments' lists: the row opens the
+                    tournament at the weight; its day, the weight, the flag, the name
+                    (shortened on a phone); the medal or the place at the right */}
                 {isOpen &&
                   level.list.map((e) => (
-                    <tr key={`${e.competition_id}/${e.weight}`} className="h-9 bg-panel/50 border-b border-rule text-[12px] sm:text-[13px]">
-                      <td colSpan={4} className="pl-4 sm:pl-6 pr-2 py-1.5">
-                        <span className="text-muted tabular-nums mr-2 sm:mr-3">{formatDate(e.day)}</span>
-                        <Link href={tournamentPath(e.competition_id, e.weight)} className="text-ink hover:underline">
-                          {e.competition}
-                        </Link>
-                        {e.weight && <span className="text-muted ml-2 whitespace-nowrap">{weightLabel(e.weight)}</span>}
+                    <RowLink
+                      key={`${e.competition_id}/${e.weight}`}
+                      href={tournamentPath(e.competition_id, e.weight)}
+                      className="group bg-panel/50 border-b border-rule text-[12px] sm:text-[13px] hover:bg-panel"
+                    >
+                      <td colSpan={4} className="h-9 pl-4 sm:pl-6 pr-2 py-1.5">
+                        <span className="flex items-center gap-2 min-w-0">
+                          <span className="hidden sm:inline text-muted tabular-nums w-[88px] shrink-0">{formatDate(e.day)}</span>
+                          <span className="text-muted tabular-nums w-9 sm:w-10 shrink-0">{e.weight ? weightLabel(e.weight) : ""}</span>
+                          {e.country && <Flag ioc={e.country} />}
+                          <span className="text-ink truncate group-hover:underline sm:hidden">{shortCompetition(e.competition)}</span>
+                          <span className="text-ink truncate group-hover:underline hidden sm:inline">{e.competition.replace(/\s+Individuals?$/i, "")}</span>
+                        </span>
                       </td>
                       {/* the result under Total (and the places, when they are shown) */}
-                      <td colSpan={2} className="md:hidden px-2 sm:px-3 text-right whitespace-nowrap">
+                      <td className="md:hidden px-2 sm:px-3 text-right whitespace-nowrap">
                         <Result result={e.result} />
                       </td>
-                      <td colSpan={2 + PLACES.length} className={`${WIDE} px-2 sm:px-3 text-right whitespace-nowrap`}>
+                      <td colSpan={1 + PLACES.length} className={`${WIDE} px-2 sm:px-3 text-right whitespace-nowrap`}>
                         <Result result={e.result} />
                       </td>
-                    </tr>
+                      <td className={CHEVRON_CELL}>
+                        <RowChevron />
+                      </td>
+                    </RowLink>
                   ))}
               </Fragment>
             );
@@ -167,15 +182,10 @@ export function Medals({ history }: { history: HistoryRow[] }) {
   );
 }
 
+// A medal as in the columns over it; another place as the tables write it.
 function Result({ result }: { result: string | null }) {
-  if (isMedal(result)) {
-    return (
-      <span className={`px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase border ${MEDAL_BADGE[result]}`}>
-        {result}
-      </span>
-    );
-  }
-  return <span className="text-muted">{result ?? "—"}</span>;
+  if (isMedal(result)) return <Medal kind={result} className="inline-block align-middle w-3.5 h-4" />;
+  return <span className="text-muted">{result ?? "–"}</span>;
 }
 
 // −73 with the minus sign, as everywhere on the site

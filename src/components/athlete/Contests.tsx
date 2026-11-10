@@ -6,7 +6,7 @@ import { Fragment, useLayoutEffect, useMemo, useState } from "react";
 import { useHashTarget, useRowMark, useRowScroll } from "@/components/anchors";
 import { Flag } from "@/components/Flag";
 import { CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
-import { MEDAL_BADGE } from "@/components/Medal";
+import { Medal, type MedalKind } from "@/components/Medal";
 import { isUpset } from "@/components/rankings/Changes";
 import { PAGE_SIZES } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
@@ -308,10 +308,10 @@ export function Contests({
   );
 }
 
-const MEDALS: Record<string, string> = MEDAL_BADGE;
+const MEDALS: MedalKind[] = ["gold", "silver", "bronze"];
 
 function CompetitionRow({ contest, total, mark }: { contest: HistoryRow; total: number; mark: string }) {
-  const medal = contest.result ? MEDALS[contest.result] : undefined;
+  const medal = MEDALS.find((kind) => kind === contest.result);
   return (
     // marked: the mark's colour for the panel's (fading back to it)
     <tr className={`h-8 border-b border-rule ${mark.includes("bg-claret") ? mark : `bg-panel ${mark}`}`}>
@@ -326,9 +326,8 @@ function CompetitionRow({ contest, total, mark }: { contest: HistoryRow; total: 
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {medal ? (
-              <span className={`px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase border ${medal}`}>
-                {contest.result}
-              </span>
+              // as the medals' columns elsewhere
+              <Medal kind={medal} className="w-3.5 h-4" />
             ) : (
               contest.result && (
                 <span className="text-[11px] font-semibold text-muted">

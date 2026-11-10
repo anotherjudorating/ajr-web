@@ -102,6 +102,7 @@ export type HistoryRow = {
   // how the athlete ended the competition: gold, silver, bronze, 5th, 7th, the round
   // they lost in ("Round of 16"), or null (still in, pools, unknown)
   result: string | null;
+  competition_country: string | null; // the tournament's (IOC), for its flag
 };
 
 export type P4PRow = {

@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { useHashTarget } from "@/components/anchors";
-import { careerLine, ChartSkeleton, ChartTip, TipEvents, tipPlaces, useChartPointer, type Competition, type LinePoint, type Range, dotsFit, monthTicks, nearest, PeakLabel, PERIOD, peakShift as shiftOf, pointerX, scale, TipBody } from "@/components/chart";
+import { careerLine, ChartSkeleton, ChartTip, TipEvents, tipPlaces, useChartPointer, type Competition, type LinePoint, type Range, dotsFit, LABEL_ROOM, monthTicks, nearest, PeakLabel, PERIOD, peakShift as shiftOf, pointerX, scale, TipBody } from "@/components/chart";
 import { Icon } from "@/components/Icon";
 
 import type { Athlete, HistoryRow } from "@/lib/api";
@@ -29,6 +29,7 @@ type Layout = {
   datesY: number;
   maxDates: number;
   labels: number; // the latest point's labels start this far right of the plot
+  font: number; // the values on the left and the dates under it (as the other charts')
 };
 
 const DESKTOP: Layout = {
@@ -43,22 +44,24 @@ const DESKTOP: Layout = {
   datesY: 255,
   maxDates: 8,
   labels: 16,
+  font: 12,
 };
 
 function phone(width: number): Layout {
-  const right = width - 96;
+  const right = width - 80; // "Rating 2276" after it
   return {
     width,
     height: 226,
-    gridLeft: 38,
-    valuesX: 32,
-    left: 48,
+    gridLeft: 32,
+    valuesX: 28,
+    left: 42, // as the other charts' (H2HChart, NationChart)
     right,
     top: 14,
     rowGap: 34,
     datesY: 206,
-    maxDates: Math.max(2, Math.floor((right - 48) / 80)),
+    maxDates: Math.max(2, Math.floor((right - 42) / 80)),
     labels: 6,
+    font: 11,
   };
 }
 
@@ -160,6 +163,9 @@ export function RatingChart({
   // the all-time peak of the header, when it is in the window
   const peak = athlete.peak_on ? real.find((p) => p.day === new Date(athlete.peak_on!).getTime()) : undefined;
   const peakLink = peakTableLink(athlete, today);
+  // its label, over it (not over today's point, whose labels say it, unless the line
+  // ends there: a career ended on it); the peak's tip goes above the label
+  const labelled = peak !== undefined && (peak !== shown[shown.length - 1] || inactive !== null);
   const targets = real;
   const { hovered, touched, hold, plot, close } = useChartPointer<Point>(
     box,
@@ -169,6 +175,8 @@ export function RatingChart({
     },
     (p) => p.events.length > 0 && onPeriod(p.events),
   );
+  // the hovered point is the peak (by its day: the points are made anew every render)
+  const onPeak = peak !== undefined && hovered?.day === peak.day;
   // a dot on a period with a competition
   const dotted = real.filter((p) => p.events.length > 0);
   const ticks = monthTicks(start, now, at.maxDates);
@@ -260,7 +268,7 @@ export function RatingChart({
               <line key={i} x1={at.gridLeft} x2={RIGHT} y1={TOP + i * at.rowGap} y2={TOP + i * at.rowGap} />
             ))}
           </g>
-          <g fill="#66605C" fontFamily={FONT} fontSize="12" textAnchor="end">
+          <g fill="#66605C" fontFamily={FONT} fontSize={at.font} textAnchor="end">
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <text key={i} x={at.valuesX} y={TOP + i * at.rowGap + 4}>
                 {low + (5 - i) * step}
@@ -298,7 +306,7 @@ export function RatingChart({
           {hovered && (
             <g pointerEvents="none">
               <line x1={x(hovered.day)} x2={x(hovered.day)} y1={TOP} y2={BOTTOM} stroke="#33302E" strokeOpacity="0.35" />
-              {hovered.events.length === 0 && hovered !== peak && <circle cx={x(hovered.day)} cy={y(hovered.score)} r="5" fill="#33302E" />}
+              {hovered.events.length === 0 && !onPeak && <circle cx={x(hovered.day)} cy={y(hovered.score)} r="5" fill="#33302E" />}
             </g>
           )}
           {/* the whole plot answers the pointer, a mouse or a finger: the nearest point by
@@ -311,7 +319,7 @@ export function RatingChart({
               {dotted
                 .filter((p) => p !== peak)
                 .map((p) => (
-                  <circle key={p.day} cx={x(p.day)} cy={y(p.score)} r={p === hovered ? 6 : 4} />
+                  <circle key={p.day} cx={x(p.day)} cy={y(p.score)} r={p.day === hovered?.day ? 6 : 4} />
                 ))}
             </g>
           )}
@@ -324,11 +332,11 @@ export function RatingChart({
               </circle>
             </g>
           )}
-          {peak && <circle cx={x(peak.day)} cy={y(peak.score)} fill="#990F3D" r={peak === hovered ? 6 : 4} pointerEvents="none" />}
+          {peak && <circle cx={x(peak.day)} cy={y(peak.score)} fill="#990F3D" r={onPeak ? 6 : 4} pointerEvents="none" />}
           {last !== peak && <circle cx={x(last.day)} cy={y(last.score)} fill="#33302E" r="4" pointerEvents="none" />}
           {/* not over today's point (its labels say it), but over an inactive
               athlete's last contest when it was the peak (a career ended on it) */}
-          {peak && (peak !== last || inactive) && (
+          {labelled && peak && (
             // the label opens the table of that week, at the athlete's row
             <PeakLabel
               x={x(peak.day)}
@@ -359,7 +367,7 @@ export function RatingChart({
               Rating {last.score}
             </text>
           </g>
-          <g fill="#66605C" fontFamily={FONT} fontSize="12" textAnchor="middle">
+          <g fill="#66605C" fontFamily={FONT} fontSize={at.font} textAnchor="middle">
             {ticks.map((tick) => (
               <text key={tick} x={x(tick)} y={at.datesY}>
                 {monthYear(new Date(tick).toISOString())}
@@ -386,11 +394,11 @@ export function RatingChart({
           </button>
         )}
         {hovered && (
-          <ChartTip left={(x(hovered.day) / at.width) * 100} top={(y(hovered.score) / at.height) * 100} hold={hold} docked={touched}>
+          <ChartTip left={(x(hovered.day) / at.width) * 100} top={((y(hovered.score) - (onPeak && labelled ? LABEL_ROOM : 0)) / at.height) * 100} hold={hold} docked={touched}>
             <TipBody
               title={hovered.period}
-              lines={[{ before: hovered.before, after: hovered.score, inactive: hovered.idle && hovered !== peak }]}
-              places={tipPlaces(places, real[real.indexOf(hovered) - 1]?.day ?? null, hovered.day)}
+              lines={[{ before: hovered.before, after: hovered.score, inactive: hovered.idle && !onPeak }]}
+              places={tipPlaces(places, real[real.findIndex((p) => p.day === hovered.day) - 1]?.day ?? null, hovered.day)}
               action={
                 touched && hovered.events.length > 0
                   ? {

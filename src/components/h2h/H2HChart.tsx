@@ -49,10 +49,10 @@ function phone(width: number): Layout {
   return {
     width,
     height: 240,
-    gridLeft: 36,
-    valuesX: 30,
-    left: 46,
-    right: width - 16,
+    gridLeft: 32,
+    valuesX: 28,
+    left: 42,
+    right: width - 10,
     top: 28,
     rowGap: 35.6,
     datesY: 230,
@@ -307,8 +307,8 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
                 inactive: p.idle,
                 extra: (
                   <>
-                    <TipEvents events={p.events} href={(c) => tournamentPath(c.id, c.weight)} />
                     <TipPlaces places={tipPlaces(athletes[i].places, lines[i][lines[i].indexOf(p) - 1]?.day ?? null, p.day)} />
+                    <TipEvents events={p.events} href={(c) => tournamentPath(c.id, c.weight)} />
                   </>
                 ),
               }))}
