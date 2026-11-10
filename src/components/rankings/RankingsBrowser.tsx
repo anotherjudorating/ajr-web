@@ -91,7 +91,9 @@ function downloadCsv(rows: LeaderboardRow[], asOf: string, fileName: string) {
 const NO_NAMES: Record<string, string> = {};
 
 export function RankingsBrowser({
-  rows,
+  rows: firstRows,
+  total,
+  full,
   asOf,
   latest,
   path,
@@ -99,7 +101,9 @@ export function RankingsBrowser({
   countryNames = NO_NAMES,
   loading = false,
 }: {
-  rows: LeaderboardRow[];
+  rows: LeaderboardRow[]; // the table, or its first rows when `total` says there are more
+  total?: number; // the whole table's rows, when `rows` is only its start
+  full?: string; // where the whole table is (/api/leaderboard?…), fetched when needed
   asOf: string; // the day of the table, YYYY-MM-DD
   latest: string; // the newest day there is data for
   path: string; // e.g. /rankings/men-73
@@ -116,14 +120,40 @@ export function RankingsBrowser({
   const [open, setOpen] = useState<Set<number>>(new Set());
   const [headerRow, visibleColumns] = useVisibleColumns();
 
-  // the countries in this table, by full name
-  const countries = useMemo(
-    () =>
-      [...new Set(rows.map((r) => r.country).filter((c): c is string => !!c))]
-        .map((code) => ({ code, name: countryNames[code] ?? code }))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [rows, countryNames],
-  );
+  // The page comes with the first rows only; the whole table is fetched (once) when
+  // the reader needs more than those: another page, a bigger page, a filter, another
+  // sort, the CSV.
+  const [all, setAll] = useState<LeaderboardRow[] | null>(null);
+  const partial = all === null && total !== undefined && total > firstRows.length && !!full;
+  const rows = all ?? firstRows;
+  const needsAll =
+    partial && (!!query.trim() || !!country || sort !== "rating-desc" || page > 1 || pageSize > firstRows.length);
+  const fetching = useRef<Promise<LeaderboardRow[]> | null>(null);
+  const fetchAll = () => {
+    fetching.current ??= fetch(full!)
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
+      .then((loaded: LeaderboardRow[]) => {
+        setAll(loaded);
+        return loaded;
+      })
+      .catch((error) => {
+        fetching.current = null; // try again on the next need
+        throw error;
+      });
+    return fetching.current;
+  };
+  useEffect(() => {
+    if (needsAll) fetchAll().catch(() => {});
+  });
+  const waiting = needsAll; // until the whole table is here
+
+  // the countries in this table, by full name (the names come for the whole table)
+  const countries = useMemo(() => {
+    const codes = partial ? Object.keys(countryNames) : rows.map((r) => r.country).filter((c): c is string => !!c);
+    return [...new Set(codes)]
+      .map((code) => ({ code, name: countryNames[code] ?? code }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [partial, rows, countryNames]);
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const filtered = rows.filter(
@@ -134,7 +164,8 @@ export function RankingsBrowser({
     return sortRows(filtered, sort);
   }, [rows, query, country, sort]);
 
-  const pages = Math.max(1, Math.ceil(shown.length / pageSize));
+  const count = partial && !needsAll ? total! : shown.length;
+  const pages = Math.max(1, Math.ceil(count / pageSize));
   const currentPage = Math.min(page, pages);
   const first = (currentPage - 1) * pageSize;
   const pageRows = shown.slice(first, first + pageSize);
@@ -173,7 +204,10 @@ export function RankingsBrowser({
         sorts={past ? PAST_SORTS : SORTS}
         sort={sort}
         onSort={setSort}
-        onCsv={() => downloadCsv(shown, asOf, csvName)}
+        onCsv={() => {
+          if (!partial) downloadCsv(shown, asOf, csvName);
+          else fetchAll().then((loaded) => downloadCsv(sortRows(loaded, sort), asOf, csvName)).catch(() => {});
+        }}
       />
 
       {/* table */}
@@ -333,7 +367,7 @@ export function RankingsBrowser({
                   </Fragment>
                 );
               })}
-              {loading &&
+              {(loading || waiting) &&
                 Array.from({ length: 20 }, (_, i) => (
                   <tr key={i} className="athlete-row border-b border-rule">
                     <td colSpan={visibleColumns} className="px-3">
@@ -341,7 +375,7 @@ export function RankingsBrowser({
                     </td>
                   </tr>
                 ))}
-              {!loading && pageRows.length === 0 && (
+              {!loading && !waiting && pageRows.length === 0 && (
                 <tr>
                   <td colSpan={visibleColumns} className="px-3 text-[13px] text-muted">
                     No athletes match.
@@ -355,7 +389,7 @@ export function RankingsBrowser({
 
       <Pagination
         loading={loading}
-        total={shown.length}
+        total={count}
         first={first}
         count={pageRows.length}
         noun="athletes"

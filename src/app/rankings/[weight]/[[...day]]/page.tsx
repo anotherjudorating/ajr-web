@@ -29,6 +29,11 @@ export async function generateMetadata({ params }: PageProps<"/rankings/[weight]
   };
 }
 
+// The rows sent with the page: the first page of the table (the whole of it, ~600 rows,
+// was ~500 KB of HTML); the rest is fetched when the reader goes past them, filters,
+// sorts or exports (/api/leaderboard).
+const FIRST_ROWS = 50;
+
 export default function RankingsPage({ params }: PageProps<"/rankings/[weight]/[[...day]]">) {
   // today's table (no day in the path) is built ahead and refreshed with the data;
   // a past day's on its first visit. The params are read inside the Suspense, so
@@ -55,7 +60,9 @@ async function Rankings({ params }: { params: PageProps<"/rankings/[weight]/[[..
       <BreadcrumbData trail={[{ href: "/rankings", label: "Rankings" }]} current={weightTitle(weight)} />
       <RankingsBrowser
         key={`${path}-${asOf}`}
-        rows={rows}
+        rows={rows.slice(0, FIRST_ROWS)}
+        total={rows.length}
+        full={`/api/leaderboard?weight=${encodeURIComponent(weight.api)}${past ? `&day=${past}` : ""}`}
         asOf={asOf}
         latest={latest}
         path={path}
