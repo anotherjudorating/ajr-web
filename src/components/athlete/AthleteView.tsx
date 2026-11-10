@@ -13,7 +13,8 @@ import { shortName } from "@/lib/format";
 import { lastRating } from "@/lib/inactive";
 import { WEIGHTS } from "@/lib/weights";
 
-// The athlete page. The weight tabs pick whose contests are listed; the rating is one
+// The athlete page. The weight tabs set the contests' weight filter (the list has its
+// own, with "All weights") and pick the lists below; the rating is one
 // for all weights, so the header and the chart stay the same.
 export function AthleteView({
   athlete,
@@ -59,7 +60,9 @@ export function AthleteView({
       <Medals history={history} />
       <Contests
         key={weight}
-        contests={contests}
+        contests={history}
+        weights={athlete.weights}
+        weight={weight}
         competition={competition}
         onClearCompetition={() => setCompetition(null)}
         fileName={`ajr-${athlete.id}-${weight ?? "all"}.csv`}

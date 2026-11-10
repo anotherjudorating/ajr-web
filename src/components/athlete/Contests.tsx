@@ -14,6 +14,8 @@ import { RowLink } from "@/components/RowLink";
 import { SECTION } from "@/lib/anchors";
 import type { HistoryRow } from "@/lib/api";
 import { formatChance, roundCode, shortDate, shortName, signed } from "@/lib/format";
+import { LEVELS, levelOf } from "@/lib/levels";
+import { WEIGHTS } from "@/lib/weights";
 import { pageNumbers } from "@/lib/pages";
 
 const SORTS = {
@@ -42,21 +44,31 @@ const TH = "px-2 sm:px-3 align-middle h-9 py-0";
 
 const gain = (contest: HistoryRow) => contest.rating_after - contest.rating_before;
 
-// Every contest of the athlete in the chosen weight, grouped by competition while
-// sorted by date; only one competition's when it was picked on the chart.
+// Every contest of the athlete, grouped by competition while sorted by date; only
+// one competition's when it was picked on the chart. The weight filter starts at the
+// weight picked in the header (the page remounts this with every pick, so the other
+// filters start over); "All weights" shows the whole career.
 export function Contests({
-  contests,
+  contests: all,
+  weights,
+  weight: picked,
   competition,
   onClearCompetition,
   fileName,
 }: {
-  contests: HistoryRow[];
+  contests: HistoryRow[]; // every contest, latest first
+  weights: string[]; // the athlete's, the latest first
+  weight: string | null; // picked in the header
   competition: Competition | null;
   onClearCompetition: () => void;
   fileName: string;
 }) {
   const [query, setQuery] = useState("");
   const [year, setYear] = useState("");
+  const [weight, setWeight] = useState(picked ?? "");
+  const [level, setLevel] = useState("");
+  const contests = useMemo(() => all.filter((c) => !weight || c.weight === weight), [all, weight]);
+  const levels = LEVELS.map((l) => l.title).filter((title) => all.some((c) => levelOf(c.competition_rank) === title));
   const [result, setResult] = useState<Result>("");
   const [sort, setSort] = useState<Sort>("date-desc");
   const [pageSize, setPageSize] = useState(20);
@@ -70,6 +82,7 @@ export function Contests({
       return (
         (!competition || c.competition_id === competition.id) &&
         (!year || c.fought_on.startsWith(year)) &&
+        (!level || levelOf(c.competition_rank) === level) &&
         (result === "" ||
           (result === "w" && c.won) ||
           (result === "l" && !c.won) ||
@@ -88,7 +101,7 @@ export function Contests({
     if (sort === "gain-desc") return [...filtered].sort((a, b) => gain(b) - gain(a));
     if (sort === "gain-asc") return [...filtered].sort((a, b) => gain(a) - gain(b));
     return filtered;
-  }, [contests, competition, query, year, result, sort]);
+  }, [contests, competition, query, year, level, result, sort]);
 
   const pages = Math.max(1, Math.ceil(shown.length / pageSize));
   const currentPage = Math.min(page, pages);
@@ -142,6 +155,22 @@ export function Contests({
             {years.map((y) => (
               <option key={y} value={y}>
                 {y}
+              </option>
+            ))}
+          </select>
+          <select value={weight} onChange={(e) => reset(setWeight)(e.target.value)} className={CONTROL} aria-label="Weight">
+            <option value="">All weights</option>
+            {weights.map((w) => (
+              <option key={w} value={w}>
+                {WEIGHTS.find((x) => x.api === w)?.label ?? w} kg
+              </option>
+            ))}
+          </select>
+          <select value={level} onChange={(e) => reset(setLevel)(e.target.value)} className={CONTROL} aria-label="Tournament level">
+            <option value="">All levels</option>
+            {levels.map((l) => (
+              <option key={l} value={l}>
+                {l}
               </option>
             ))}
           </select>
