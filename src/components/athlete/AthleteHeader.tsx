@@ -64,9 +64,9 @@ export function AthleteHeader({
           <div className="text-sm text-muted mt-1.5 flex items-center">
             {/* the nation's page */}
             {athlete.country ? (
-              <Link href={`/countries/${athlete.country.toLowerCase()}`} className="inline-flex items-center hover:text-ink hover:underline">
+              <Link href={`/countries/${athlete.country.toLowerCase()}`} className="group inline-flex items-center hover:text-ink">
                 <Flag ioc={athlete.country} className="mr-2" />
-                <span>{athlete.country_name ?? athlete.country}</span>
+                <span className="group-hover:underline">{athlete.country_name ?? athlete.country}</span>
               </Link>
             ) : (
               <span>{athlete.country_name}</span>
