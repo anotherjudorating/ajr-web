@@ -90,7 +90,7 @@ export function NationsBrowser({ rows, loading = false }: { rows: NationRow[]; l
           ))}
         </tbody>
       </table>
-      {!loading && shown.length === 0 && <p className="py-6 text-[14px] text-muted">No nations match.</p>}
+      {!loading && shown.length === 0 && <p className="py-6 text-[14px] text-muted">No nations match these filters.</p>}
       <Pagination
         loading={loading}
         total={shown.length}

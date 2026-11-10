@@ -139,8 +139,8 @@ export function TeamsBrowser({
             ))}
             {!loading && shown.length === 0 && (
               <tr>
-                <td colSpan={6} className={`${ROW_CELL} text-[13px] text-muted`}>
-                  No nations match.
+                <td colSpan={6} className="px-3 py-6 text-[14px] text-muted">
+                  No nations match these filters.
                 </td>
               </tr>
             )}

@@ -177,7 +177,7 @@ export function TournamentsBrowser({
           })}
         </tbody>
       </table>
-      {!loading && shown.length === 0 && <p className="py-6 text-[14px] text-muted">No tournaments match.</p>}
+      {!loading && shown.length === 0 && <p className="py-6 text-[14px] text-muted">No tournaments match these filters.</p>}
     </>
   );
 }

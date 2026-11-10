@@ -228,9 +228,9 @@ export function Contests({
               );
             })}
             {pageRows.length === 0 && (
-              <tr className="h-10">
-                <td colSpan={7} className="px-3 text-[13px] text-muted">
-                  No contests match.
+              <tr>
+                <td colSpan={7} className="px-3 py-6 text-[14px] text-muted">
+                  No contests match these filters.
                 </td>
               </tr>
             )}
