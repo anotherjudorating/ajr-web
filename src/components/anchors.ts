@@ -24,39 +24,41 @@ export function useHash(): string {
 
 // Whether the address points at section `id`: the qualifier (null: not this section,
 // "": the section itself), a ref for the <section>, and scrollNow() for a layout
-// effect, once the section shows what the hash asked for (a level opened). It
+// effect, once the section shows what the hash asked for (a level opened); given an
+// element (the one whose id is the whole hash), it scrolls to that instead. It
 // scrolls once per hash: the section's own changes (a click) do not scroll it again.
 // Needed because Next scrolls to a hash only if the section is there at the first
 // commit, and the athlete page's sections come after its data.
 export function useHashTarget(id: string): {
   qualifier: string | null;
   ref: RefObject<HTMLElement | null>;
-  scrollNow: () => void;
+  scrollNow: (target?: HTMLElement | null) => void;
 } {
   const hash = useHash();
   const qualifier = targetOf(hash, id);
   const ref = useRef<HTMLElement | null>(null);
   const scrolledFor = useRef<string | null>(null);
-  const scrollNow = useCallback(() => {
-    if (qualifier === null || scrolledFor.current === hash || !ref.current) return;
+  const scrollNow = useCallback((target?: HTMLElement | null) => {
+    const element = target ?? ref.current;
+    if (qualifier === null || scrolledFor.current === hash || !element) return;
     scrolledFor.current = hash;
-    scrollWhileGrowing(ref.current);
+    scrollWhileGrowing(element);
   }, [hash, qualifier]);
   return { qualifier, ref, scrollNow };
 }
 
-// Scroll to `section` (below the header: scroll-padding-top, globals.css). The rest
-// of the page may still be on its way, too short to scroll that far: scroll again as
-// it grows, until the section is in place, the reader scrolls, or 5 seconds pass.
+// Scroll to `section` (below the header: scroll-padding-top, globals.css), and keep
+// it there while the page settles: the rest may still be arriving (too short to
+// scroll that far), and fonts or a chart above may change height after the first
+// scroll. Every change of the page's size puts it back, for 5 seconds or until the
+// reader scrolls, clicks or types.
 export function scrollWhileGrowing(section: HTMLElement): void {
   const padding = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
-  const placed = () => Math.abs(section.getBoundingClientRect().top - padding) < 2;
+  const place = () => {
+    if (Math.abs(section.getBoundingClientRect().top - padding) >= 2) section.scrollIntoView();
+  };
   section.scrollIntoView();
-  if (placed()) return;
-  const observer = new ResizeObserver(() => {
-    section.scrollIntoView();
-    if (placed()) stop();
-  });
+  const observer = new ResizeObserver(place);
   const events = ["wheel", "touchstart", "keydown", "mousedown"] as const;
   const timer = window.setTimeout(stop, 5000);
   function stop() {
@@ -65,5 +67,6 @@ export function scrollWhileGrowing(section: HTMLElement): void {
     for (const e of events) window.removeEventListener(e, stop);
   }
   observer.observe(document.body);
+  document.fonts?.ready.then(place);
   for (const e of events) window.addEventListener(e, stop, { passive: true });
 }
