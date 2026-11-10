@@ -117,7 +117,9 @@ export function RecordBrowser({
             className="w-full h-8 pl-8 pr-2.5 bg-paper border border-rule text-[12px] placeholder:text-muted focus:outline-none focus:border-ink"
           />
         </div>
-        {athletes && (
+        {/* men or women for every record: a nation's or tournament's counts only that
+            gender's athletes; the weights for the athletes' records */}
+        {(
           <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
             <select
               value={gender}
@@ -128,7 +130,7 @@ export function RecordBrowser({
               <option value="men">Men</option>
               <option value="women">Women</option>
             </select>
-            {info.weights && (
+            {athletes && info.weights && (
               <select value={weight} onChange={(e) => filter("", e.target.value)} className={CONTROL}>
                 <option value="">All weights</option>
                 {WEIGHTS.map((w) => (
