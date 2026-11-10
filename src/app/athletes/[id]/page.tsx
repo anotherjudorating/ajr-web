@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: PageProps<"/athletes/[id]">):
   const name = fullName(found.family_name, found.given_name);
   const today = (updated ?? "1970-01-01").slice(0, 10);
   return {
-    title: `${name} — judo rating, results and record`,
+    title: `${name} judo rating and results`,
     description: athleteSummary(found),
     // a few contests long ago: reachable, not indexed (lib/seo.ts)
     ...(indexableAthlete(found.contests, found.last_contest, today) ? {} : { robots: NOINDEX }),
@@ -38,13 +38,13 @@ function athleteSummary(a: Athlete): string {
   const name = fullName(a.family_name, a.given_name);
   const who = [a.country_name, a.birth_year ? `born ${a.birth_year}` : null].filter(Boolean).join(", ");
   const weight = WEIGHTS.find((w) => w.api === a.weight);
-  const where = weight ? weightTitle(weight) : "judo";
+  const where = weight ? weightTitle(weight).toLowerCase() : "judo";
   const standing =
     a.place !== null
-      ? `is #${a.place} in the ${where} rating (score ${a.score}${a.wrl_place ? `; IJF World Ranking #${a.wrl_place}` : ""})`
-      : `is rated in ${where} (not in the table: no contest in the last year)`;
-  const peak = a.peak_score && a.peak_on ? ` Peak ${a.peak_score} in ${monthYear(a.peak_on)}.` : "";
-  return `${name}${who ? ` (${who})` : ""} ${standing}.${peak} ${a.contests} rated IJF contests with win chances and rating changes.`;
+      ? `#${a.place} in ${where} with a rating of ${a.score}`
+      : `rated in ${where}, out of the table (no contest in the last year)`;
+  const peak = a.peak_score && a.peak_on ? `, peak ${a.peak_score} in ${monthYear(a.peak_on)}` : "";
+  return `${name}${who ? ` (${who})` : ""}: ${standing}${peak}.`;
 }
 
 // No rated athlete under this id: an athlete's second id goes to their main page for

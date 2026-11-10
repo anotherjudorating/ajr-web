@@ -4,7 +4,7 @@ import { RecordsOverview } from "@/components/records/RecordsOverview";
 import { records } from "@/lib/api";
 
 export const metadata: Metadata = {
-  title: "Records",
+  title: "All-time judo records",
   description: "All-time judo records: highest ratings, longest reigns at #1, most medals, biggest upsets and more.",
 };
 

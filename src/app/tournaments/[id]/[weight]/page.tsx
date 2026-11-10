@@ -8,6 +8,9 @@ import { WeightView } from "@/components/tournament/WeightView";
 import { competition, competitionChances, competitionContests, competitionResults, competitions, lastUpdate } from "@/lib/api";
 import { WEIGHTS, weightBySlug, weightTitle } from "@/lib/weights";
 import { NOINDEX } from "@/lib/seo";
+import { shortName } from "@/lib/format";
+
+const MEDALS = ["gold", "silver", "bronze"];
 
 const MAJOR = ["Olympic Games", "World Championships", "Masters", "Grand Slam"];
 
@@ -27,9 +30,14 @@ export async function generateMetadata({ params }: PageProps<"/tournaments/[id]/
   const found = Number.isInteger(Number(id)) && weight ? await competition(Number(id)) : null;
   if (!found || !weight || !found.weights.includes(weight.api)) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const name = tournamentName(found.name);
+  // its medallists, once there are: "gold Fawaz M. (FRA), silver …"
+  const results = (await competitionResults(found.id)).filter((r) => r.weight === weight.api);
+  const medals = MEDALS.flatMap((medal) =>
+    results.filter((r) => r.result === medal).map((r) => `${medal} ${shortName(r.family_name, r.given_name)}${r.country ? ` (${r.country})` : ""}`),
+  );
   return {
-    title: `${weightTitle(weight)} at the ${name} — results`,
-    description: `${weightTitle(weight)} at the ${name}: medallists, every contest with win chances, rating changes.`,
+    title: `${weightTitle(weight)} ${name} judo results`,
+    description: `${weightTitle(weight)} at the ${name}${medals.length ? `: ${medals.join(", ")}` : ""}.`,
     // the weights of the events people search for; the others reachable, not indexed
     ...(MAJOR.includes(found.rank_name ?? "") ? {} : { robots: NOINDEX }),
   };

@@ -17,7 +17,9 @@ const sans = IBM_Plex_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
-  title: { default: "Another Judo Rating", template: "%s | Another Judo Rating" },
+  // no " | Another Judo Rating" after each title: Google writes the site's name over the
+  // address itself (the WebSite data below)
+  title: "Another Judo Rating",
   description:
     "Independent Glicko-2 judo rating: the strongest judoka in every weight, built from every IJF contest.",
   // every page its own canonical address, without the query (filters, pairs)

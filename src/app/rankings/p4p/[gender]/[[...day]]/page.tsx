@@ -6,6 +6,7 @@ import { BreadcrumbData } from "@/components/Breadcrumbs";
 import { P4PBrowser } from "@/components/rankings/P4PBrowser";
 import { countryNames, p4p } from "@/lib/api";
 import { tableDay } from "@/lib/days";
+import { formatDate } from "@/lib/format";
 import { NOINDEX } from "@/lib/seo";
 
 const GENDERS = { men: "Men", women: "Women" } as const;
@@ -18,10 +19,11 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/rankings/p4p/[gender]/[[...day]]">): Promise<Metadata> {
   const { gender, day } = await params;
   if (!(gender in GENDERS)) notFound(); // a crawler is sent the head first: only here does a 404 get its status
-  const title = `${GENDERS[gender as Gender]} pound for pound — judo ranking`;
+  const title = `${GENDERS[gender as Gender]} pound for pound judo ranking`;
+  const description = `The best ${GENDERS[gender as Gender].toLowerCase()} judoka across all weights: how far each stands above the rest of their category.`;
   return day?.length
-    ? { title: `${title} on ${day[0]}`, robots: NOINDEX } // a past day
-    : { title, description: `The best ${GENDERS[gender as Gender].toLowerCase()} judoka across all weights: how far each stands above the rest of their category, by Glicko-2 rating.` };
+    ? { title: `${title} on ${formatDate(day[0])}`, description, robots: NOINDEX } // a past day
+    : { title, description };
 }
 
 export default function Page({ params }: PageProps<"/rankings/p4p/[gender]/[[...day]]">) {
@@ -44,7 +46,7 @@ async function Table({ params }: { params: PageProps<"/rankings/p4p/[gender]/[[.
   const names = await countryNames(rows.map((r) => r.country));
   return (
     <>
-      <h1 className="sr-only">{GENDERS[gender as Gender]} pound for pound — judo ranking</h1>
+      <h1 className="sr-only">{GENDERS[gender as Gender]} pound for pound judo ranking</h1>
       <BreadcrumbData trail={[{ href: "/rankings", label: "Rankings" }]} current={`${GENDERS[gender as Gender]} pound for pound`} />
       <P4PBrowser
         key={asOf}
