@@ -42,7 +42,7 @@ export function Tournaments({ rows }: { rows: CountryTournament[] }) {
                 </span>
               </th>
             ))}
-            <th className={`${HEAD_CELL} text-right w-14 sm:w-16`}>Total</th>
+            <th className={`${HEAD_CELL} text-right w-16 hidden sm:table-cell`}>Total</th>
             <th className="w-6 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
@@ -59,7 +59,7 @@ export function Tournaments({ rows }: { rows: CountryTournament[] }) {
                   {t[kind]}
                 </td>
               ))}
-              <td className={`${ROW_CELL} text-right font-semibold`}>{t.gold + t.silver + t.bronze}</td>
+              <td className={`${ROW_CELL} text-right font-semibold hidden sm:table-cell`}>{t.gold + t.silver + t.bronze}</td>
               <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
                 <Icon size={18} name="chevron_right" className="align-middle" />
               </td>
