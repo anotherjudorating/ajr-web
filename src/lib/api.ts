@@ -70,6 +70,8 @@ export type Athlete = {
   peak_on: string | null;
   peak_place: number | null; // the place in that day's table
   peak_weight: string | null; // the weight of that table
+  // every table listing the athlete today (one, or two when they fight in two weights)
+  tables?: { weight: string; place: number; places_up_90d: number | null; places_up_6m: number | null; wrl_place: number | null }[];
   score_change_90d: number | null;
   score_change_6m: number | null;
   places_up_90d: number | null;
