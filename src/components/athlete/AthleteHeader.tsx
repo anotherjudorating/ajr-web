@@ -75,7 +75,17 @@ export function AthleteHeader({
           <div className="flex justify-between items-start gap-2 sm:gap-4">
             <div className="flex flex-col">
               <span className={LABEL}>Rank</span>
-              <span className={`${BIG} mt-1`}>{athlete.place ? `#${athlete.place}` : "–"}</span>
+              {inactive ? (
+                // why there is no rank: no contest in any weight for a year
+                <span
+                  className="font-serif text-[22px] leading-[38px] font-bold text-muted mt-1"
+                  title="No contest for over a year: out of the tables until the next one"
+                >
+                  Inactive
+                </span>
+              ) : (
+                <span className={`${BIG} mt-1`}>{athlete.place ? `#${athlete.place}` : "–"}</span>
+              )}
             </div>
             <div className="flex flex-col items-start">
               <span className={LABEL}>Peak</span>
@@ -107,20 +117,7 @@ export function AthleteHeader({
             <div className="flex flex-col">
               <div className="font-serif text-[56px] leading-none font-bold text-ink tabular-nums">{score}</div>
               <span className={`${LABEL} mt-2`}>
-                {inactive ? (
-                  // the athlete's, not a weight's: no contest in any weight for a year
-                  <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
-                    Last rating · {monthYear(inactive.day)}
-                    <span
-                      className="px-1.5 py-0.5 border border-rule text-[10px] tracking-wider"
-                      title="No contest for over a year: out of the tables until the next one"
-                    >
-                      Inactive
-                    </span>
-                  </span>
-                ) : (
-                  "Current rating"
-                )}
+                {inactive ? `Last rating · ${monthYear(inactive.day)}` : "Current rating"}
               </span>
             </div>
             <div className="tabular-nums text-xs pb-1">
