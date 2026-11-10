@@ -17,6 +17,8 @@ type Slot = keyof typeof COLORS;
 const TH = "h-9 py-0 align-middle px-2 sm:px-3 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted";
 const TD = "h-10 sm:h-11 py-0 align-middle px-2 sm:px-3";
 
+const urlKey = (w: string | null, a?: number, b?: number) => `${w}|${a}|${b}`;
+
 // The weight and the two athletes, then the comparison (`result`, rendered on the
 // server for the pair in the URL) or, while a pair is not picked, the popular matchups.
 // The picks live here and go to the URL; the page renders the comparison for them.
@@ -26,22 +28,41 @@ export function H2HBrowser({
   b: initialB,
   popular,
   result,
+  loading = false,
 }: {
   weight: string | null; // slug
   a: Picked | null;
   b: Picked | null;
   popular: Matchup[];
   result: ReactNode;
+  loading?: boolean; // the page's fallback, while the URL's pair is read
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [weight, setWeight] = useState(initialWeight);
   const [picks, setPicks] = useState<Record<Slot, Picked | null>>({ a: initialA, b: initialB });
+  // A link to another pair (Frequent opponents, the menu) keeps this component and its
+  // state (the page is kept between visits): the URL's pair replaces the picks. After
+  // the URLs of the component's own replaces are skipped (a quick second pick must not
+  // be undone by the first pick's URL arriving).
+  const fromUrl = urlKey(initialWeight, initialA?.id, initialB?.id);
+  const [own, setOwn] = useState<string[]>([]);
+  const [seenUrl, setSeenUrl] = useState(fromUrl);
+  if (seenUrl !== fromUrl) {
+    setSeenUrl(fromUrl);
+    if (own.includes(fromUrl)) {
+      setOwn(own.filter((key) => key !== fromUrl));
+    } else {
+      setWeight(initialWeight);
+      setPicks({ a: initialA, b: initialB });
+    }
+  }
   const inputA = useRef<HTMLInputElement>(null);
 
   const go = (w: string | null, next: Record<Slot, Picked | null>) => {
     setWeight(w);
     setPicks(next);
+    setOwn((keys) => [...keys, urlKey(w, next.a?.id, next.b?.id)]);
     startTransition(() => router.replace(h2hPath(w, next.a?.id ?? null, next.b?.id ?? null), { scroll: false }));
   };
   const both = picks.a && picks.b;
@@ -69,31 +90,37 @@ export function H2HBrowser({
           <label htmlFor="h2h-weight" className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1.5">
             Weight category
           </label>
-          <select
-            id="h2h-weight"
-            value={weight ?? ""}
-            onChange={(e) => {
-              go(e.target.value, { a: null, b: null });
-              inputA.current?.focus();
-            }}
-            className="w-full sm:w-64 h-10 px-3 bg-paper border border-rule text-[14px] text-ink focus:outline-none focus:border-ink cursor-pointer rounded-none"
-          >
-            <option value="" disabled>
-              Choose weight
-            </option>
-            {[
-              { label: "Men", weights: MEN },
-              { label: "Women", weights: WOMEN },
-            ].map((group) => (
-              <optgroup key={group.label} label={group.label}>
-                {group.weights.map((w) => (
-                  <option key={w.slug} value={w.slug}>
-                    {weightTitle(w)}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+          {loading ? (
+            <div className="w-full sm:w-64 h-10 px-3 border border-rule flex items-center">
+              <div className="h-3 w-1/2 bg-rule/60 animate-pulse" />
+            </div>
+          ) : (
+            <select
+              id="h2h-weight"
+              value={weight ?? ""}
+              onChange={(e) => {
+                go(e.target.value, { a: null, b: null });
+                inputA.current?.focus();
+              }}
+              className="w-full sm:w-64 h-10 px-3 bg-paper border border-rule text-[14px] text-ink focus:outline-none focus:border-ink cursor-pointer rounded-none"
+            >
+              <option value="" disabled>
+                Choose weight
+              </option>
+              {[
+                { label: "Men", weights: MEN },
+                { label: "Women", weights: WOMEN },
+              ].map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.weights.map((w) => (
+                    <option key={w.slug} value={w.slug}>
+                      {weightTitle(w)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          )}
         </div>
         {(["a", "b"] as const).map((slot) => (
           <AthleteSlot
@@ -101,6 +128,7 @@ export function H2HBrowser({
             slot={slot}
             weight={weight}
             picked={picks[slot]}
+            loading={loading}
             other={picks[slot === "a" ? "b" : "a"]}
             inputRef={slot === "a" ? inputA : undefined}
             onPick={(athlete) => go(weight, { ...picks, [slot]: athlete })}
@@ -108,7 +136,9 @@ export function H2HBrowser({
         ))}
       </section>
 
-      {!both && <PopularMatchups matchups={popular} onPick={(m) => {
+      {/* until the server's comparison for the pair arrives: stripes, as in the rankings */}
+      {(loading || (both && !current)) && <ResultSkeleton />}
+      {!loading && !both && <PopularMatchups matchups={popular} onPick={(m) => {
         go(m.weight, { a: m.a, b: m.b });
         window.scrollTo(0, 0);
       }} />}
@@ -126,8 +156,10 @@ function AthleteSlot({
   other,
   inputRef,
   onPick,
+  loading,
 }: {
   slot: Slot;
+  loading: boolean;
   weight: string | null;
   picked: Picked | null;
   other: Picked | null;
@@ -169,7 +201,11 @@ function AthleteSlot({
         <span className="w-3 h-[3px] shrink-0" style={{ background: COLORS[slot] }} />
         Athlete {slot === "a" ? 1 : 2}
       </div>
-      {picked ? (
+      {loading ? (
+        <div className="h-10 px-3 border border-rule flex items-center">
+          <div className="h-3 w-1/3 bg-rule/60 animate-pulse" />
+        </div>
+      ) : picked ? (
         <div className="h-10 px-3 border border-ink flex items-center gap-2 text-[14px]">
           <span className="flex">
             <Flag ioc={picked.country} />
@@ -246,6 +282,21 @@ function AthleteSlot({
         </ul>
       )}
     </div>
+  );
+}
+
+function ResultSkeleton() {
+  return (
+    <section className="mt-10 lg:mt-12" aria-busy="true">
+      <div className="border-b-2 border-ink pb-2">
+        <div className="h-5 sm:h-6 w-48 bg-rule/60 animate-pulse" />
+      </div>
+      {Array.from({ length: 6 }, (_, i) => (
+        <div key={i} className="border-b border-rule h-10 sm:h-11 px-3 flex items-center">
+          <div className="h-3 bg-rule/60 animate-pulse" style={{ width: `${40 + ((i * 37) % 45)}%` }} />
+        </div>
+      ))}
+    </section>
   );
 }
 

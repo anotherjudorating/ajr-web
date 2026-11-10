@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+
+import { useHashTarget } from "@/components/anchors";
+import { careerLine, ChartSkeleton, ChartTip, TipEvents, tipPlaces, useChartPointer, type Competition, type LinePoint, type Range, dotsFit, monthTicks, nearest, PeakLabel, PERIOD, peakShift as shiftOf, pointerX, scale, TipBody } from "@/components/chart";
+import { Icon } from "@/components/Icon";
 
 import type { Athlete, HistoryRow } from "@/lib/api";
 import type { LastRating } from "@/lib/inactive";
-import { peakTableLink } from "@/lib/anchors";
-import { formatDate, monthYear, signed } from "@/lib/format";
+import { peakTableLink, SECTION } from "@/lib/anchors";
+import { formatDate, monthYear } from "@/lib/format";
+import { tournamentPath } from "@/lib/weights";
+import { type Places } from "@/lib/places";
 
 // Where things go on the canvas. From md up, the prototype's chart: a 1000×280 canvas
 // scaled to the page (the plot from x 75 to 860, grid from 50, y 25 to 225). Scaled
@@ -57,23 +63,16 @@ function phone(width: number): Layout {
 }
 
 const MD = 768;
-const RANGES = { "1Y": 1, "4Y": 4, All: null } as const;
-type Range = keyof typeof RANGES;
+const RANGES: Record<Range, number | null> = { "1Y": 1, "4Y": 4, All: null };
 const FONT = "'IBM Plex Sans', sans-serif";
 const YEAR = 365.25 * 24 * 3600 * 1000;
 const DAY = 24 * 3600 * 1000;
 // No contest for this long: out of the tables (hide_after_days in the rating settings).
 const AWAY = 365 * DAY;
 
-export type Competition = {
-  id: number;
-  name: string;
-  weight: string | null;
-  day: string;
-  scoreBefore: number; // before its first contest
-};
+export type { Competition } from "@/components/chart";
 
-type Point = { day: number; rating: number; score: number; competition?: Competition; edge?: boolean };
+type Point = LinePoint & { edge?: boolean };
 
 // The rating (skill, dashed) and the score (rating minus uncertainty, solid) after
 // every competition, and today's. Marked: the peak (claret, as in the header) and
@@ -82,21 +81,42 @@ type Point = { day: number; rating: number; score: number; competition?: Competi
 export function RatingChart({
   athlete,
   history,
+  places,
   today,
   inactive,
-  onCompetition,
+  onPeriod,
 }: {
   athlete: Athlete;
   history: HistoryRow[];
+  places: Places | null;
   today: string;
   inactive: LastRating | null; // over a year without a contest: the line ends at the last one
-  onCompetition: (competition: Competition) => void;
+  onPeriod: (competitions: Competition[]) => void; // a point's: its contests marked in the table
 }) {
-  const [hovered, setHovered] = useState<Point | null>(null);
+
   const now = new Date(today).getTime();
   // an athlete idle for years: the whole history rather than an empty window
   const lastContest = history.length ? new Date(history[0].fought_on).getTime() : now;
   const [range, setRange] = useState<Range>(now - lastContest > 3.5 * YEAR ? "All" : "4Y");
+  // #rating (a rating record's link): the whole career, the peak pulsing until the
+  // reader's first move, the chart scrolled into place
+  const { qualifier, ref: anchorRef, scrollNow } = useHashTarget(SECTION.rating);
+  const [hashSeen, setHashSeen] = useState<string | null>(null);
+  if (qualifier !== hashSeen) {
+    setHashSeen(qualifier);
+    if (qualifier !== null) setRange("All");
+  }
+  useLayoutEffect(scrollNow, [scrollNow, range]);
+  const [pulse, setPulse] = useState(true);
+  useEffect(() => {
+    if (qualifier === null || !pulse) return;
+    const events = ["wheel", "touchstart", "keydown", "mousedown"] as const;
+    const stop = () => setPulse(false);
+    for (const e of events) window.addEventListener(e, stop, { passive: true, once: true });
+    return () => {
+      for (const e of events) window.removeEventListener(e, stop);
+    };
+  }, [qualifier, pulse]);
   const box = useRef<HTMLDivElement>(null);
   const [boxWidth, setBoxWidth] = useState<number | null>(null);
   useEffect(() => {
@@ -113,42 +133,26 @@ export function RatingChart({
   const { left: LEFT, right: RIGHT, top: TOP } = at;
   const BOTTOM = TOP + 5 * at.rowGap;
 
-  // the score before every competition: its first contest's (history is latest first)
-  const before = new Map<number, number>();
-  for (const contest of history) before.set(contest.competition_id, contest.score_before);
-  // the last contest of every competition
-  const seen = new Set<number>();
-  const points: Point[] = [];
-  for (const contest of history) {
-    if (seen.has(contest.competition_id)) continue;
-    seen.add(contest.competition_id);
-    points.unshift({
-      day: new Date(contest.fought_on).getTime(),
-      rating: contest.rating_after,
-      score: contest.score_after,
-      competition: {
-        id: contest.competition_id,
-        name: contest.competition,
-        weight: contest.weight,
-        day: contest.fought_on,
-        scoreBefore: before.get(contest.competition_id) ?? contest.score_before,
-      },
-    });
-  }
+  const period = PERIOD[range];
+  const points: Point[] = careerLine(history, inactive ? null : { day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 }, period);
   // the athlete's peak (as in the header) is a point of the line too: it is the end
   // of a day, which can fall inside a competition of several days
   if (athlete.peak_on) {
     const peakDay = new Date(athlete.peak_on).getTime();
     const peakRow = history.find((contest) => contest.fought_on === athlete.peak_on);
     if (peakRow && !points.some((p) => p.day === peakDay)) {
-      points.push({ day: peakDay, rating: peakRow.rating_after, score: peakRow.score_after });
+      points.push({
+        day: peakDay,
+        rating: peakRow.rating_after,
+        score: peakRow.score_after,
+        period: `Peak, ${formatDate(athlete.peak_on)}`,
+        before: null,
+        events: [],
+        idle: false,
+      });
       points.sort((a, b) => a.day - b.day);
     }
   }
-  // today's point, but not for an inactive athlete: their line ends at the last
-  // contest, the inactive zone runs on to today
-  if (!inactive) points.push({ day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 });
-
   const years = RANGES[range];
   const from = years === null ? points[0].day : now - years * YEAR;
   const shown = points.filter((p) => p.day >= from);
@@ -168,23 +172,37 @@ export function RatingChart({
   // the all-time peak of the header, when it is in the window
   const peak = athlete.peak_on ? real.find((p) => p.day === new Date(athlete.peak_on!).getTime()) : undefined;
   const peakLink = peakTableLink(athlete, today);
+  const targets = real;
+  const { hovered, touched, hold, plot, close } = useChartPointer<Point>(
+    box,
+    (e) => {
+      const at = pointerX(e, LEFT, RIGHT);
+      return targets.length ? nearest(targets, (p) => Math.abs(x(p.day) - at)) : null;
+    },
+    (p) => p.events.length > 0 && onPeriod(p.events),
+  );
+  // a dot on a period with a competition
+  const dotted = real.filter((p) => p.events.length > 0);
   const ticks = monthTicks(start, now, at.maxDates);
   // the end labels (Skill, −RD, Rating) next to the line's last point: at today's edge,
   // or, for an inactive athlete whose line ends earlier, right after that point (over
   // the inactive zone, on a paper halo)
   const labelX = inactive ? Math.min(x(last.day) + 12, at.width - (desktop ? 130 : 88)) : RIGHT + at.labels;
+  // the Peak label (68 wide, centred over the peak) moved left so that it stops before
+  // the end labels (Skill, uncertainty, Rating) and the plot's edge, right of its start
+  const peakShift = peak ? shiftOf(x(peak.day), LEFT, Math.min(RIGHT, labelX) - 6) : 0;
 
   // Inactive: no contest for over a year (out of the tables), between competitions or
   // since the last one. The rating holds, its uncertainty grows, so the score drifts
   // down: the zone says why.
-  const days = points.filter((p) => p.competition).map((p) => p.day);
+  const days = points.flatMap((p) => p.events.map((c) => new Date(c.day).getTime()));
   const zones = [...days, now]
     .flatMap((day, i, all) => (i && day - all[i - 1] > AWAY ? [{ from: all[i - 1], to: day }] : []))
     .filter((zone) => zone.to > start)
     .map((zone) => ({ ...zone, x1: x(Math.max(zone.from, start)), x2: x(zone.to) }));
 
   return (
-    <section className="mb-0 mt-14 lg:mt-16">
+    <section id={SECTION.rating} ref={anchorRef} className="mb-0 mt-14 lg:mt-16">
       <div className="flex justify-between items-end mb-3 border-b-2 border-ink pb-2">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 min-w-0">
           <h2 className="font-serif font-bold text-[20px] sm:text-[24px] text-ink">Rating</h2>
@@ -236,11 +254,18 @@ export function RatingChart({
         </div>
       </div>
 
-      <div ref={box} className="w-full relative py-2">
+      <div ref={box} className="w-full relative py-2 overflow-x-clip">
+        {/* until the chart knows its width (after the page's script): its place,
+            striped as a loading table, rather than a squeezed drawing */}
+        {boxWidth === null ? (
+          <ChartSkeleton className="h-[226px] md:h-auto md:aspect-[1000/280]" />
+        ) : (
         <svg
           viewBox={`0 0 ${at.width} ${at.height}`}
           preserveAspectRatio="none"
           className="w-full h-auto overflow-visible block"
+          // a finger sliding along the chart moves its line, not the page
+          style={{ touchAction: "pan-y" }}
         >
           <g stroke="#D6CFC2" strokeWidth="0.8">
             {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -281,36 +306,51 @@ export function RatingChart({
           />
           <polyline fill="none" points={line("rating")} stroke="#66605C" strokeDasharray="4,3" strokeWidth="1.2" />
           <polyline fill="none" points={line("score")} stroke="#33302E" strokeWidth="2.5" />
-          {desktop && (
-            <g fill="#33302E">
-              {real
-                .filter((p) => p.competition && p !== peak)
+          {/* the hovered competition's day, top to bottom */}
+          {hovered && (
+            <g pointerEvents="none">
+              <line x1={x(hovered.day)} x2={x(hovered.day)} y1={TOP} y2={BOTTOM} stroke="#33302E" strokeOpacity="0.35" />
+              {hovered.events.length === 0 && hovered !== peak && <circle cx={x(hovered.day)} cy={y(hovered.score)} r="5" fill="#33302E" />}
+            </g>
+          )}
+          {/* the whole plot answers the pointer, a mouse or a finger: the nearest point by
+              its day (the marks drawn over it let the pointer through) */}
+          {targets.length > 0 && (
+            <rect x={LEFT} y={TOP} width={RIGHT - LEFT} height={BOTTOM - TOP} fill="transparent" className="cursor-pointer" {...plot} />
+          )}
+          {dotsFit(dotted.length, RIGHT - LEFT) && (
+            <g fill="#33302E" pointerEvents="none">
+              {dotted
+                .filter((p) => p !== peak)
                 .map((p) => (
                   <circle key={p.day} cx={x(p.day)} cy={y(p.score)} r={p === hovered ? 6 : 4} />
                 ))}
             </g>
           )}
-          {peak && <circle cx={x(peak.day)} cy={y(peak.score)} fill="#990F3D" r={peak === hovered ? 6 : 4} />}
-          <circle cx={x(last.day)} cy={y(last.score)} fill="#33302E" r="4" />
-          {peak && peak !== last && (
+          {peak && qualifier !== null && (
+            // fades at the reader's first move, as a table's marked row
+            <g style={{ opacity: pulse ? 1 : 0, transition: "opacity 1.5s" }} pointerEvents="none">
+              <circle cx={x(peak.day)} cy={y(peak.score)} fill="none" stroke="#990F3D" strokeWidth="1.5">
+                <animate attributeName="r" values="5;14" dur="1.4s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.8;0" dur="1.4s" repeatCount="indefinite" />
+              </circle>
+            </g>
+          )}
+          {peak && <circle cx={x(peak.day)} cy={y(peak.score)} fill="#990F3D" r={peak === hovered ? 6 : 4} pointerEvents="none" />}
+          {last !== peak && <circle cx={x(last.day)} cy={y(last.score)} fill="#33302E" r="4" pointerEvents="none" />}
+          {/* not over today's point (its labels say it), but over an inactive
+              athlete's last contest when it was the peak (a career ended on it) */}
+          {peak && (peak !== last || inactive) && (
             // the label opens the table of that week, at the athlete's row
-            <a href={peakLink ?? undefined} className={peakLink ? "group cursor-pointer" : undefined}>
-              <g transform={`translate(${x(peak.day)}, ${y(peak.score)})`}>
-                <title>{peakLink ? "The table of that week" : ""}</title>
-                <rect
-                  className={peakLink ? "fill-[#F3EEE3] group-hover:fill-[#EBD5D6] group-active:fill-[#E0BFC2] transition-colors" : "fill-[#F3EEE3]"}
-                  height="16"
-                  stroke={peakLink ? "#990F3D" : "#D6CFC2"}
-                  strokeWidth="0.8"
-                  width="68"
-                  x="-34"
-                  y="-24"
-                />
-                <text fill="#33302E" fontFamily={FONT} fontSize="11" fontWeight="600" textAnchor="middle" x="0" y="-12">
-                  Peak {athlete.peak_score}
-                </text>
-              </g>
-            </a>
+            <PeakLabel
+              x={x(peak.day)}
+              y={y(peak.score)}
+              score={athlete.peak_score ?? peak.score}
+              shift={peakShift}
+              href={peakLink}
+              title={peakLink ? "The table of that week" : undefined}
+              font={FONT}
+            />
           )}
           <g fontFamily={FONT} fontSize="12" stroke="#F3EEE3" strokeWidth={inactive ? 4 : 0} paintOrder="stroke" strokeLinejoin="round">
             <text fill="#66605C" x={labelX} y={y(last.rating) + 4}>
@@ -342,92 +382,44 @@ export function RatingChart({
               {monthYear(new Date(now).toISOString())}
             </text>
           </g>
-          {desktop && (
-            <g fill="transparent" className="cursor-pointer">
-              {real
-                .filter((p) => p.competition)
-                .map((p) => (
-                  <circle
-                    key={p.day}
-                    cx={x(p.day)}
-                    cy={y(p.score)}
-                    r="10"
-                    onMouseEnter={() => setHovered(p)}
-                    onMouseLeave={() => setHovered(null)}
-                    onClick={() => onCompetition(p.competition!)}
-                  />
-                ))}
-            </g>
-          )}
         </svg>
-        {hovered?.competition && (
-          <CompetitionTip
-            competition={hovered.competition}
-            score={hovered.score}
-            left={(x(hovered.day) / at.width) * 100}
-            top={(y(hovered.score) / at.height) * 100}
-          />
+        )}
+        {/* the career's peak, when it is before the window: a way to it */}
+        {boxWidth !== null && !peak && athlete.peak_on && athlete.peak_score !== null && range !== "All" && (
+          <button
+            type="button"
+            onClick={() => setRange("All")}
+            className="absolute top-3 inline-flex items-center h-4 pr-1.5 border border-claret bg-[#F3EEE3] hover:bg-[#EBD5D6] active:bg-[#E0BFC2] transition-colors text-[11px] leading-none font-semibold text-ink cursor-pointer"
+            style={{ left: `${(LEFT / at.width) * 100}%`, fontFamily: FONT }}
+            title={`Peak in ${monthYear(athlete.peak_on)}: show the whole career`}
+          >
+            <Icon size={14} name="chevron_left" className="text-claret" />
+            Peak {athlete.peak_score}
+          </button>
+        )}
+        {hovered && (
+          <ChartTip left={(x(hovered.day) / at.width) * 100} top={(y(hovered.score) / at.height) * 100} hold={hold} docked={touched}>
+            <TipBody
+              title={hovered.period}
+              lines={[{ before: hovered.before, after: hovered.score, inactive: hovered.idle && hovered !== peak }]}
+              places={tipPlaces(places, real[real.indexOf(hovered) - 1]?.day ?? null, hovered.day)}
+              action={
+                touched && hovered.events.length > 0
+                  ? {
+                      label: "Show contests",
+                      onClick: () => {
+                        onPeriod(hovered.events);
+                        close();
+                      },
+                    }
+                  : undefined
+              }
+            >
+              <TipEvents events={hovered.events} href={(c) => tournamentPath(c.id, c.weight)} />
+            </TipBody>
+          </ChartTip>
         )}
       </div>
     </section>
   );
-}
-
-// Over a competition's point: the competition, its day, the score before → after.
-function CompetitionTip({
-  competition,
-  score,
-  left,
-  top,
-}: {
-  competition: Competition;
-  score: number;
-  left: number; // % of the chart
-  top: number;
-}) {
-  const change = score - competition.scoreBefore;
-  return (
-    <div
-      className="absolute z-30 -translate-x-1/2 -translate-y-full bg-paper border border-rule px-2.5 py-1.5 text-[12px] leading-tight whitespace-nowrap pointer-events-none shadow-sm"
-      style={{ left: `${left}%`, top: `calc(${top}% - 12px)` }}
-    >
-      <div className="font-semibold text-ink">{competition.name}</div>
-      <div className="text-muted mt-0.5">{formatDate(competition.day)}</div>
-      <div className="mt-1 tabular-nums">
-        <span className="text-ink">
-          {competition.scoreBefore} → {score}
-        </span>{" "}
-        <span className={`font-bold ${change > 0 ? "text-gain" : change < 0 ? "text-drop" : "text-muted"}`}>
-          {signed(change)}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// The bottom grid line and the step: six round lines covering low..high.
-export function scale(low: number, high: number): [number, number] {
-  for (const step of [25, 50, 100, 200, 250, 500]) {
-    const top = Math.ceil(high / step) * step;
-    if (top - 5 * step <= low) return [top - 5 * step, step];
-  }
-  return [Math.floor(low / 1000) * 1000, 1000];
-}
-
-// First days of months every 1, 3, 6, 12 or 24 months, at most `most`, not too close
-// to the end (today's date is written there).
-function monthTicks(start: number, end: number, most: number): number[] {
-  const months = (end - start) / (30.44 * 24 * 3600 * 1000);
-  const every = [1, 3, 6, 12, 24, 48, 96].find((n) => months / n <= most) ?? 192;
-  const ticks: number[] = [];
-  const date = new Date(start);
-  date.setUTCDate(1);
-  date.setUTCMonth(date.getUTCMonth() + 1);
-  while (date.getTime() < end) {
-    const index = date.getUTCFullYear() * 12 + date.getUTCMonth();
-    const tooClose = (end - date.getTime()) / (end - start) < 0.6 / most;
-    if (index % every === (every === 6 ? 4 : 0) && !tooClose) ticks.push(date.getTime());
-    date.setUTCMonth(date.getUTCMonth() + 1);
-  }
-  return ticks;
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { Arrow, Icon } from "@/components/Icon";
 import { isUpset } from "@/components/rankings/Changes";
 import { RowLink } from "@/components/RowLink";
 import type { ContestDetail, HistoryRow } from "@/lib/api";
@@ -294,7 +294,9 @@ function RatingChange({ contest: c }: { contest: ContestDetail }) {
                 <Sum pair={athlete.rating} weight="font-semibold" />
               </td>
               <td className={`${TD} text-right`}>
-                {athlete.rd[0]} <span className="text-muted">→</span> {athlete.rd[1]}
+                {athlete.rd[0]}
+                <Arrow />
+                {athlete.rd[1]}
               </td>
               <td className={`${TD} text-right`}>
                 <Sum pair={athlete.score} weight="font-bold" bold />
@@ -339,7 +341,9 @@ function RatingChange({ contest: c }: { contest: ContestDetail }) {
             <td className={LABEL}>RD</td>
             {rows.map(({ side, athlete }) => (
               <td key={side} className={MOBILE}>
-                {athlete.rd[0]} <span className="text-muted">→</span> {athlete.rd[1]}
+                {athlete.rd[0]}
+                <Arrow />
+                {athlete.rd[1]}
               </td>
             ))}
           </tr>

@@ -12,10 +12,7 @@ import { athleteRow } from "@/lib/anchors";
 
 // A weight's table on a past day: places, names, nations, ratings and ages then.
 // The changes, trend, IJF place and latest tournament are only built for today.
-// the row a link pointed at (#athlete-<id>)
-const MARKED = "bg-claret/10";
-
-export function PastTable({ rows, year, marked = null }: { rows: LeaderboardRow[]; year: number; marked?: number | null }) {
+export function PastTable({ rows, year, mark = () => "", empty = rows.length === 0 }: { rows: LeaderboardRow[]; year: number; mark?: (id: number) => string; empty?: boolean }) {
   const router = useRouter();
   return (
     <table className="w-full table-fixed border-collapse text-left">
@@ -35,7 +32,7 @@ export function PastTable({ rows, year, marked = null }: { rows: LeaderboardRow[
             key={row.athlete_id}
             id={athleteRow(row.athlete_id)}
             onClick={() => router.push(`/athletes/${row.athlete_id}`)}
-            className={`border-b border-rule hover:bg-panel/60 cursor-pointer ${row.athlete_id === marked ? MARKED : ""}`}
+            className={`border-b border-rule hover:bg-panel/60 cursor-pointer ${mark(row.athlete_id)}`}
           >
             <td className={`${ROW_CELL} text-right tabular-nums font-medium`}>{row.place}</td>
             <td className={`${ROW_CELL} font-medium truncate`}>
@@ -60,6 +57,13 @@ export function PastTable({ rows, year, marked = null }: { rows: LeaderboardRow[
             </td>
           </tr>
         ))}
+        {empty && (
+          <tr>
+            <td colSpan={7} className="px-3 py-6 text-[14px] text-muted">
+              No athletes match these filters.
+            </td>
+          </tr>
+        )}
       </tbody>
     </table>
   );

@@ -90,10 +90,19 @@ export function monthYear(value: string): string {
 // "Paris Grand Slam 2026" -> "Paris GS 2026", as in the design's short lists.
 export function shortCompetition(name: string): string {
   return name
+    .replace(/^(OTP (Group|Bank)|PARK24 Group presents|Ecole Mont-Olivet)\s+/i, "") // sponsors
+    .replace(/\s+-\s+[A-Z][a-z]+$/, "") // "… 2026 - Switzerland"
+    .replace(/\s*\(Individuals?( and Teams)?\)/i, "")
+    .replace(/\b(Individuals?|Seniors?|and Teams)\b/gi, "")
+    .replace(/\bJudo\s+/i, "")
     .replace(/Grand Slam/i, "GS")
     .replace(/Grand Prix/i, "GP")
-    .replace(/World (Senior )?Championships?/i, "World Ch.")
-    .replace(/\s+Individuals?$/i, "")
+    .replace(/World Championships?/i, "World Ch.")
+    .replace(/Central American and Caribbean/i, "CAC")
+    .replace(/Pan[ -]?American/i, "Pan Am")
+    .replace(/\bEuropean\b/i, "Eur.")
+    .replace(/\bAfrican\b/i, "Afr.")
+    .replace(/\bChampionships?\b/i, "Ch.")
     .replace(/\s+/g, " ")
     .trim();
 }

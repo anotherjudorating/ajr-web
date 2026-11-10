@@ -1,60 +1,98 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
+import { ChartTip, dotsFit, useChartPointer, INK, monthTicks, nearest, PEAK, PERIOD, PeakLabel, peakShift, periodName, type Range, scale, TipBody } from "@/components/chart";
+import { Icon } from "@/components/Icon";
 import { H2, HEAD } from "@/components/tournament/styles";
 import type { CountryWeek } from "@/lib/api";
+import { nationPeakLink } from "@/lib/anchors";
 import { monthYear } from "@/lib/format";
 
-const RANGES = { "1Y": 1, "4Y": 4, All: null } as const;
-type Range = keyof typeof RANGES;
-const POINTS = 9; // as in the prototype: 8 dots and today's
-const STEPS = [5, 10, 25, 50, 100, 200, 500];
+const RANGES: Record<Range, number | null> = { "1Y": 1, "4Y": 4, All: null };
+const DAY = 24 * 3600 * 1000;
+const YEAR = 365.25 * 24 * 3600 * 1000;
+const FONT = "var(--font-ibm-plex-sans), sans-serif";
 
-// Desktop and phone drawings: the plot's box in the viewBox, the font size and how
-// many dates to write under it.
+// Desktop and phone drawings: the plot's box in the viewBox (six grid lines, as on
+// the athlete's chart), the font size and how many dates to write under it.
 const LAYOUTS = [
-  { className: "hidden sm:block", width: 1000, height: 260, left: 50, right: 940, top: 20, bottom: 226, font: 11, dates: POINTS },
-  { className: "sm:hidden", width: 500, height: 300, left: 52, right: 444, top: 20, bottom: 266, font: 14, dates: 3 },
+  { className: "hidden sm:block", width: 1000, height: 260, left: 50, right: 920, top: 28, bottom: 226, font: 11, dates: 8 },
+  { className: "sm:hidden", width: 500, height: 300, left: 52, right: 420, top: 28, bottom: 266, font: 14, dates: 3 },
 ];
 
-type Point = { day: string; rating: number };
+// A point: the last week of a period (a week, a month or a quarter, by the range),
+// with the period's start: the last week before it (for the change, and its
+// tournaments: those after that week up to this one).
+type Point = { day: number; rating: number; place: number | null; before: { day: number; rating: number; place: number | null } | null; period: string };
 
-// Nine points over the range, evenly in time: the latest week on or before each
-// day, and today's rating last.
-function sample(history: CountryWeek[], today: string, rating: number, years: number | null): Point[] {
-  if (history.length === 0) return [{ day: today, rating }];
-  const end = new Date(today).getTime();
-  const earliest = new Date(history[0].day).getTime();
-  const start = years === null ? earliest : Math.max(earliest, end - years * 365.25 * 86400e3);
-  const points: Point[] = [];
-  for (let i = 0; i < POINTS - 1; i++) {
-    const at = start + ((end - start) * i) / (POINTS - 1);
-    const week = history.findLast((w) => new Date(w.day).getTime() <= at);
-    if (week) points.push({ day: new Date(at).toISOString().slice(0, 10), rating: week.rating });
-  }
-  return [...points, { day: today, rating }];
-}
+// A click on a point marks the tournaments of its period (country/Tournaments.tsx).
+export const PERIOD_EVENT = "ajr:nation-period";
+export type PeriodPick = { title: string; after: number; until: number }; // days, after < day <= until
 
-// Four steps of a round size that hold every point.
-function scale(points: Point[]): number[] {
-  const low = Math.min(...points.map((p) => p.rating));
-  const high = Math.max(...points.map((p) => p.rating));
-  const step = STEPS.find((s) => Math.ceil(high / s) * s - Math.floor(low / s) * s <= 4 * s) ?? 1000;
-  const from = Math.floor(low / step) * step;
-  return [0, 1, 2, 3, 4].map((i) => from + i * step);
-}
-
-// The nation's mixed rating over time, as on the country page of the prototype.
-export function NationChart({ history, today, rating }: { history: CountryWeek[]; today: string; rating: number }) {
+// The nation's leaders rating average, one point a week, month or quarter (about
+// fifty over any range), then today's; its all-time peak week marked (claret) and,
+// when it is before the window, a way to it. On a desktop the nearest point under the
+// pointer: its period, the rating and place at its start and end.
+export function NationChart({ ioc, history, today, rating }: { ioc: string; history: CountryWeek[]; today: string; rating: number }) {
   const [range, setRange] = useState<Range>("4Y");
-  const points = sample(history, today, rating, RANGES[range]);
-  const ticks = scale(points);
-  const first = points[0];
-  const label = `Leaders rating average, ${monthYear(first.day)} to ${monthYear(today)}: ${first.rating} to ${rating}`;
+  const box = useRef<HTMLElement>(null);
+  const now = new Date(today).getTime();
+  const weeks = [
+    ...history.map((w) => ({ day: new Date(w.day).getTime(), rating: w.rating, place: w.place as number | null })),
+  ].filter((w) => w.day < now);
+  weeks.push({ day: now, rating, place: weeks.at(-1)?.place ?? null });
+  const best = weeks.reduce((top, w) => (w.rating > top.rating ? w : top));
+
+  const years = RANGES[range];
+  const from = years === null ? weeks[0].day : Math.max(weeks[0].day, now - years * YEAR);
+  const period = PERIOD[range];
+  const name = (day: number) => periodName(period, day);
+  // the last week of every period, and the all-time peak's week as a point of its own
+  const points: Point[] = [];
+  weeks.forEach((w, i) => {
+    const next = weeks[i + 1];
+    const end = !next || name(next.day) !== name(w.day);
+    if (!end && w !== best) return;
+    const previous = points.at(-1);
+    const prior = previous ?? (i > 0 ? weeks[i - 1] : null);
+    points.push({
+      ...w,
+      period: w === best && !end ? periodName("week", w.day) : w.day === now ? "Today" : name(w.day),
+      before: prior ? { day: prior.day, rating: prior.rating, place: prior.place } : null,
+    });
+  });
+  const peakPoint = points.find((p) => p.day === best.day);
+  const shown = points.filter((p) => p.day >= from);
+  // the line comes in from the left edge, from the last point before the window
+  const outside = points.filter((p) => p.day < from).at(-1);
+  if (outside) shown.unshift({ ...outside, day: from });
+  const start = shown[0].day;
+  const peak = shown.find((p) => p === peakPoint);
+  const last = shown[shown.length - 1];
+  const targets = outside ? shown.slice(1) : shown;
+  // its tournaments marked below (country/Tournaments.tsx)
+  const showTournaments = (p: Point) => {
+    const pick: PeriodPick = { title: p.period, after: p.before?.day ?? p.day - 7 * DAY, until: p.day };
+    window.dispatchEvent(new CustomEvent(PERIOD_EVENT, { detail: pick }));
+  };
+  // the same on both drawings: the day under the pointer from its share of the plot
+  const { hovered, touched, hold, plot, close } = useChartPointer<Point>(
+    box,
+    (e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const day = start + ((e.clientX - rect.left) / rect.width) * (now - start);
+      return nearest(targets, (p) => Math.abs(p.day - day));
+    },
+    showTournaments,
+  );
+
+  const values = shown.map((p) => p.rating);
+  const [low, step] = scale(Math.min(...values), Math.max(...values));
+  const label = `Leaders rating average, ${monthYear(new Date(start).toISOString())} to ${monthYear(today)}: ${shown[0].rating} to ${rating}`;
 
   return (
-    <section className="mt-14 lg:mt-16">
+    <section ref={box} className="mt-14 lg:mt-16">
       <div className={HEAD}>
         <h2 className={H2}>Leaders rating avg</h2>
         <div className="flex items-center gap-4 text-[14px] shrink-0">
@@ -71,45 +109,113 @@ export function NationChart({ history, today, rating }: { history: CountryWeek[]
         </div>
       </div>
       {LAYOUTS.map((l) => {
-        const x = (i: number) => (points.length === 1 ? l.right : l.left + ((l.right - l.left) * i) / (points.length - 1));
-        const y = (value: number) => l.bottom - ((value - ticks[0]) / (ticks[4] - ticks[0])) * (l.bottom - l.top);
-        const labelled = points
-          .map((p, i) => ({ p, i }))
-          .filter(({ i }) => l.dates === POINTS || i % Math.ceil((points.length - 1) / (l.dates - 1)) === 0 || i === points.length - 1);
-        const text = { fill: "currentColor", fontFamily: "var(--font-ibm-plex-sans), sans-serif", fontSize: l.font };
+        const x = (day: number) => l.left + ((day - start) / Math.max(now - start, 1)) * (l.right - l.left);
+        const y = (value: number) => l.bottom - ((value - low) / (5 * step)) * (l.bottom - l.top);
+        const ticks = monthTicks(start, now, l.dates);
+        const text = { fill: "currentColor", fontFamily: FONT, fontSize: l.font };
         return (
-          <div key={l.width} className={`py-2 ${l.className}`}>
-            <svg className="w-full h-auto overflow-visible block" viewBox={`0 0 ${l.width} ${l.height}`} role="img" aria-label={label}>
+          <div key={l.width} className={`relative py-2 overflow-x-clip ${l.className}`}>
+            <svg className="w-full h-auto overflow-visible block" style={{ touchAction: "pan-y" }} viewBox={`0 0 ${l.width} ${l.height}`} role="img" aria-label={label}>
               <g stroke="#D6CFC2" strokeWidth="0.8">
-                {ticks.map((t) => (
-                  <line key={t} x1={l.left} x2={l.right} y1={y(t)} y2={y(t)} />
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <line key={i} x1={l.left} x2={l.right} y1={y(low + i * step)} y2={y(low + i * step)} />
                 ))}
               </g>
               <g className="text-muted" {...text} textAnchor="end">
-                {ticks.map((t) => (
-                  <text key={t} x={l.left - 8} y={y(t) + l.font * 0.35}>
-                    {t}
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <text key={i} x={l.left - 8} y={y(low + i * step) + l.font * 0.35}>
+                    {low + i * step}
                   </text>
                 ))}
               </g>
-              <polyline fill="none" points={points.map((p, i) => `${x(i)},${y(p.rating)}`).join(" ")} stroke="#33302E" strokeWidth="2.5" />
-              <g fill="#33302E">
-                {points.slice(0, -1).map((p, i) => (
-                  <circle key={p.day} cx={x(i)} cy={y(p.rating)} r="4" />
-                ))}
-              </g>
-              <circle cx={x(points.length - 1)} cy={y(rating)} fill="#990F3D" r="4" />
-              <text x={x(points.length - 1) + 12} y={y(rating) + l.font * 0.3} className="text-ink" {...text} fontWeight="700">
+              <polyline fill="none" points={shown.map((p) => `${x(p.day)},${y(p.rating)}`).join(" ")} stroke={INK} strokeWidth="2.5" strokeLinejoin="round" />
+              {/* under the marks and the Peak label (a link): they let the pointer through */}
+              {(
+                <rect
+                  x={l.left}
+                  y={l.top}
+                  width={l.right - l.left}
+                  height={l.bottom - l.top}
+                  fill="transparent"
+                  className="cursor-pointer"
+                  {...plot}
+                />
+              )}
+              {dotsFit(targets.length, l.right - l.left) && (
+                <g fill={INK} pointerEvents="none">
+                  {targets
+                    .filter((p) => p !== peak && p !== last)
+                    .map((p) => (
+                      <circle key={p.day} cx={x(p.day)} cy={y(p.rating)} r="3" />
+                    ))}
+                </g>
+              )}
+              {hovered && (
+                <g pointerEvents="none">
+                  <line x1={x(hovered.day)} x2={x(hovered.day)} y1={l.top} y2={l.bottom} stroke={INK} strokeOpacity="0.35" />
+                  <circle cx={x(hovered.day)} cy={y(hovered.rating)} r="5" fill={hovered === peak ? PEAK : INK} />
+                </g>
+              )}
+              {peak && <circle cx={x(peak.day)} cy={y(peak.rating)} fill={PEAK} r="4" pointerEvents="none" />}
+              {last !== peak && <circle cx={x(last.day)} cy={y(last.rating)} fill={INK} r="4" pointerEvents="none" />}
+              {/* not over today's point: its label says it */}
+              {peak && peak !== last && (
+                <PeakLabel
+                  x={x(peak.day)}
+                  y={y(peak.rating)}
+                  score={peak.rating}
+                  shift={peakShift(x(peak.day), l.left, l.right)}
+                  href={nationPeakLink(ioc, new Date(peak.day).toISOString().slice(0, 10), today)}
+                  title="The nations' table of that week"
+                  font={FONT}
+                />
+              )}
+              <text x={x(last.day) + 12} y={y(last.rating) + l.font * 0.3} className="text-ink" {...text} fontWeight="700">
                 {rating}
               </text>
               <g className="text-muted" {...text} textAnchor="middle">
-                {labelled.map(({ p, i }) => (
-                  <text key={p.day} x={x(i)} y={l.height - 10}>
-                    {monthYear(p.day)}
+                {ticks.map((tick) => (
+                  <text key={tick} x={x(tick)} y={l.height - 10}>
+                    {monthYear(new Date(tick).toISOString())}
                   </text>
                 ))}
+                <text x={l.right} y={l.height - 10}>
+                  {monthYear(today)}
+                </text>
               </g>
             </svg>
+            {!peak && range !== "All" && (
+              <button
+                type="button"
+                onClick={() => setRange("All")}
+                className="absolute top-3 inline-flex items-center h-4 pr-1.5 border border-claret bg-[#F3EEE3] hover:bg-[#EBD5D6] active:bg-[#E0BFC2] transition-colors text-[11px] leading-none font-semibold text-ink cursor-pointer"
+                style={{ left: `${(l.left / l.width) * 100}%` }}
+                title={`Peak in ${monthYear(new Date(best.day).toISOString())}: show the whole history`}
+              >
+                <Icon size={14} name="chevron_left" className="text-claret" />
+                Peak {best.rating}
+              </button>
+            )}
+            {hovered && (
+              <ChartTip left={(x(hovered.day) / l.width) * 100} top={(y(hovered.rating) / l.height) * 100} hold={hold} docked={touched}>
+                <TipBody
+                  action={
+                    touched
+                      ? {
+                          label: "Show tournaments",
+                          onClick: () => {
+                            showTournaments(hovered);
+                            close();
+                          },
+                        }
+                      : undefined
+                  }
+                  title={hovered.period}
+                  lines={[{ before: hovered.before?.rating ?? null, after: hovered.rating }]}
+                  places={[{ label: "Rank", before: hovered.before?.place ?? null, after: hovered.place }]}
+                />
+              </ChartTip>
+            )}
           </div>
         );
       })}

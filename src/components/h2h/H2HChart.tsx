@@ -1,11 +1,14 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { scale } from "@/components/athlete/RatingChart";
+import { careerLine, ChartSkeleton, ChartTip, TipEvents, TipPlaces, tipPlaces, useChartPointer, dotsFit, INK, nearest, PERIOD, pointerX, scale, TipBody } from "@/components/chart";
 import type { HistoryRow } from "@/lib/api";
 import { monthYear, shortName } from "@/lib/format";
 import { COLORS } from "@/lib/h2h";
+import { tournamentPath } from "@/lib/weights";
+import type { Places } from "@/lib/places";
 
 // Both ratings after every competition. From sm up the prototype's 1000×300 canvas
 // scaled to the page; below sm its 360×240 phone canvas, drawn at the chart's real
@@ -72,9 +75,9 @@ export type ChartAthlete = {
   given_name: string | null;
   score: number;
   history: HistoryRow[];
+  places: Places | null; // every Monday's (R2), for the tip
 };
 
-type Point = { day: number; score: number };
 
 export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today: string }) {
   const now = new Date(today).getTime();
@@ -91,18 +94,13 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
   const at = boxWidth !== null && page < SM ? phone(Math.round(boxWidth)) : DESKTOP;
   const BOTTOM = at.top + 5 * at.rowGap;
 
-  // the last contest of every competition (history is latest first), then today's
-  const all = athletes.map((athlete) => {
-    const seen = new Set<number>();
-    const points: Point[] = [];
-    for (const contest of athlete.history) {
-      if (seen.has(contest.competition_id)) continue;
-      seen.add(contest.competition_id);
-      points.unshift({ day: new Date(contest.fought_on).getTime(), score: contest.score_after });
-    }
-    points.push({ day: now, score: athlete.score });
-    return points;
-  });
+  const router = useRouter();
+  // each line as the athlete's chart draws it: honest between competitions, a point
+  // a period, today's last
+  const period = PERIOD[range];
+  const all = athletes.map((athlete) =>
+    careerLine(athlete.history, { day: now, rating: athlete.history[0]?.rating_after ?? 0, score: athlete.score }, period),
+  );
 
   const years = RANGES[range];
   const from = years === null ? Math.min(...all.map((points) => points[0].day)) : now - years * YEAR;
@@ -110,7 +108,7 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
     const shown = points.filter((p) => p.day >= from);
     // the line comes in from the left edge, from the last point before the window
     const outside = points.filter((p) => p.day < from).at(-1);
-    if (outside) shown.unshift({ day: from, score: outside.score });
+    if (outside) shown.unshift({ ...outside, day: from, period: "", events: [] });
     return shown;
   });
   const start = Math.min(from, ...lines.map((shown) => shown[0].day));
@@ -131,6 +129,22 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
     const text = monthYear(new Date(day).toISOString());
     return at.phone ? `${text.slice(0, 4)}${text.slice(-2)}` : text; // "Nov 22"
   };
+  // the nearest period's end under the pointer (both lines have the same), with each
+  // athlete's competitions in it; a click opens the one competition of a period
+  const targets = lines.flatMap((shown) => shown.filter((p) => p.period && p.day >= from));
+  const { hovered, touched, hold, plot } = useChartPointer<number>(
+    box,
+    (e) => {
+      const px = pointerX(e, at.left, at.right);
+      return targets.length ? nearest(targets, (p) => Math.abs(x(p.day) - px)).day : null;
+    },
+    (day) => {
+      const events = [...new Map(lines.flat().filter((p) => p.day === day).flatMap((p) => p.events).map((c) => [c.id, c])).values()];
+      if (events.length === 1) router.push(tournamentPath(events[0].id, events[0].weight));
+    },
+  ); // a point's day
+  const under = hovered === null ? [] : lines.flatMap((shown, i) => shown.filter((p) => p.day === hovered && p.period).map((p) => ({ i, p })));
+  const single = new Set(under.flatMap(({ p }) => p.events.map((c) => c.id))).size === 1;
   // athlete 1 is drawn last, on top
   const order = athletes.map((_, i) => i).reverse();
 
@@ -162,9 +176,14 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
       </div>
       <Legend athletes={athletes} names={names} className="sm:hidden mt-3 flex flex-wrap items-center gap-x-4 gap-y-1" />
 
-      <div ref={box} className="py-2">
+      <div ref={box} className="relative py-2 overflow-x-clip">
+        {/* until the chart knows its width: its place, striped (as RatingChart) */}
+        {boxWidth === null ? (
+          <ChartSkeleton className="h-[240px] sm:h-auto sm:aspect-[1000/300]" />
+        ) : (
         <svg
           className="w-full h-auto block overflow-visible"
+          style={{ touchAction: "pan-y" }}
           viewBox={`0 0 ${at.width} ${at.height}`}
           role="img"
           aria-label={`Rating of ${names.join(" and ")}, ${date(start)} to ${date(now)}`}
@@ -199,10 +218,39 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
                   strokeLinejoin="round"
                   points={shown.map((p) => `${round(x(p.day))},${round(y(p.score))}`).join(" ")}
                 />
+                {/* the competitions, as on the athlete's chart */}
+                {dotsFit(shown.filter((p) => p.events.length).length, at.right - at.left) &&
+                  shown
+                    .filter((p) => p.events.length)
+                    .map((p) => <circle key={p.day} cx={round(x(p.day))} cy={round(y(p.score))} r={at.dot - 1} fill={color} />)}
                 <circle cx={round(x(last.day))} cy={round(y(last.score))} r={at.dot} fill={color} />
               </g>
             );
           })}
+          {under.length > 0 && (
+            <g pointerEvents="none">
+              <line x1={x(hovered!)} x2={x(hovered!)} y1={at.top} y2={BOTTOM} stroke={INK} strokeOpacity="0.35" />
+              {/* filled with a competition in the period, hollow without */}
+              {under.map(({ i, p }) =>
+                p.idle ? (
+                  <circle key={i} cx={x(p.day)} cy={y(p.score)} r={at.dot} fill="#F3EEE3" stroke={COLORS[athletes[i].slot]} strokeWidth="1.5" />
+                ) : (
+                  <circle key={i} cx={x(p.day)} cy={y(p.score)} r={at.dot + 2} fill={COLORS[athletes[i].slot]} />
+                ),
+              )}
+            </g>
+          )}
+          {targets.length > 0 && (
+            <rect
+              x={at.left}
+              y={at.top}
+              width={at.right - at.left}
+              height={BOTTOM - at.top}
+              fill="transparent"
+              className={single ? "cursor-pointer" : undefined}
+              {...plot}
+            />
+          )}
           <g fill="#66605C" fontSize={at.font} fontFamily={FONT} textAnchor="middle">
             {ticks.map((tick) => (
               <text key={tick} x={round(x(tick))} y={at.datesY}>
@@ -245,6 +293,28 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
             </g>
           )}
         </svg>
+        )}
+        {under.length > 0 && (
+          <ChartTip left={(x(hovered!) / at.width) * 100} top={(Math.min(...under.map(({ p }) => y(p.score))) / at.height) * 100} hold={hold} docked={touched}>
+            <TipBody
+              title={under[0].p.period}
+              // in the legend's order: athlete 1 first; each one's competitions under them
+              lines={under.map(({ i, p }) => ({
+                color: COLORS[athletes[i].slot],
+                name: surnames[i],
+                before: p.before,
+                after: p.score,
+                inactive: p.idle,
+                extra: (
+                  <>
+                    <TipEvents events={p.events} href={(c) => tournamentPath(c.id, c.weight)} />
+                    <TipPlaces places={tipPlaces(athletes[i].places, lines[i][lines[i].indexOf(p) - 1]?.day ?? null, p.day)} />
+                  </>
+                ),
+              }))}
+            />
+          </ChartTip>
+        )}
       </div>
     </section>
   );
@@ -262,6 +332,7 @@ function Legend({ athletes, names, className }: { athletes: ChartAthlete[]; name
     </div>
   );
 }
+
 
 const round = (value: number) => Math.round(value * 10) / 10;
 

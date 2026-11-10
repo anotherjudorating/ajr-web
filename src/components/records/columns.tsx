@@ -48,13 +48,15 @@ function period(row: RecordRow): string {
 
 const medal = (row: RecordRow, kind: string) => Number(row.detail?.[kind] ?? 0);
 
-function Name({ ioc, name, muted = false, flag = "" }: { ioc: string | null; name: string; muted?: boolean; flag?: string }) {
+function Name({ ioc, name, muted = false, flag = "", place }: { ioc: string | null; name: string; muted?: boolean; flag?: string; place?: string }) {
   return (
     <div className={`flex items-center gap-1.5 min-w-0 ${muted ? "text-muted" : ""}`}>
       <span className={`flex ${flag}`}>
         <Flag ioc={ioc} />
       </span>
       <span className={`${muted ? "" : "font-medium "}truncate`}>{name}</span>
+      {/* the place in the table, as on a contest's page */}
+      {place && <span className="shrink-0 tabular-nums">#{place}</span>}
     </div>
   );
 }
@@ -213,7 +215,7 @@ function pair(label: string, mutedSecond: boolean): Column {
     cell: (r) => (
       <div className="flex flex-col gap-1">
         <Name ioc={r.country} name={athleteName(r)} />
-        <Name ioc={null} name={opponentName(r)} muted={mutedSecond} />
+        <Name ioc={r.opponent_country} name={opponentName(r)} muted={mutedSecond} />
       </div>
     ),
     csv: (r) => `${athleteName(r)} / ${opponentName(r)}`,
@@ -277,7 +279,7 @@ export function recordColumns(info: RecordInfo, full: boolean, name: string = in
           cell: (r) => (
             <div className="flex flex-col gap-1">
               <Name ioc={r.country} name={athleteName(r)} />
-              <Name ioc={null} name={`${opponentName(r)} · #${detail(r, "opponent_place")}`} muted />
+              <Name ioc={r.opponent_country} name={opponentName(r)} place={String(detail(r, "opponent_place"))} muted />
             </div>
           ),
           csv: (r) => `${athleteName(r)} / ${opponentName(r)}`,
@@ -393,6 +395,16 @@ const IN_A_WEIGHT = new Set(["least_likely_champion", "youngest_grand_slam_medal
 // The section of the athlete's or the tournament's page a record is about
 // (lib/anchors.ts); other records open the page at the top.
 const ATHLETE_SECTION: Record<string, string> = {
+  // the rating's records: the chart, the whole career
+  highest_rating: SECTION.rating,
+  longest_at_1: SECTION.rating,
+  longest_at_1_run: SECTION.rating,
+  most_weeks_in_top_10: SECTION.rating,
+  most_weeks_in_top_10_run: SECTION.rating,
+  longest_p4p_1: SECTION.rating,
+  longest_p4p_1_run: SECTION.rating,
+  biggest_p4p_lead: SECTION.rating,
+  youngest_1: SECTION.rating,
   most_world_tour_medals: SECTION.results,
   most_world_tour_golds: SECTION.results,
   most_medals_in_row: SECTION.results,

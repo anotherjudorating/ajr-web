@@ -102,7 +102,8 @@ export function TournamentsBrowser({
             <th className={`${HEAD_CELL} text-left`}>Tournament</th>
             <th className={`${HEAD_CELL} hidden sm:table-cell text-left`}>Location</th>
             <th className={`${HEAD_CELL} hidden sm:table-cell w-40 text-right`}>Rating accuracy</th>
-            <th className={`${HEAD_CELL} w-16 sm:w-24 text-right`}>Upsets</th>
+            {/* on a phone the name takes the room: upsets on wider screens */}
+            <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-24 text-right`}>Upsets</th>
             <th className="w-6 sm:w-8 h-9 py-0" />
           </tr>
         </thead>
@@ -166,7 +167,7 @@ export function TournamentsBrowser({
                     >
                       {row.accuracy === null ? "–" : `${Math.round(row.accuracy * 100)}%`}
                     </td>
-                    <td className={`${ROW_CELL} text-right text-ink tabular-nums`}>{row.upsets}</td>
+                    <td className={`${ROW_CELL} hidden sm:table-cell text-right text-ink tabular-nums`}>{row.upsets}</td>
                     <td className="h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-muted">
                       <Icon size={18} name="chevron_right" className="align-middle" />
                     </td>
@@ -177,7 +178,7 @@ export function TournamentsBrowser({
           })}
         </tbody>
       </table>
-      {!loading && shown.length === 0 && <p className="py-6 text-[14px] text-muted">No tournaments match.</p>}
+      {!loading && shown.length === 0 && <p className="py-6 text-[14px] text-muted">No tournaments match these filters.</p>}
     </>
   );
 }

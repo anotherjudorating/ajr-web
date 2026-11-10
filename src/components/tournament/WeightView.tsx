@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Fragment, useState } from "react";
 
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { Arrow, Icon } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { isUpset } from "@/components/rankings/Changes";
 import { Pagination } from "@/components/rankings/TableParts";
@@ -94,7 +94,9 @@ export function WeightView({
                   </div>
                   <div className="mt-1.5 flex items-baseline gap-2 text-[13px] leading-[18px] tabular-nums" title="Rating before → after the tournament">
                     <span className="text-muted">
-                      {r.score_before} → {r.score_after}
+                      {r.score_before}
+                      <Arrow />
+                      {r.score_after}
                     </span>
                     <span className={`font-bold ${gainOf(r) >= 0 ? "text-gain" : "text-drop"}`}>{signed(gainOf(r))}</span>
                   </div>

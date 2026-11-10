@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Comparison } from "@/components/h2h/Comparison";
 import { H2HBrowser } from "@/components/h2h/H2HBrowser";
 import { athlete, athleteHistory, lastUpdate } from "@/lib/api";
+import { athletePlaces } from "@/lib/tables";
 import type { Picked } from "@/lib/h2h";
 import { popularMatchups } from "@/lib/matchups";
 import { WEIGHTS } from "@/lib/weights";
@@ -26,7 +27,7 @@ export default function Page({ searchParams }: PageProps<"/head-to-head">) {
         Head-to-head
       </h1>
       <p className="mt-1.5 text-[14px] text-muted">Compare two athletes: ratings, win chance and every meeting.</p>
-      <Suspense fallback={<H2HBrowser weight={null} a={null} b={null} popular={[]} result={null} />}>
+      <Suspense fallback={<H2HBrowser weight={null} a={null} b={null} popular={[]} result={null} loading />}>
         <Content searchParams={searchParams} />
       </Suspense>
     </div>
@@ -41,13 +42,15 @@ async function Content({ searchParams }: { searchParams: PageProps<"/head-to-hea
     return Number.isInteger(value) && value > 0 ? value : null;
   };
   const [idA, idB] = [id("a"), id("b")];
-  const [athleteA, athleteB, historyA, historyB, updated, popular] = await Promise.all([
+  const [athleteA, athleteB, historyA, historyB, updated, popular, placesA, placesB] = await Promise.all([
     idA ? athlete(idA) : null,
     idB ? athlete(idB) : null,
     idA ? athleteHistory(idA) : [],
     idB ? athleteHistory(idB) : [],
     lastUpdate(),
     popularMatchups(),
+    idA ? athletePlaces(idA) : null,
+    idB ? athletePlaces(idB) : null,
   ]);
   const today = (updated ?? "1970-01-01").slice(0, 10);
   const slug = typeof query.w === "string" && WEIGHTS.some((w) => w.slug === query.w) ? query.w : null;
@@ -55,7 +58,11 @@ async function Content({ searchParams }: { searchParams: PageProps<"/head-to-hea
 
   const result =
     athleteA && athleteB ? (
-      <Comparison a={{ athlete: athleteA, history: historyA }} b={{ athlete: athleteB, history: historyB }} today={today} />
+      <Comparison
+        a={{ athlete: athleteA, history: historyA, places: placesA }}
+        b={{ athlete: athleteB, history: historyB, places: placesB }}
+        today={today}
+      />
     ) : null;
 
   return <H2HBrowser weight={weight} a={picked(athleteA)} b={picked(athleteB)} popular={popular} result={result} />;

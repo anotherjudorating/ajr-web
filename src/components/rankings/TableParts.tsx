@@ -32,7 +32,11 @@ export function Toolbar<Sort extends string>({
   sort,
   onSort,
   onCsv,
+  id,
+  dayMark = "",
 }: {
+  id?: string;
+  dayMark?: string; // the date's mark: the table a link opened marked (its day)
   query: string;
   onQuery: (query: string) => void;
   placeholder?: string;
@@ -48,7 +52,7 @@ export function Toolbar<Sort extends string>({
   onCsv: () => void;
 }) {
   return (
-    <div className="mt-6 border-b-2 border-ink pb-2 flex flex-col lg:flex-row lg:items-center gap-2">
+    <div id={id} className="mt-6 border-b-2 border-ink pb-2 flex flex-col lg:flex-row lg:items-center gap-2">
       <div className="relative w-full md:w-72 lg:w-56 shrink-0">
         <Icon
           size={16}
@@ -83,7 +87,7 @@ export function Toolbar<Sort extends string>({
           max={latest}
           title="Ranking as of this date"
           onChange={(e) => e.target.value && onDay(e.target.value)}
-          className={`${CONTROL} md:w-[111px] tabular-nums`} // its width with a date, also while loading
+          className={`${CONTROL} md:w-[111px] tabular-nums ${dayMark}`} // its width with a date, also while loading
         />
       </div>
       <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto">
