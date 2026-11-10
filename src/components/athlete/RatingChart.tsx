@@ -134,25 +134,13 @@ export function RatingChart({
   const BOTTOM = TOP + 5 * at.rowGap;
 
   const period = PERIOD[range];
-  const points: Point[] = careerLine(history, inactive ? null : { day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 }, period);
-  // the athlete's peak (as in the header) is a point of the line too: it is the end
-  // of a day, which can fall inside a competition of several days
-  if (athlete.peak_on) {
-    const peakDay = new Date(athlete.peak_on).getTime();
-    const peakRow = history.find((contest) => contest.fought_on === athlete.peak_on);
-    if (peakRow && !points.some((p) => p.day === peakDay)) {
-      points.push({
-        day: peakDay,
-        rating: peakRow.rating_after,
-        score: peakRow.score_after,
-        period: `Peak, ${formatDate(athlete.peak_on)}`,
-        before: null,
-        events: [],
-        idle: false,
-      });
-      points.sort((a, b) => a.day - b.day);
-    }
-  }
+  // the athlete's peak (as in the header) is a point of the line too: the end of a
+  // day, which can fall inside a competition of several days
+  const peakRow = athlete.peak_on ? history.find((contest) => contest.fought_on === athlete.peak_on) : undefined;
+  const split = peakRow
+    ? { day: new Date(peakRow.fought_on).getTime(), rating: peakRow.rating_after, score: peakRow.score_after, period: `Peak, ${formatDate(peakRow.fought_on)}` }
+    : undefined;
+  const points: Point[] = careerLine(history, inactive ? null : { day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 }, period, split);
   const years = RANGES[range];
   const from = years === null ? points[0].day : now - years * YEAR;
   const shown = points.filter((p) => p.day >= from);
