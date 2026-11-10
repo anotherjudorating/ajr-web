@@ -18,7 +18,7 @@ const FONT = "var(--font-ibm-plex-sans), sans-serif";
 // the athlete's chart), the font size and how many dates to write under it.
 const LAYOUTS = [
   { className: "hidden sm:block", width: 1000, height: 260, left: 50, right: 920, top: 28, bottom: 226, font: 11, dates: 8 },
-  { className: "sm:hidden", width: 500, height: 300, left: 52, right: 420, top: 28, bottom: 266, font: 14, dates: 3 },
+  { className: "sm:hidden", width: 500, height: 300, left: 46, right: 440, top: 28, bottom: 266, font: 14, dates: 3 },
 ];
 
 // A point: the last week of a period (a week, a month or a quarter, by the range),

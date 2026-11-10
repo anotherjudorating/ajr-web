@@ -46,18 +46,18 @@ const DESKTOP: Layout = {
 };
 
 function phone(width: number): Layout {
-  const right = width - 96;
+  const right = width - 86; // "Rating 2276" after it
   return {
     width,
     height: 226,
-    gridLeft: 38,
-    valuesX: 32,
-    left: 48,
+    gridLeft: 34,
+    valuesX: 30,
+    left: 44,
     right,
     top: 14,
     rowGap: 34,
     datesY: 206,
-    maxDates: Math.max(2, Math.floor((right - 48) / 80)),
+    maxDates: Math.max(2, Math.floor((right - 44) / 80)),
     labels: 6,
   };
 }
