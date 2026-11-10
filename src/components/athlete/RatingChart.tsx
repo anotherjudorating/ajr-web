@@ -395,7 +395,7 @@ export function RatingChart({
             <TipBody
               title={hovered.period}
               lines={[{ before: hovered.before, after: hovered.score, inactive: hovered.idle && !onPeak }]}
-              places={tipPlaces(places, real[real.indexOf(hovered) - 1]?.day ?? null, hovered.day)}
+              places={tipPlaces(places, real[real.findIndex((p) => p.day === hovered.day) - 1]?.day ?? null, hovered.day)}
               action={
                 touched && hovered.events.length > 0
                   ? {

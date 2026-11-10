@@ -307,8 +307,8 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
                 inactive: p.idle,
                 extra: (
                   <>
-                    <TipEvents events={p.events} href={(c) => tournamentPath(c.id, c.weight)} />
                     <TipPlaces places={tipPlaces(athletes[i].places, lines[i][lines[i].indexOf(p) - 1]?.day ?? null, p.day)} />
+                    <TipEvents events={p.events} href={(c) => tournamentPath(c.id, c.weight)} />
                   </>
                 ),
               }))}
