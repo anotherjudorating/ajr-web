@@ -4,7 +4,7 @@ import { HashScroll } from "@/components/HashScroll";
 import { SECTION } from "@/lib/anchors";
 
 import { Flag } from "@/components/Flag";
-import { Arrow, Icon } from "@/components/Icon";
+import { Arrow, CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { RowLink } from "@/components/RowLink";
 import { UpsetCard } from "@/components/UpsetCard";
@@ -155,8 +155,8 @@ function Medallists({
                 </td>
                 <td className="h-9 py-0 px-2 sm:px-3 align-middle text-right whitespace-nowrap w-16">{line.value}</td>
                 {i === 0 && (
-                  <td rowSpan={lines.length} className="w-6 py-0 align-middle pl-1 pr-0 text-right text-muted border-b border-rule">
-                    <Icon size={18} name="chevron_right" className="align-middle" />
+                  <td rowSpan={lines.length} className={`${CHEVRON_CELL} border-b border-rule`}>
+                    <RowChevron />
                   </td>
                 )}
               </RowLink>
@@ -236,7 +236,7 @@ function Gains({ results, href }: { results: CompetitionResult[]; href: string }
             <th className={`${HEAD_CELL} text-left`}>Athlete</th>
             <th className={`${HEAD_CELL} text-right w-28`}>Rating</th>
             <th className={`${HEAD_CELL} text-right w-14`}>+/−</th>
-            <th className="w-6 h-9 py-0 pl-1 pr-0" />
+            <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
         <tbody>
@@ -256,8 +256,8 @@ function Gains({ results, href }: { results: CompetitionResult[]; href: string }
               <td className={`${ROW_CELL} text-right font-semibold ${gainOf(r) >= 0 ? "text-gain" : "text-drop"}`}>
                 {signed(gainOf(r))}
               </td>
-              <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-                <Icon size={18} name="chevron_right" className="align-middle" />
+              <td className={`${CHEVRON_CELL}`}>
+                <RowChevron />
               </td>
             </RowLink>
           ))}

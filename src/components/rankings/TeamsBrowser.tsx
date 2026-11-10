@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { TABLE_START, useHash, useRowMark, useRowScroll } from "@/components/anchors";
 
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { RowLink } from "@/components/RowLink";
 import { HEAD_CELL, Pagination, PlaceholderRows, ROW_CELL, saveCsv, Tip, Toolbar } from "@/components/rankings/TableParts";
 import type { TeamRow } from "@/lib/api";
@@ -132,7 +132,7 @@ export function TeamsBrowser({
                   without one counts as that table&apos;s last place
                 </Tip>
               </th>
-              <th className="w-6 sm:w-8 h-9 py-0" />
+              <th className="w-8 sm:w-10 h-9 py-0" />
             </tr>
           </thead>
           <tbody className="text-ink text-[14px] leading-[20px]">
@@ -157,8 +157,8 @@ export function TeamsBrowser({
                 <td className={`${ROW_CELL} hidden sm:table-cell text-right tabular-nums`}>{row.weights_led}</td>
                 <td className={`${ROW_CELL} text-right tabular-nums`}>{row.weights_top8}</td>
                 <td className={`${ROW_CELL} text-right tabular-nums font-bold`}>{row.rating}</td>
-                <td className="pl-1 pr-2 sm:pr-3 h-10 sm:h-11 py-0 align-middle text-right text-muted">
-                  <Icon size={18} name="chevron_right" className="align-middle" />
+                <td className={`${CHEVRON_CELL}`}>
+                  <RowChevron />
                 </td>
               </RowLink>
             ))}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Fragment, useState } from "react";
 
 import { Flag } from "@/components/Flag";
-import { Arrow, Icon } from "@/components/Icon";
+import { Arrow, CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { isUpset } from "@/components/rankings/Changes";
 import { Pagination } from "@/components/rankings/TableParts";
@@ -133,7 +133,7 @@ function Chances({ rows }: { rows: MedalChance[] }) {
             <th className={`${HEAD_CELL} text-left`}>Athlete</th>
             <th className={`${HEAD_CELL} text-right w-16 sm:w-20`}>Gold</th>
             <th className={`${HEAD_CELL} text-right w-16 sm:w-20`}>Medal</th>
-            <th className="w-6 h-9 py-0 pl-1 pr-0" />
+            <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
         <tbody>
@@ -147,8 +147,8 @@ function Chances({ rows }: { rows: MedalChance[] }) {
               </td>
               <td className={`${ROW_CELL} text-right text-muted`}>{percent(r.gold)}</td>
               <td className={`${ROW_CELL} text-right font-semibold`}>{percent(r.medal)}</td>
-              <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-                <Icon size={18} name="chevron_right" className="align-middle" />
+              <td className={`${CHEVRON_CELL}`}>
+                <RowChevron />
               </td>
             </RowLink>
           ))}
@@ -219,7 +219,7 @@ function Results({ rows, places, contests }: { rows: CompetitionResult[]; places
                         <span className={`w-10 shrink-0 text-right font-bold tabular-nums ${(self.change ?? 0) >= 0 ? "text-gain" : "text-drop"}`}>
                           {self.change === null ? "" : signed(self.change)}
                         </span>
-                        <Icon size={18} name="chevron_right" className="text-muted shrink-0 -mr-1" />
+                        <RowChevron className="text-muted shrink-0 mr-[3px] sm:mr-[7px]" />
                       </Link>
                     );
                   })}
@@ -336,7 +336,7 @@ function Contests({ rounds, href }: { rounds: { round: string; contests: Competi
             <th className="p-0 h-0 w-14 sm:w-16" />
             <th className="p-0 h-0 w-8 sm:w-10" />
             <th className="p-0 h-0 w-12 sm:w-16" />
-            <th className="w-6 p-0 h-0" />
+            <th className="w-8 sm:w-10 p-0 h-0" />
           </tr>
         </thead>
         <tbody>
@@ -447,8 +447,8 @@ function ContestRow({ contest: c }: { contest: CompetitionContest }) {
           </div>
         ))}
       </td>
-      <td className="w-6 py-2 align-middle pl-1 pr-0 text-right text-muted">
-        <Icon size={18} name="chevron_right" className="align-middle" />
+      <td className={`${CHEVRON_CELL}`}>
+        <RowChevron />
       </td>
     </RowLink>
   );

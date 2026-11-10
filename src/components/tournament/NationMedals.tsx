@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HashScroll } from "@/components/HashScroll";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { HEAD_CELL, Pagination, ROW_CELL } from "@/components/rankings/TableParts";
@@ -79,7 +79,7 @@ export function NationMedals({ medallists }: { medallists: CompetitionResult[] }
               </th>
             ))}
             <th className={`${HEAD_CELL} text-right w-14 sm:w-16`}>Total</th>
-            <th className="w-6 h-9 py-0 pl-1 pr-0" />
+            <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
         <tbody>
@@ -101,8 +101,8 @@ export function NationMedals({ medallists }: { medallists: CompetitionResult[] }
                 </td>
               ))}
               <td className={`${ROW_CELL} text-right font-semibold`}>{n.total}</td>
-              <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-                <Icon size={18} name="chevron_right" className="align-middle" />
+              <td className={`${CHEVRON_CELL}`}>
+                <RowChevron />
               </td>
             </RowLink>
           ))}

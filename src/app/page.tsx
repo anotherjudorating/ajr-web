@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { Flag } from "@/components/Flag";
 import { HomeAthlete } from "@/components/home/HomeAthlete";
 import { LeaderPanel } from "@/components/home/LeaderPanel";
-import { Icon } from "@/components/Icon";
+import { RowChevron } from "@/components/Icon";
 import { H2, LINK } from "@/components/tournament/styles";
 import { UpsetCard } from "@/components/UpsetCard";
 import { biggestMovers, homeLeaders, recentUpsets, upcoming } from "@/lib/api";
@@ -116,8 +116,8 @@ async function HomeLists() {
                 </div>
                 <div className="flex items-center shrink-0">
                   <span className="text-muted tabular-nums whitespace-nowrap text-right">{dateRange(t.date_from, t.date_to)}</span>
-                  <span className="w-6 sm:w-8 px-0 flex justify-end items-center">
-                    <Icon size={18} name="chevron_right" className="text-muted" />
+                  <span className="w-8 sm:w-10 sm:pr-[3px] flex justify-end items-center text-muted">
+                    <RowChevron />
                   </span>
                 </div>
               </Link>

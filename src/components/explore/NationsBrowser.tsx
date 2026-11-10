@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import { CsvButton, ExploreTitle, SearchBox, Select, ToolbarRow } from "@/components/explore/Controls";
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HEAD_CELL, Pagination, PlaceholderRows, ROW_CELL, saveCsv } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import type { NationRow } from "@/lib/api";
@@ -67,7 +67,7 @@ export function NationsBrowser({ rows, loading = false }: { rows: NationRow[]; l
             <th className={`${HEAD_CELL} w-24 sm:w-32 text-right`} title="Rated athletes; in brackets those in a table today">
               Athletes
             </th>
-            <th className="w-6 h-9 py-0 pl-1 pr-0" />
+            <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
         <tbody className="text-[13px] sm:text-[14px]">
@@ -83,8 +83,8 @@ export function NationsBrowser({ rows, loading = false }: { rows: NationRow[]; l
               <td className={`${ROW_CELL} text-right tabular-nums`}>
                 {row.athletes} <span className="text-muted">({row.active})</span>
               </td>
-              <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-                <Icon size={18} name="chevron_right" className="align-middle" />
+              <td className={`${CHEVRON_CELL}`}>
+                <RowChevron />
               </td>
             </RowLink>
           ))}

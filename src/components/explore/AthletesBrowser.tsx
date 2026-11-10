@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { CsvButton, ExploreTitle, SearchBox, Select, ToolbarRow } from "@/components/explore/Controls";
 import { useFilters } from "@/components/explore/useFilters";
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HEAD_CELL, Pagination, PlaceholderRows, ROW_CELL, saveCsv } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import type { AthleteListRow } from "@/lib/api";
@@ -87,7 +87,7 @@ export function AthletesBrowser({
             <th className={`${HEAD_CELL} w-16 sm:w-20 text-left`}>Weight</th>
             <th className={`${HEAD_CELL} w-12 sm:w-16 text-right`}>Age</th>
             <th className={`${HEAD_CELL} hidden md:table-cell w-64 text-left`}>Last contest</th>
-            <th className="w-6 sm:w-8 h-9 py-0" />
+            <th className="w-8 sm:w-10 h-9 py-0" />
           </tr>
         </thead>
         <tbody className="text-[13px] sm:text-[14px]">
@@ -113,8 +113,8 @@ export function AthletesBrowser({
               <td className={`${ROW_CELL} hidden md:table-cell text-muted truncate`}>
                 {row.last_competition ? shortCompetition(row.last_competition) : "–"}
               </td>
-              <td className="h-10 sm:h-11 py-0 align-middle pl-1 pr-0 sm:px-2 text-right text-muted">
-                <Icon size={18} name="chevron_right" className="align-middle" />
+              <td className={`${CHEVRON_CELL}`}>
+                <RowChevron />
               </td>
             </RowLink>
           ))}

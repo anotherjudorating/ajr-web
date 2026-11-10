@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { RowChevron } from "@/components/Icon";
 import { changeText, ijfDifference, isUpset } from "@/components/rankings/Changes";
 import type { HistoryRow, LeaderboardRow } from "@/lib/api";
 import { cachedAthleteHistory, fetchAthleteHistory } from "@/lib/browser-api";
@@ -108,8 +108,8 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
                   </span>
                   <span className={`w-6 text-center font-bold shrink-0 ${result}`}>{contest.won ? "W" : "L"}</span>
                   <span className={`w-10 text-right font-bold shrink-0 tabular-nums ${result}`}>{signed(delta)}</span>
-                  <Link href={`/contests/${contest.contest_id}`} aria-label="The contest" className="shrink-0 -mr-1">
-                    <Icon size={18} name="chevron_right" className="text-muted" />
+                  <Link href={`/contests/${contest.contest_id}`} aria-label="The contest" className="group shrink-0 mr-[3px] sm:mr-[7px]">
+                    <RowChevron className="text-muted" />
                   </Link>
                 </div>
               );

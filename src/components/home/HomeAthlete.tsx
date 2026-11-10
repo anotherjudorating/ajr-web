@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { RowChevron } from "@/components/Icon";
 import { changeText, placesText } from "@/components/rankings/Changes";
 import type { HomeRow } from "@/lib/api";
 import { shortName } from "@/lib/format";
@@ -42,7 +42,7 @@ export function HomeAthlete({
         <span className={`text-xs w-6 text-right font-medium ${places.color || "text-muted"}`}>{places.text}</span>
         <span className={`font-medium w-12 text-right ${change.color || "text-muted"}`}>{change.text}</span>
         {score && <span className="text-ink w-12 text-right">{row.score}</span>}
-        <Icon size={18} name="chevron_right" className="text-muted align-middle shrink-0 ml-1 group-hover:translate-x-0.5 transition-transform" />
+        <RowChevron className="text-muted shrink-0 ml-1 sm:mr-[3px]" />
       </div>
     </Link>
   );

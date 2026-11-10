@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { CsvButton, ExploreTitle, SearchBox, Select, ToolbarRow } from "@/components/explore/Controls";
 import { useFilters } from "@/components/explore/useFilters";
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { isUpset } from "@/components/rankings/Changes";
 import { HEAD_CELL, Pagination, PlaceholderRows, saveCsv } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
@@ -102,7 +102,7 @@ export function ContestsBrowser({
             <th className={`${HEAD_CELL} w-14 sm:w-20 text-right`}>Chance</th>
             <th className={`${HEAD_CELL} w-10 text-center`}>W/L</th>
             <th className={`${HEAD_CELL} w-12 sm:w-16 text-right`}>+/−</th>
-            <th className="w-6 sm:w-8 h-9 py-0" />
+            <th className="w-8 sm:w-10 h-9 py-0" />
           </tr>
         </thead>
         <tbody className="text-[13px] sm:text-[14px]">
@@ -175,8 +175,8 @@ export function ContestsBrowser({
                     </div>
                   ))}
                 </td>
-                <td className="py-2 align-middle pl-1 pr-0 sm:px-2 text-right text-muted">
-                  <Icon size={18} name="chevron_right" className="align-middle" />
+                <td className={`${CHEVRON_CELL}`}>
+                  <RowChevron />
                 </td>
               </RowLink>
             );

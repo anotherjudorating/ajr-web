@@ -6,7 +6,7 @@ import { useRowMark, useRowScroll } from "@/components/anchors";
 import { nearest } from "@/components/chart";
 import { PERIOD_EVENT, type PeriodPick } from "@/components/country/NationChart";
 
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { CsvButton, SearchBox, Select, ToolbarRow } from "@/components/explore/Controls";
 import { Pagination, saveCsv } from "@/components/rankings/TableParts";
@@ -115,7 +115,7 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
               </th>
             ))}
             <th className={`${HEAD_CELL} text-right w-16 hidden sm:table-cell`}>Total</th>
-            <th className="w-6 h-9 py-0 pl-1 pr-0" />
+            <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
         <tbody>
@@ -137,8 +137,8 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
                 </td>
               ))}
               <td className={`${ROW_CELL} text-right font-semibold hidden sm:table-cell`}>{t.gold + t.silver + t.bronze}</td>
-              <td className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-                <Icon size={18} name="chevron_right" className="align-middle" />
+              <td className={`${CHEVRON_CELL}`}>
+                <RowChevron />
               </td>
             </RowLink>
           ))}

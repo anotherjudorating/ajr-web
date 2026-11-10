@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Flag } from "@/components/Flag";
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HashScroll } from "@/components/HashScroll";
 import { RowLink } from "@/components/RowLink";
 import { anchor, SECTION } from "@/lib/anchors";
@@ -65,9 +65,9 @@ function ContestList({ id, title, contests, onAll }: { id: string; title: string
               >
                 {c.opponent_score}
               </td>
-              <td className={`pl-2 text-right text-muted w-6 ${CELL}`}>
+              <td className={`${CHEVRON_CELL}`}>
                 <Link href={`/contests/${c.contest_id}`} aria-label="The contest">
-                  <Icon size={18} name="chevron_right" className="align-middle" />
+                  <RowChevron />
                 </Link>
               </td>
             </RowLink>
@@ -124,8 +124,8 @@ export function FrequentOpponents({ athleteId, contests }: { athleteId: number; 
               >
                 {wins}–{losses}
               </td>
-              <td className={`pl-2 pr-2 sm:pr-3 text-right text-muted w-6 ${CELL}`}>
-                <Icon size={18} name="chevron_right" className="align-middle" />
+              <td className={`${CHEVRON_CELL}`}>
+                <RowChevron />
               </td>
             </RowLink>
           ))}
@@ -148,7 +148,7 @@ export function NextTournaments() {
             <th className="px-2 sm:px-3 text-left align-middle h-9 py-0">Tournament</th>
             <th className="w-12 sm:w-16 px-2 sm:px-3 text-right align-middle h-9 py-0">Gold</th>
             <th className="w-14 sm:w-16 px-2 sm:px-3 text-right align-middle h-9 py-0">Medal</th>
-            <th className="w-6 sm:w-8 px-0 text-right align-middle h-9 py-0" />
+            <th className="w-8 sm:w-10 px-0 text-right align-middle h-9 py-0" />
           </tr>
         </thead>
       </table>

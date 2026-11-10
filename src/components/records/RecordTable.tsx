@@ -1,6 +1,6 @@
 "use client";
 
-import { Icon } from "@/components/Icon";
+import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { RowLink } from "@/components/RowLink";
 import { type Column, rowLink, TD, TH } from "@/components/records/columns";
 import type { RecordRow } from "@/lib/api";
@@ -31,7 +31,7 @@ export function RecordTable({
               {c.header ?? c.label}
             </th>
           ))}
-          <th className="w-6 h-9 py-0 pl-1 pr-0" />
+          <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
         </tr>
       </thead>
       <tbody>
@@ -47,8 +47,8 @@ export function RecordTable({
                 {c.cell(row)}
               </td>
             )),
-            <td key="chevron" className="w-6 h-10 sm:h-11 py-0 align-middle pl-1 pr-0 text-right text-muted">
-              {link && <Icon size={18} name="chevron_right" className="align-middle" />}
+            <td key="chevron" className={`${CHEVRON_CELL}`}>
+              {link && <RowChevron />}
             </td>,
           ];
           // a real link in the row (RowLink): crawlers follow it, Cmd/middle click opens a tab
