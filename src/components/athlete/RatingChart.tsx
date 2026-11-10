@@ -294,10 +294,18 @@ export function RatingChart({
           <circle cx={x(last.day)} cy={y(last.score)} fill="#33302E" r="4" />
           {peak && peak !== last && (
             // the label opens the table of that week, at the athlete's row
-            <a href={peakLink ?? undefined} className={peakLink ? "cursor-pointer" : undefined}>
+            <a href={peakLink ?? undefined} className={peakLink ? "group cursor-pointer" : undefined}>
               <g transform={`translate(${x(peak.day)}, ${y(peak.score)})`}>
                 <title>{peakLink ? "The table of that week" : ""}</title>
-                <rect fill="#F3EEE3" height="16" stroke={peakLink ? "#990F3D" : "#D6CFC2"} strokeWidth="0.8" width="68" x="-34" y="-24" />
+                <rect
+                  className={peakLink ? "fill-[#F3EEE3] group-hover:fill-[#EBD5D6] group-active:fill-[#E0BFC2] transition-colors" : "fill-[#F3EEE3]"}
+                  height="16"
+                  stroke={peakLink ? "#990F3D" : "#D6CFC2"}
+                  strokeWidth="0.8"
+                  width="68"
+                  x="-34"
+                  y="-24"
+                />
                 <text fill="#33302E" fontFamily={FONT} fontSize="11" fontWeight="600" textAnchor="middle" x="0" y="-12">
                   Peak {athlete.peak_score}
                 </text>
