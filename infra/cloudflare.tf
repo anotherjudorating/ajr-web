@@ -137,6 +137,24 @@ resource "cloudflare_ruleset" "cache" {
         cache_key   = { custom_key = { query_string = { exclude = { all = true } } } }
       }
     },
+    # An athlete's places every week (ajr-backend ajr/tables): they change every week,
+    # an hour at the edge and in browsers.
+    {
+      description = "data.: an athlete's places, an hour at the edge"
+      expression  = "(http.host eq \"data.${var.domain}\" and starts_with(http.request.uri.path, \"/places/\"))"
+      action      = "set_cache_settings"
+      enabled     = true
+      action_parameters = {
+        cache = true
+        edge_ttl = {
+          mode            = "override_origin"
+          default         = 3600
+          status_code_ttl = [{ status_code = 404, value = 60 }]
+        }
+        browser_ttl = { mode = "override_origin", default = 3600 }
+        cache_key   = { custom_key = { query_string = { exclude = { all = true } } } }
+      }
+    },
     # The manifest is never cached at the edge: it is tiny, the site keeps it a few
     # minutes itself, and a 404 cached before it existed was served for hours (11-08).
     {
@@ -184,6 +202,7 @@ resource "cloudflare_ruleset" "waf_custom" {
           http.request.uri.path wildcard "/v/*/rankings/*/*/*.json" or
           http.request.uri.path wildcard "/v/*/p4p/*/*/*.json" or
           http.request.uri.path wildcard "/v/*/teams/*/*/*.json" or
+          http.request.uri.path wildcard "/places/*/*.json" or
           http.request.uri.path wildcard "/archive/*/*"
         )))
     EOT
