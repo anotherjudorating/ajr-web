@@ -111,10 +111,10 @@ resource "cloudflare_ruleset" "cache" {
     # after it (stale-while-revalidate), so a purge would cache the stale copy; 10
     # minutes bound the delay instead. Only the plain page: not Next's navigation and
     # prefetch data (the same address with an RSC header and a ?_rsc= query), not a
-    # filtered or paired URL (a query), not the API. A page the origin marks private or
-    # no-store (the streamed ones: an athlete, a nation) stays uncached: the free plan
-    # cannot override it ("not entitled to disable origin cache control"); the pages
-    # built ahead (home, tables, records) are the ones asked for again and again.
+    # filtered or paired URL (a query), not the API. The edge TTL override caches the
+    # streamed pages too (an athlete, a nation: private, no-store from the origin; seen
+    # HIT on 2026-11-11); the browsers still follow the origin. origin_cache_control is
+    # left alone: the free plan cannot set it ("not entitled").
     # Header names: lower case over HTTP/2 and 3, as sent over HTTP/1.1.
     {
       description = "www: a page's HTML, 10 minutes at the edge"
