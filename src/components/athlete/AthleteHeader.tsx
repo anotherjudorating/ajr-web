@@ -33,7 +33,7 @@ export function AthleteHeader({
   // by the uncertainty grown since)
   const rating = inactive ? inactive.rating : (athlete.rating ?? 0);
   const score = inactive ? inactive.score : (athlete.score ?? 0);
-  const uncertainty = rating - score; // 3 × RD, rounded as the score is
+  const uncertainty = rating - score; // RD_FACTOR × RD (lib/h2h.ts), rounded as the score is
 
   return (
     <>

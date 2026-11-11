@@ -95,7 +95,7 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
             })}
           </tbody>
         </table>
-        <p className="mt-2 text-[12px] text-muted">Chance from skill ratings. Rating = skill − 3 × RD.</p>
+        <p className="mt-2 text-[12px] text-muted">Chance from the ratings. Rating = skill − RD.</p>
       </section>
 
       <H2HChart athletes={chart} today={today} />

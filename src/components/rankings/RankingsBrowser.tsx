@@ -318,7 +318,7 @@ export function RankingsBrowser({
                             <span>{row.rating}</span>
                           </div>
                           <div className="flex justify-between gap-4 py-0.5 text-rule">
-                            <span>− 3 × RD ({row.rd})</span>
+                            <span>− RD ({row.rd})</span>
                             <span>{signed(row.score - row.rating)}</span>
                           </div>
                           <div className="flex justify-between gap-4 pt-1 mt-1 border-t border-muted font-bold text-white tabular-nums">

@@ -11,12 +11,18 @@ export type Picked = {
 
 // Glicko's expected score of the first athlete, with the uncertainty of both: two
 // shaky ratings make a closer call than their difference says.
+// From each side's rating (skill − RD_FACTOR × RD), as the backend's
+// (ajr/rating/glicko2.py win_probability): it predicts better than the skill alone.
 export function winChance(rating1: number, rd1: number, rating2: number, rd2: number): number {
   const q = 173.7178;
   const phi = Math.sqrt(rd1 * rd1 + rd2 * rd2) / q;
   const g = 1 / Math.sqrt(1 + (3 * phi * phi) / (Math.PI * Math.PI));
-  return 1 / (1 + Math.exp((-g * (rating1 - rating2)) / q));
+  const gap = rating1 - RD_FACTOR * rd1 - (rating2 - RD_FACTOR * rd2);
+  return 1 / (1 + Math.exp((-g * gap) / q));
 }
+
+// The site's rating is skill − RD_FACTOR × RD (ajr-backend RatingParams.rd_factor).
+export const RD_FACTOR = 1;
 
 // "/head-to-head?w=men-73&a=13028&b=18842". Without `w` the page takes the weight of
 // the athletes.

@@ -43,7 +43,8 @@ const CONTROL =
 const CELL = "px-2 sm:px-3 h-10 sm:h-11 py-0 align-middle";
 const TH = "px-2 sm:px-3 align-middle h-9 py-0";
 
-const gain = (contest: HistoryRow) => contest.rating_after - contest.rating_before;
+// the rating's change (skill − RD), as the chart and the header show it
+const gain = (contest: HistoryRow) => contest.score_after - contest.score_before;
 
 // Every contest of the athlete, grouped by competition while sorted by date; a
 // point picked on the chart marks its competitions' contests (the filters cleared,
