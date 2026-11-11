@@ -357,7 +357,7 @@ function RatingChange({ contest: c }: { contest: ContestDetail }) {
           </tr>
         </tbody>
       </table>
-      <p className="mt-2 text-[12px] text-muted">Rating = skill − 3 × RD. Lower RD, higher rating.</p>
+      <p className="mt-2 text-[12px] text-muted">Rating = skill − RD. Lower RD, higher rating.</p>
     </section>
   );
 }
@@ -380,7 +380,7 @@ function Sum({ pair: [before, after], weight, bold = false }: { pair: (number | 
 // An earlier contest of the athlete at the tournament.
 function RoadRow({ row }: { row: HistoryRow }) {
   const chance = formatChance(row.win_probability);
-  const gain = row.rating_after - row.rating_before;
+  const gain = row.score_after - row.score_before;
   return (
     <RowLink href={`/contests/${row.contest_id}`} className={ROW}>
       <td className={`w-10 ${CELL} font-semibold text-muted`}>{roundCode(row.round)}</td>

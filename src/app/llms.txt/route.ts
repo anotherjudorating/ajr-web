@@ -21,7 +21,7 @@ export async function GET(): Promise<Response> {
 > An independent rating of every IJF World Tour judoka (Glicko-2, from every IJF contest in judobase since 2009), updated every 15 minutes. It answers "who is the strongest judoka right now?" per weight, pound for pound and by nation, with each athlete's history, every contest's win chances and tournament medal chances.
 
 How to read it:
-- Score = rating − 3 × RD (the rating's uncertainty): an athlete with few contests needs to prove more. Tables order by score.
+- Score = rating − RD (the rating's uncertainty): an athlete with few contests needs to prove more. Tables order by score, and the chance of a win is computed from it.
 - An athlete without a contest for 365 days leaves the tables (comes back with the next contest).
 - Independent of the IJF World Ranking List (points for results); both are shown.
 - Data: IJF judobase. Ratings updated ${day || "every 15 minutes during tournaments"}.

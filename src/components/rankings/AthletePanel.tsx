@@ -73,7 +73,7 @@ export function AthletePanel({ row, asOf }: { row: LeaderboardRow; asOf: string 
           <div className="flex flex-col text-[13px] w-full sm:max-w-[560px]">
             {group.contests.map((contest) => {
               const chance = formatChance(contest.win_probability);
-              const delta = contest.rating_after - contest.rating_before;
+              const delta = contest.score_after - contest.score_before; // the rating's, as the chart's
               const result = contest.won ? "text-gain" : "text-drop";
               // Only upsets stand out.
               const upset = isUpset(contest.won, contest.win_probability);
