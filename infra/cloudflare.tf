@@ -105,6 +105,41 @@ resource "cloudflare_ruleset" "cache" {
   phase       = "http_request_cache_settings"
 
   rules = [
+    # The pages' HTML, 10 minutes at the edge: every request for a page was a render on
+    # Render (2026-11-10: 29 thousand HTML requests a day, 1% from the cache; the home
+    # page alone 650). Not purged on an update: the site refreshes a page on the visit
+    # after it (stale-while-revalidate), so a purge would cache the stale copy; 10
+    # minutes bound the delay instead. Only the plain page: not Next's navigation and
+    # prefetch data (the same address with an RSC header and a ?_rsc= query), not a
+    # filtered or paired URL (a query), not the API. The edge TTL override caches the
+    # streamed pages too (an athlete, a nation: private, no-store from the origin; seen
+    # HIT on 2026-11-11); the browsers still follow the origin. origin_cache_control is
+    # left alone: the free plan cannot set it ("not entitled").
+    # Header names: lower case over HTTP/2 and 3, as sent over HTTP/1.1.
+    {
+      description = "www: a page's HTML, 10 minutes at the edge"
+      expression  = <<-EOT
+        (http.host eq "www.${var.domain}" and http.request.method eq "GET"
+          and http.request.uri.query eq ""
+          and not starts_with(http.request.uri.path, "/api/")
+          and not starts_with(http.request.uri.path, "/_next/")
+          and not any(http.request.headers.names[*] == "rsc")
+          and not any(http.request.headers.names[*] == "RSC")
+          and not any(http.request.headers.names[*] == "next-router-prefetch")
+          and not any(http.request.headers.names[*] == "Next-Router-Prefetch"))
+      EOT
+      action      = "set_cache_settings"
+      enabled     = true
+      action_parameters = {
+        cache = true
+        edge_ttl = {
+          mode            = "override_origin"
+          default         = 600
+          status_code_ttl = [{ status_code = 404, value = 60 }]
+        }
+        browser_ttl = { mode = "respect_origin" }
+      }
+    },
     {
       description = "Cache the search index, the sitemap and llms.txt for an hour"
       expression  = "(http.request.uri.path in {\"/api/search-index\" \"/sitemap.xml\" \"/llms.txt\"})"
