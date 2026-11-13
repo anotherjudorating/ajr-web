@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useHashTarget } from "@/components/anchors";
 import { careerLine, ChartSkeleton, ChartTip, TipEvents, tipPlaces, useChartPointer, type Competition, type LinePoint, type Range, dotsFit, LABEL_ROOM, monthTicks, nearest, PeakLabel, PERIOD, peakShift as shiftOf, pointerX, scale, TipBody } from "@/components/chart";
 import { Icon } from "@/components/Icon";
+import { RankChart } from "@/components/athlete/RankChart";
 
 import type { Athlete, HistoryRow } from "@/lib/api";
 import type { LastRating } from "@/lib/inactive";
@@ -12,6 +13,7 @@ import { peakTableLink, SECTION } from "@/lib/anchors";
 import { formatDate, monthYear } from "@/lib/format";
 import { tournamentPath } from "@/lib/weights";
 import { type Places } from "@/lib/places";
+import type { Highlight } from "@/lib/standing";
 
 // Where things go on the canvas. From md up, the prototype's chart: a 1000×280 canvas
 // scaled to the page (the plot from x 75 to 860, grid from 50, y 25 to 225). Scaled
@@ -85,6 +87,9 @@ export function RatingChart({
   athlete,
   history,
   places,
+  weight = null,
+  run = null,
+  onRun,
   today,
   inactive,
   onPeriod,
@@ -92,6 +97,9 @@ export function RatingChart({
   athlete: Athlete;
   history: HistoryRow[];
   places: Places | null;
+  weight?: string | null; // the picked weight: its places for the Rank view
+  run?: Highlight | null; // a run picked in the header: the Rank view, the whole career, it marked
+  onRun?: (run: Highlight | null) => void; // its mark taken off
   today: string;
   inactive: LastRating | null; // over a year without a contest: the line ends at the last one
   onPeriod: (competitions: Competition[]) => void; // a point's: its contests marked in the table
@@ -101,6 +109,22 @@ export function RatingChart({
   // an athlete idle for years: the whole history rather than an empty window
   const lastContest = history.length ? new Date(history[0].fought_on).getTime() : now;
   const [range, setRange] = useState<Range>(now - lastContest > 3.5 * YEAR ? "All" : "4Y");
+  // the rating, or the place every week in the picked weight and pound for pound
+  const [view, setView] = useState<"rating" | "rank">("rating");
+  const ranked = places !== null && weight !== null && places.weeks.some((week) => week?.[1] === weight);
+  const rank = view === "rank" && ranked;
+  // a run picked: the Rank view over the whole career, the chart scrolled to
+  const [runSeen, setRunSeen] = useState<Highlight | null>(null);
+  if (run !== runSeen) {
+    setRunSeen(run);
+    if (run) {
+      setView("rank");
+      setRange("All");
+    }
+  }
+  useEffect(() => {
+    if (run) document.getElementById(SECTION.rating)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [run]);
   // #rating (a rating record's link): the whole career, the peak pulsing until the
   // reader's first move, the chart scrolled into place
   const { qualifier, ref: anchorRef, scrollNow } = useHashTarget(SECTION.rating);
@@ -177,6 +201,10 @@ export function RatingChart({
   );
   // the hovered point is the peak (by its day: the points are made anew every render)
   const onPeak = peak !== undefined && hovered?.day === peak.day;
+  // the tip's bottom: over the point, and over the Peak label when the point is the peak
+  // or near it (the tip would cover the label, and the label is a link)
+  const nearPeak = labelled && peak !== undefined && hovered !== null && Math.abs(x(hovered.day) - x(peak.day)) < (desktop ? 140 : 90);
+  const tipY = hovered ? (nearPeak ? Math.min(y(hovered.score), y(peak!.score)) - LABEL_ROOM : y(hovered.score)) : 0;
   // a dot on a period with a competition
   const dotted = real.filter((p) => p.events.length > 0);
   const ticks = monthTicks(start, now, at.maxDates);
@@ -200,39 +228,29 @@ export function RatingChart({
   return (
     <section id={SECTION.rating} ref={anchorRef} className="mb-0 mt-14 lg:mt-16">
       <div className="flex justify-between items-end mb-3 border-b-2 border-ink pb-2">
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 min-w-0">
-          <h2 className="font-serif font-bold text-[20px] sm:text-[24px] text-ink">Rating</h2>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-            <span className="inline-flex items-center gap-1.5">
-              <svg width="16" height="4" aria-hidden>
-                <line x1="0" y1="2" x2="16" y2="2" stroke="#66605C" strokeWidth="1.2" strokeDasharray="4,3" />
-              </svg>
-              Skill
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <svg width="16" height="4" aria-hidden>
-                <line x1="0" y1="2" x2="16" y2="2" stroke="#33302E" strokeWidth="2.5" />
-              </svg>
-              Rating
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-3 h-2.5 bg-ink/[0.08] border border-rule inline-block" />
-              Uncertainty
-            </span>
-            <span className="inline-flex items-center gap-1.5" title="No contest for over a year: out of the tables">
-              <svg width="12" height="10" aria-hidden className="border border-rule">
-                <rect width="12" height="10" fill="url(#inactive-legend)" />
-                <defs>
-                  <pattern id="inactive-legend" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                    <line x1="0" y1="0" x2="0" y2="4" stroke="#D6CFC2" strokeWidth="1.5" />
-                  </pattern>
-                </defs>
-              </svg>
-              Inactive
-            </span>
-          </div>
+        <div className="min-w-0">
+          <h2 className="font-serif font-bold text-[20px] sm:text-[24px] text-ink">{rank ? "Rank" : "Rating"}</h2>
         </div>
         <div className="flex items-center gap-4 text-sm shrink-0">
+          {ranked && (
+            <div className="flex items-center gap-3 pr-4 border-r border-rule" role="group" aria-label="Rating or rank">
+              {(
+                [
+                  ["rating", "Rating"],
+                  ["rank", "Rank"],
+                ] as const
+              ).map(([v, label]) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setView(v)}
+                  className={view === v ? "font-bold text-claret border-b-2 border-claret pb-0.5" : "text-muted hover:text-ink cursor-pointer"}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           {(Object.keys(RANGES) as Range[]).map((r) => (
             <button
               key={r}
@@ -255,6 +273,19 @@ export function RatingChart({
             striped as a loading table, rather than a squeezed drawing */}
         {boxWidth === null ? (
           <ChartSkeleton className="h-[226px] md:h-auto md:aspect-[1000/280]" />
+        ) : rank ? (
+          // the column on the right for the latest places, an inactive athlete's too
+          <RankChart
+            places={places!}
+            weight={weight!}
+            start={start}
+            now={now}
+            at={base}
+            run={run}
+            onClear={() => onRun?.(null)}
+            // out of the tables a year after the last contest: the rank's idle spells start then
+            idle={zones.map((zone) => ({ from: zone.from + AWAY, to: zone.to }))}
+          />
         ) : (
         <svg
           viewBox={`0 0 ${at.width} ${at.height}`}
@@ -381,7 +412,7 @@ export function RatingChart({
         </svg>
         )}
         {/* the career's peak, when it is before the window: a way to it */}
-        {boxWidth !== null && !peak && athlete.peak_on && athlete.peak_score !== null && range !== "All" && (
+        {!rank && boxWidth !== null && !peak && athlete.peak_on && athlete.peak_score !== null && range !== "All" && (
           <button
             type="button"
             onClick={() => setRange("All")}
@@ -393,8 +424,8 @@ export function RatingChart({
             Peak {athlete.peak_score}
           </button>
         )}
-        {hovered && (
-          <ChartTip left={(x(hovered.day) / at.width) * 100} top={((y(hovered.score) - (onPeak && labelled ? LABEL_ROOM : 0)) / at.height) * 100} hold={hold} docked={touched}>
+        {!rank && hovered && (
+          <ChartTip left={(x(hovered.day) / at.width) * 100} top={(tipY / at.height) * 100} hold={hold} docked={touched}>
             <TipBody
               title={hovered.period}
               lines={[{ before: hovered.before, after: hovered.score, inactive: hovered.idle && !onPeak }]}
@@ -414,6 +445,70 @@ export function RatingChart({
               <TipEvents events={hovered.events} href={(c) => tournamentPath(c.id, c.weight)} />
             </TipBody>
           </ChartTip>
+        )}
+      </div>
+      {/* the legend under the chart: the title and the switches alone over it */}
+      <div className="mt-1">
+        {rank ? (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+            <span className="inline-flex items-center gap-1.5">
+              <svg width="16" height="4" aria-hidden>
+                <line x1="0" y1="2" x2="16" y2="2" stroke="#33302E" strokeWidth="2.5" />
+              </svg>
+              {weight!.replace("-", "−")} kg
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <svg width="16" height="4" aria-hidden>
+                <line x1="0" y1="2" x2="16" y2="2" stroke="#66605C" strokeWidth="1.2" strokeDasharray="4,3" />
+              </svg>
+              P4P
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-3 h-2.5 bg-ink/[0.05] border border-rule inline-block" />
+              Top 8
+            </span>
+            <span className="inline-flex items-center gap-1.5" title="No contest for over a year: out of the tables">
+              <svg width="12" height="10" aria-hidden className="border border-rule">
+                <rect width="12" height="10" fill="url(#inactive-legend)" />
+                <defs>
+                  <pattern id="inactive-legend" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <line x1="0" y1="0" x2="0" y2="4" stroke="#D6CFC2" strokeWidth="1.5" />
+                  </pattern>
+                </defs>
+              </svg>
+              Inactive
+            </span>
+          </div>
+        ) : (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+          <span className="inline-flex items-center gap-1.5">
+            <svg width="16" height="4" aria-hidden>
+              <line x1="0" y1="2" x2="16" y2="2" stroke="#66605C" strokeWidth="1.2" strokeDasharray="4,3" />
+            </svg>
+            Skill
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <svg width="16" height="4" aria-hidden>
+              <line x1="0" y1="2" x2="16" y2="2" stroke="#33302E" strokeWidth="2.5" />
+            </svg>
+            Rating
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-3 h-2.5 bg-ink/[0.08] border border-rule inline-block" />
+            Uncertainty
+          </span>
+          <span className="inline-flex items-center gap-1.5" title="No contest for over a year: out of the tables">
+            <svg width="12" height="10" aria-hidden className="border border-rule">
+              <rect width="12" height="10" fill="url(#inactive-legend)" />
+              <defs>
+                <pattern id="inactive-legend" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                  <line x1="0" y1="0" x2="0" y2="4" stroke="#D6CFC2" strokeWidth="1.5" />
+                </pattern>
+              </defs>
+            </svg>
+            Inactive
+          </span>
+        </div>
         )}
       </div>
     </section>

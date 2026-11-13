@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { scrollWhileGrowing } from "@/components/anchors";
 import { AthleteHeader } from "@/components/athlete/AthleteHeader";
+import { type Highlight, standingOf } from "@/lib/standing";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Contests, type ContestsPreset } from "@/components/athlete/Contests";
 import { FrequentOpponents, NextTournaments, Standouts } from "@/components/athlete/Lists";
@@ -38,7 +39,10 @@ export function AthleteView({
   const [marked, setMarked] = useState<{ ids: number[]; n: number } | null>(null);
   const contests = history.filter((contest) => contest.weight === weight);
 
+  // a longest run picked in the header: shown on the Rank chart
+  const [run, setRun] = useState<Highlight | null>(null);
   const pickWeight = (w: string) => {
+    setRun(null);
     setWeight(w);
     setMarked(null);
     setPreset(null);
@@ -79,8 +83,8 @@ export function AthleteView({
       />
 
       {/* the place, the changes and the peak of the picked weight */}
-      <AthleteHeader athlete={{ ...athlete, ...weightView(athlete, weight, history, places) }} weight={weight} onWeight={pickWeight} today={today} inactive={inactive} />
-      <RatingChart athlete={athlete} history={history} places={places} today={today} inactive={inactive} onPeriod={pickPeriod} />
+      <AthleteHeader athlete={{ ...athlete, ...weightView(athlete, weight, history, places) }} weight={weight} onWeight={pickWeight} today={today} inactive={inactive} standing={standingOf(places, weight, history)} run={run} onRun={setRun} />
+      <RatingChart athlete={athlete} history={history} places={places} weight={weight} run={run} onRun={setRun} today={today} inactive={inactive} onPeriod={pickPeriod} />
       <Medals history={history} />
       <Contests
         key={`${weight}-${preset?.n ?? 0}`}
