@@ -394,6 +394,16 @@ const CONTESTS = new Set(["biggest_upsets", "longest_contest"]);
 const IN_A_WEIGHT = new Set(["least_likely_champion", "youngest_grand_slam_medal", "youngest_grand_slam_gold"]);
 // The section of the athlete's or the tournament's page a record is about
 // (lib/anchors.ts); other records open the page at the top.
+// The records of weeks at the top and what of them the athlete's Rank chart marks
+// (#rating-<kind>[-run]~<weight>: components/athlete/AthleteView.tsx).
+const WEEKS: Record<string, string> = {
+  longest_at_1: "at-1",
+  longest_at_1_run: "at-1-run",
+  longest_p4p_1: "p4p-1",
+  longest_p4p_1_run: "p4p-1-run",
+  most_weeks_in_top_8: "top-8",
+  most_weeks_in_top_8_run: "top-8-run",
+};
 const ATHLETE_SECTION: Record<string, string> = {
   // the rating's records: the chart, the whole career
   highest_rating: SECTION.rating,
@@ -429,6 +439,8 @@ export function rowLink(row: RecordRow): string | null {
     const weight = WEIGHTS.find((w) => w.api === row.weight && w.gender === (row.gender === "female" ? "women" : "men"));
     return weight ? `/tournaments/${row.competition_id}/${weight.slug}` : `/tournaments/${row.competition_id}`;
   }
+  // the records of weeks: the Rank chart in their weight, their weeks marked
+  if (row.athlete_id && WEEKS[row.record]) return anchor(`/athletes/${row.athlete_id}`, SECTION.rating, `${WEEKS[row.record]}${row.weight ? `~${row.weight}` : ""}`);
   if (row.athlete_id) return anchor(`/athletes/${row.athlete_id}`, ATHLETE_SECTION[row.record]);
   if (row.competition_id) return anchor(`/tournaments/${row.competition_id}`, TOURNAMENT_SECTION[row.record]);
   if (row.country) return `/countries/${row.country.toLowerCase()}`;

@@ -5,11 +5,14 @@ import type { Places } from "@/lib/places";
 // weight and pound for pound: the best place in the weight — of the weeks at it, the
 // one with the highest rating — and the weeks at #1, each with its longest run. Null
 // without the weekly places.
-// `from`, `to`: the first and the last Monday of the longest run.
-export type Run = { weeks: number; longest: number; from: string | null; to: string | null };
-// A run picked in the header, shown on the Rank chart: its weeks and what they were.
-export type Highlight = { from: string; to: string; label: string };
-export type Standing = { best: number; bestOn: string; atOne: Run; p4pAtOne: Run };
+// `from`, `to`: the first and the last Monday of the longest run; `spans`: every run's.
+export type Span = { from: string; to: string };
+export type Run = { weeks: number; longest: number; from: string | null; to: string | null; spans: Span[] };
+// Weeks shown on the Rank chart (a run picked in the header, a record's weeks): their
+// spans and what they were.
+export type Highlight = { spans: Span[]; label: string };
+// the top 8's: for the records of weeks in the top 8 (not in the header)
+export type Standing = { best: number; bestOn: string; atOne: Run; p4pAtOne: Run; top8: Run; p4pTop8: Run };
 
 const DAY = 86_400_000;
 // As the records (ajr/records/queries.py RATINGS_SINCE): the ratings from 2011 on, when
@@ -28,17 +31,20 @@ function scoreOn(history: HistoryRow[], monday: number): number {
 }
 
 function runs(flags: boolean[], mondayOf: (index: number) => number): Run {
+  const day = (index: number) => new Date(mondayOf(index)).toISOString().slice(0, 10);
   let weeks = 0;
   let current = 0;
   let longest = 0;
   let end = -1;
+  const spans: Span[] = [];
   flags.forEach((on, index) => {
     current = on ? current + 1 : 0;
     if (on) weeks++;
     if (current > longest) [longest, end] = [current, index];
+    if (current === 1) spans.push({ from: day(index), to: day(index) });
+    else if (current > 1) spans[spans.length - 1].to = day(index);
   });
-  const day = (index: number) => new Date(mondayOf(index)).toISOString().slice(0, 10);
-  return { weeks, longest, from: longest ? day(end - longest + 1) : null, to: longest ? day(end) : null };
+  return { weeks, longest, from: longest ? day(end - longest + 1) : null, to: longest ? day(end) : null, spans };
 }
 
 export function standingOf(places: Places | null, weight: string | null, history: HistoryRow[]): Standing | null {
@@ -64,5 +70,7 @@ export function standingOf(places: Places | null, weight: string | null, history
     bestOn: new Date(mondayOf(bestIndex)).toISOString().slice(0, 10),
     atOne: runs(inWeight.map((place) => place === 1), mondayOf),
     p4pAtOne: runs(p4p.map((place) => place === 1), mondayOf),
+    top8: runs(inWeight.map((place) => place !== null && place <= 8), mondayOf),
+    p4pTop8: runs(p4p.map((place) => place !== null && place <= 8), mondayOf),
   };
 }

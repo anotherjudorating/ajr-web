@@ -80,6 +80,8 @@ export function RankChart({
     return shown.length ? nearest(shown, (w) => Math.abs(x(w.day) - at)) : null;
   });
   // the dates, none too close to today's at the right edge
+  // the label goes over the longest span
+  const widest = run?.spans.reduce((a, b) => (Date.parse(b.to) - Date.parse(b.from) > Date.parse(a.to) - Date.parse(a.from) ? b : a), run.spans[0]);
   const ticks = monthTicks(start, now, at.maxDates).filter((tick) => x(tick) < RIGHT - 90);
   const last = shown.at(-1);
   const band = y(8.5);
@@ -122,15 +124,16 @@ export function RankChart({
             );
           })}
         {run && (
-          <g pointerEvents="none">
-            <rect
-              x={x(Date.parse(run.from))}
-              y={TOP}
-              width={Math.max(x(Date.parse(run.to) + 7 * DAY) - x(Date.parse(run.from)), 2)}
-              height={BOTTOM - TOP}
-              fill="#990F3D"
-              fillOpacity="0.12"
-            />
+          <g pointerEvents="none" fill="#990F3D" fillOpacity="0.12">
+            {run.spans.map((span) => (
+              <rect
+                key={span.from}
+                x={x(Date.parse(span.from))}
+                y={TOP}
+                width={Math.max(x(Date.parse(span.to) + 7 * DAY) - x(Date.parse(span.from)), 2)}
+                height={BOTTOM - TOP}
+              />
+            ))}
           </g>
         )}
         <path d={path("p4p")} fill="none" stroke="#66605C" strokeWidth="1.2" strokeDasharray="4,3" />
@@ -182,9 +185,11 @@ export function RankChart({
         // the run's label over its band, kept inside the chart
         <div
           className="absolute top-0 -translate-x-1/2 inline-flex items-center gap-1.5 pl-1.5 border border-claret bg-paper text-[11px] font-semibold text-ink whitespace-nowrap z-20"
-          style={{ left: `${Math.min(Math.max((((x(Date.parse(run.from)) + x(Date.parse(run.to))) / 2) / at.width) * 100, 18), 82)}%` }}
+          style={{ left: `${Math.min(Math.max((((x(Date.parse(widest!.from)) + x(Date.parse(widest!.to))) / 2) / at.width) * 100, 18), 82)}%` }}
         >
-          {run.label}, {monthYear(run.from)} – {monthYear(run.to)}
+          {run.label}
+          {/* one run: its months */}
+          {run.spans.length === 1 && `, ${monthYear(run.spans[0].from)} – ${monthYear(run.spans[0].to)}`}
           {onClear && (
             <button type="button" onClick={onClear} aria-label="Take the mark off" title="Take the mark off (Esc)" className="px-1.5 py-0.5 text-claret hover:bg-claret/10 cursor-pointer">
               ×

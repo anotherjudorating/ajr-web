@@ -35,6 +35,9 @@ export function AthleteHeader({
   run: Highlight | null; // the longest run shown on the chart
   onRun: (run: Highlight | null) => void;
 }) {
+  // a run of the table on the chart (its longest one alone)
+  const shownRun = (streak: { from: string | null; to: string | null }) =>
+    run?.spans.length === 1 && run.spans[0].from === streak.from && run.spans[0].to === streak.to;
   // the best place's table: the Monday it was first reached, at the athlete's row
   const slug = WEIGHTS.find((w) => w.api === weight)?.slug;
   const bestLink =
@@ -188,10 +191,9 @@ export function AthleteHeader({
                         title="Show it on the chart"
                         data-run
                         onClick={() => {
-                          const shown = run?.from === streak.from && run?.to === streak.to;
-                          onRun(shown ? null : { from: streak.from!, to: streak.to!, label: `${streak.longest} ${streak.longest === 1 ? "week" : "weeks"} ${phrase}` });
+                          onRun(shownRun(streak) ? null : { spans: [{ from: streak.from!, to: streak.to! }], label: `${streak.longest} ${streak.longest === 1 ? "week" : "weeks"} ${phrase}` });
                         }}
-                        className={`font-medium text-sm cursor-pointer ${LINKED} ${run?.from === streak.from && run?.to === streak.to ? "text-claret" : "text-ink"}`}
+                        className={`font-medium text-sm cursor-pointer ${LINKED} ${shownRun(streak) ? "text-claret" : "text-ink"}`}
                       >
                         {streak.longest}
                       </button>
