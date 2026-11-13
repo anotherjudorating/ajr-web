@@ -332,9 +332,9 @@ export function recordColumns(info: RecordInfo, full: boolean, name: string = in
       return [nation(), ...medals(true), value("Total", "w-14 sm:w-16", (r) => int(r.value))];
     case "longest_at_1_run":
     case "longest_p4p_1_run":
-    case "most_weeks_in_top_10_run":
+    case "most_weeks_in_top_8_run":
       return [...athlete(full), weight(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Period", "w-28", period)];
-    case "most_weeks_in_top_10":
+    case "most_weeks_in_top_8":
       return [...athlete(full), weight(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Until", full ? "w-24" : "w-28", (r) => month(r.day))];
     case "most_world_tour_golds":
       return [...athlete(full), ...medals(false), value("Golds", "w-14 sm:w-16", (r) => int(r.value))];
@@ -399,8 +399,8 @@ const ATHLETE_SECTION: Record<string, string> = {
   highest_rating: SECTION.rating,
   longest_at_1: SECTION.rating,
   longest_at_1_run: SECTION.rating,
-  most_weeks_in_top_10: SECTION.rating,
-  most_weeks_in_top_10_run: SECTION.rating,
+  most_weeks_in_top_8: SECTION.rating,
+  most_weeks_in_top_8_run: SECTION.rating,
   longest_p4p_1: SECTION.rating,
   longest_p4p_1_run: SECTION.rating,
   biggest_p4p_lead: SECTION.rating,
