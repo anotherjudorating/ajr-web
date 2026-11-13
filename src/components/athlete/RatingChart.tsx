@@ -13,7 +13,7 @@ import { peakTableLink, SECTION } from "@/lib/anchors";
 import { formatDate, monthYear } from "@/lib/format";
 import { tournamentPath } from "@/lib/weights";
 import { type Places } from "@/lib/places";
-import type { Highlight } from "@/lib/standing";
+import { type Highlight, SINCE } from "@/lib/standing";
 
 // Where things go on the canvas. From md up, the prototype's chart: a 1000×280 canvas
 // scaled to the page (the plot from x 75 to 860, grid from 50, y 25 to 225). Scaled
@@ -106,9 +106,11 @@ export function RatingChart({
 }) {
 
   const now = new Date(today).getTime();
-  // an athlete idle for years: the whole history rather than an empty window
   const lastContest = history.length ? new Date(history[0].fought_on).getTime() : now;
-  const [range, setRange] = useState<Range>(now - lastContest > 3.5 * YEAR ? "All" : "4Y");
+  // the last year; idle over a year: four (the last results in it); idle over two: the
+  // whole career (a comeback makes the last contest recent again)
+  const idleFor = now - lastContest;
+  const [range, setRange] = useState<Range>(idleFor > 2 * YEAR ? "All" : idleFor > YEAR ? "4Y" : "1Y");
   // the rating, or the place every week in the picked weight and pound for pound
   const [view, setView] = useState<"rating" | "rank">("rating");
   const ranked = places !== null && weight !== null && places.weeks.some((week) => week?.[1] === weight);
@@ -169,7 +171,8 @@ export function RatingChart({
     : undefined;
   const points: Point[] = careerLine(history, inactive ? null : { day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 }, period, split);
   const years = RANGES[range];
-  const from = years === null ? points[0].day : now - years * YEAR;
+  // All: from SINCE (as the records), unless the whole career was before it
+  const from = years === null ? (points.at(-1)!.day >= SINCE ? Math.max(points[0].day, SINCE) : points[0].day) : now - years * YEAR;
   const shown = points.filter((p) => p.day >= from);
   // the line comes in from the left edge, from the last point before the window
   const outside = points.filter((p) => p.day < from).at(-1);
@@ -418,7 +421,8 @@ export function RatingChart({
         </svg>
         )}
         {/* the career's peak, when it is before the window: a way to it */}
-        {!rank && boxWidth !== null && !peak && athlete.peak_on && athlete.peak_score !== null && range !== "All" && (
+        {/* (a peak before SINCE: not on the chart, no way to it) */}
+        {!rank && boxWidth !== null && !peak && athlete.peak_on && athlete.peak_score !== null && range !== "All" && Date.parse(athlete.peak_on) >= SINCE && (
           <button
             type="button"
             onClick={() => setRange("All")}

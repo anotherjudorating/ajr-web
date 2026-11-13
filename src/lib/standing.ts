@@ -12,6 +12,9 @@ export type Highlight = { from: string; to: string; label: string };
 export type Standing = { best: number; bestOn: string; atOne: Run; p4pAtOne: Run };
 
 const DAY = 86_400_000;
+// As the records (ajr/records/queries.py RATINGS_SINCE): the ratings from 2011 on, when
+// they had settled; the weeks, the runs and the charts of an athlete start then too.
+export const SINCE = Date.parse("2011-01-01T00:00:00Z");
 const RD_GROWTH = 5; // the engine's (ajr.rating_settings): RD² grows by 5² a day
 const MAX_RD = 350;
 
@@ -42,7 +45,9 @@ export function standingOf(places: Places | null, weight: string | null, history
   if (!places || !weight) return null;
   const from = Date.parse(`${places.from}T00:00:00Z`);
   const mondayOf = (index: number) => from + 7 * DAY * index;
-  const inWeight = places.weeks.map((week) => (week && week[1] === weight ? week[0] : null));
+  // the weeks from SINCE on
+  const counted = places.weeks.map((week, index) => (mondayOf(index) >= SINCE ? week : null));
+  const inWeight = counted.map((week) => (week && week[1] === weight ? week[0] : null));
   const best = Math.min(...inWeight.filter((place): place is number => place !== null));
   if (!Number.isFinite(best)) return null;
   // the weeks at the best place: the one with the highest rating
@@ -53,7 +58,7 @@ export function standingOf(places: Places | null, weight: string | null, history
     const score = scoreOn(history, mondayOf(index));
     if (bestIndex < 0 || score > bestScore) [bestIndex, bestScore] = [index, score];
   });
-  const p4p = places.weeks.map((week) => week?.[2] ?? null);
+  const p4p = counted.map((week) => week?.[2] ?? null);
   return {
     best,
     bestOn: new Date(mondayOf(bestIndex)).toISOString().slice(0, 10),

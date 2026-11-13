@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { ChartTip, monthTicks, nearest, pointerX, useChartPointer } from "@/components/chart";
 import { formatDate, monthYear } from "@/lib/format";
 import type { Places } from "@/lib/places";
-import type { Highlight } from "@/lib/standing";
+import { type Highlight, SINCE } from "@/lib/standing";
 
 type Layout = { width: number; height: number; gridLeft: number; valuesX: number; left: number; right: number; top: number; rowGap: number; datesY: number; maxDates: number; font: number };
 type Week = { day: number; place: number | null; p4p: number | null };
@@ -57,7 +57,7 @@ export function RankChart({
   const from = Date.parse(`${places.from}T00:00:00Z`);
   const weeks: Week[] = places.weeks
     .map((week, i) => ({ day: from + 7 * DAY * i, place: week && week[1] === weight ? week[0] : null, p4p: week?.[2] ?? null }))
-    .filter((w) => w.day >= start && w.day <= now);
+    .filter((w) => w.day >= Math.max(start, SINCE) && w.day <= now);
   const { left: LEFT, right: RIGHT, top: TOP } = at;
   const BOTTOM = TOP + 5 * at.rowGap;
   const worst = Math.max(8, ...weeks.flatMap((w) => [w.place ?? 0, w.p4p ?? 0]));
