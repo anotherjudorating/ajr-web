@@ -457,9 +457,24 @@ export function RatingChart({
           </ChartTip>
         )}
       </div>
-      {/* the legend under the chart: the title and the switches alone over it */}
-      <div className="mt-1">
-        {rank ? (
+      {/* the legend under the chart: the title and the switches alone over it; marked
+          weeks' label in its place while they are on (the same height: nothing moves) */}
+      <div className="mt-1 min-h-5 flex items-center">
+        {rank && run ? (
+          <div className="inline-flex items-center gap-1.5 pl-1.5 border border-claret bg-paper text-[11px] leading-4 font-semibold text-ink">
+            {run.label}
+            {/* one run: its months */}
+            {run.spans.length === 1 &&
+              (monthYear(run.spans[0].from) === monthYear(run.spans[0].to)
+                ? `, ${monthYear(run.spans[0].from)}`
+                : `, ${monthYear(run.spans[0].from)} – ${monthYear(run.spans[0].to)}`)}
+            {onRun && (
+              <button type="button" onClick={() => onRun(null)} aria-label="Take the mark off" title="Take the mark off (Esc)" className="px-1.5 text-claret hover:bg-claret/10 cursor-pointer">
+                ×
+              </button>
+            )}
+          </div>
+        ) : rank ? (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
             <span className="inline-flex items-center gap-1.5">
               <svg width="16" height="4" aria-hidden>

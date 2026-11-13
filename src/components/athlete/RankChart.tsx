@@ -192,22 +192,6 @@ export function RankChart({
           </text>
         </g>
       </svg>
-      {run && (
-        // the marked weeks' label under the chart (over it, it would hide the #1 line)
-        <div className="mt-1 inline-flex items-center gap-1.5 pl-1.5 border border-claret bg-paper text-[11px] font-semibold text-ink">
-          {run.label}
-          {/* one run: its months */}
-          {run.spans.length === 1 &&
-            (monthYear(run.spans[0].from) === monthYear(run.spans[0].to)
-              ? `, ${monthYear(run.spans[0].from)}`
-              : `, ${monthYear(run.spans[0].from)} – ${monthYear(run.spans[0].to)}`)}
-          {onClear && (
-            <button type="button" onClick={onClear} aria-label="Take the mark off" title="Take the mark off (Esc)" className="px-1.5 py-0.5 text-claret hover:bg-claret/10 cursor-pointer">
-              ×
-            </button>
-          )}
-        </div>
-      )}
       {hovered && (
         <ChartTip left={(x(hovered.day) / at.width) * 100} top={((hovered.place !== null ? y(hovered.place) : TOP) / at.height) * 100} hold={hold} docked={touched}>
           <div className="font-semibold text-ink">Week of {formatDate(new Date(hovered.day).toISOString().slice(0, 10))}</div>
