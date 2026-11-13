@@ -11,7 +11,7 @@ import { Medals } from "@/components/athlete/Medals";
 import { type Competition, RatingChart } from "@/components/athlete/RatingChart";
 import type { Places } from "@/lib/places";
 import { weightView } from "@/lib/weight-view";
-import type { Athlete, HistoryRow } from "@/lib/api";
+import type { Athlete, AthleteChance, HistoryRow } from "@/lib/api";
 import { shortName } from "@/lib/format";
 import { lastRating } from "@/lib/inactive";
 import { WEIGHTS } from "@/lib/weights";
@@ -24,10 +24,12 @@ export function AthleteView({
   athlete,
   history,
   places,
+  chances = [],
   today,
 }: {
   athlete: Athlete;
   history: HistoryRow[];
+  chances?: AthleteChance[]; // the tournaments still open, with their chances
   places: Places | null; // every Monday's, for the chart's tip (null without R2)
   today: string; // YYYY-MM-DD
 }) {
@@ -92,7 +94,7 @@ export function AthleteView({
       <Standouts contests={contests} onAll={showAll} />
       <section className="mt-14 md:mt-16 grid grid-cols-1 lg:grid-cols-2 lg:gap-x-24 gap-y-14">
         <FrequentOpponents athleteId={athlete.id} contests={contests} />
-        <NextTournaments />
+        <NextTournaments athleteId={athlete.id} chances={chances} today={today} />
       </section>
     </>
   );

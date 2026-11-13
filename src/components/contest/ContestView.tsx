@@ -87,6 +87,7 @@ export function ContestView({
 
       <Result contest={c} upcoming={upcoming} />
       {rated && <RatingChange contest={c} upcoming={upcoming} />}
+      {!rated && c.walkover && <Walkover contest={c} />}
 
       {(roads.white.length > 0 || roads.blue.length > 0) && (
         <section className="mt-14 lg:mt-16">
@@ -263,6 +264,29 @@ function Result({ contest: c, upcoming }: { contest: ContestDetail; upcoming?: U
           </span>
         )}
       </div>
+    </section>
+  );
+}
+
+// A walkover: why it changes no rating.
+function Walkover({ contest: c }: { contest: ContestDetail }) {
+  const loser = c.winner_id === athleteOf(c, "white").id ? athleteOf(c, "blue") : athleteOf(c, "white");
+  return (
+    <section className="mt-14 lg:mt-16">
+      <div className={HEAD}>
+        <h2 className={H2}>Rating change</h2>
+        <Link href="/methodology" className={LINK}>
+          How ratings work
+        </Link>
+      </div>
+      <p className="mt-4 max-w-2xl text-[14px] sm:text-[15px] text-ink">
+        {c.walkover === "fusen"
+          ? `A walkover: ${loser.name} did not come out to fight (Fusen-Gachi).`
+          : "A walkover: nothing was fought, no clock and no score."}{" "}
+        <span className="text-muted">
+          A win without a fight says nothing about who is stronger, so it changes neither rating.
+        </span>
+      </p>
     </section>
   );
 }
