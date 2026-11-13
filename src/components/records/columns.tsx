@@ -404,6 +404,7 @@ const WEEKS: Record<string, string> = {
   most_weeks_in_top_8: "top-8",
   most_weeks_in_top_8_run: "top-8-run",
 };
+const WEEK: Record<string, string> = { youngest_1: "first-1", biggest_p4p_lead: "p4p-lead" };
 const ATHLETE_SECTION: Record<string, string> = {
   // the rating's records: the chart, the whole career
   highest_rating: SECTION.rating,
@@ -439,6 +440,10 @@ export function rowLink(row: RecordRow): string | null {
     const weight = WEIGHTS.find((w) => w.api === row.weight && w.gender === (row.gender === "female" ? "women" : "men"));
     return weight ? `/tournaments/${row.competition_id}/${weight.slug}` : `/tournaments/${row.competition_id}`;
   }
+  // the records of a week (the first at #1, the biggest P4P lead): the Rank chart in
+  // their weight, the week marked with the record's value
+  if (row.athlete_id && WEEK[row.record] && row.day)
+    return anchor(`/athletes/${row.athlete_id}`, SECTION.rating, `${WEEK[row.record]}-${row.day}-${Math.round(row.value)}${row.weight ? `~${row.weight}` : ""}`);
   // the records of weeks: the Rank chart in their weight, their weeks marked
   if (row.athlete_id && WEEKS[row.record]) return anchor(`/athletes/${row.athlete_id}`, SECTION.rating, `${WEEKS[row.record]}${row.weight ? `~${row.weight}` : ""}`);
   if (row.athlete_id) return anchor(`/athletes/${row.athlete_id}`, ATHLETE_SECTION[row.record]);

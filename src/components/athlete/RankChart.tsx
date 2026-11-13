@@ -80,8 +80,6 @@ export function RankChart({
     return shown.length ? nearest(shown, (w) => Math.abs(x(w.day) - at)) : null;
   });
   // the dates, none too close to today's at the right edge
-  // the label goes over the longest span
-  const widest = run?.spans.reduce((a, b) => (Date.parse(b.to) - Date.parse(b.from) > Date.parse(a.to) - Date.parse(a.from) ? b : a), run.spans[0]);
   const ticks = monthTicks(start, now, at.maxDates).filter((tick) => x(tick) < RIGHT - 90);
   const last = shown.at(-1);
   const band = y(8.5);
@@ -125,6 +123,19 @@ export function RankChart({
           })}
         {run && (
           <g pointerEvents="none" fill="#990F3D" fillOpacity="0.12">
+            {/* one week (a record's day): a line and the athlete's place that week */}
+            {run.spans.length === 1 && run.spans[0].from === run.spans[0].to && (() => {
+              // the Monday's table on or after it holds the weekend before (lib/places.ts)
+              const day = Date.parse(run.spans[0].from);
+              const week = weeks.find((w) => w.day >= day && w.day - day < 7 * DAY && w.place !== null);
+              const at = week ? week.day : day;
+              return (
+                <g fillOpacity="1">
+                  <line x1={x(at)} x2={x(at)} y1={TOP} y2={BOTTOM} stroke="#990F3D" strokeWidth="1.5" />
+                  {week && <circle cx={x(week.day)} cy={y(week.place!)} r="5" fill="#990F3D" />}
+                </g>
+              );
+            })()}
             {run.spans.map((span) => (
               <rect
                 key={span.from}
@@ -182,14 +193,14 @@ export function RankChart({
         </g>
       </svg>
       {run && (
-        // the run's label over its band, kept inside the chart
-        <div
-          className="absolute top-0 -translate-x-1/2 inline-flex items-center gap-1.5 pl-1.5 border border-claret bg-paper text-[11px] font-semibold text-ink whitespace-nowrap z-20"
-          style={{ left: `${Math.min(Math.max((((x(Date.parse(widest!.from)) + x(Date.parse(widest!.to))) / 2) / at.width) * 100, 18), 82)}%` }}
-        >
+        // the marked weeks' label under the chart (over it, it would hide the #1 line)
+        <div className="mt-1 inline-flex items-center gap-1.5 pl-1.5 border border-claret bg-paper text-[11px] font-semibold text-ink">
           {run.label}
           {/* one run: its months */}
-          {run.spans.length === 1 && `, ${monthYear(run.spans[0].from)} – ${monthYear(run.spans[0].to)}`}
+          {run.spans.length === 1 &&
+            (monthYear(run.spans[0].from) === monthYear(run.spans[0].to)
+              ? `, ${monthYear(run.spans[0].from)}`
+              : `, ${monthYear(run.spans[0].from)} – ${monthYear(run.spans[0].to)}`)}
           {onClear && (
             <button type="button" onClick={onClear} aria-label="Take the mark off" title="Take the mark off (Esc)" className="px-1.5 py-0.5 text-claret hover:bg-claret/10 cursor-pointer">
               ×
