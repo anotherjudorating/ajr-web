@@ -380,9 +380,9 @@ export type CompetitionRow = {
   country_name: string | null;
   date_from: string;
   date_to: string | null;
-  contests: number;
+  contests: number | null; // null: to come, not fought yet
   accuracy: number | null; // share of real fights the rating's favourite won
-  upsets: number;
+  upsets: number | null;
 };
 
 // Tournaments of a year (all with null), latest first.
@@ -708,7 +708,78 @@ export type MedalChance = {
   country: string | null;
   gold: number; // 0..1, from playing the draw with today's ratings
   medal: number;
+  quarter?: number; // of reaching the quarter-finals, the semi-finals, the final
+  semi?: number;
+  final?: number;
+  rating?: number | null; // on the day (skill − RD), the athlete's before their first contest
 };
+
+// A place of a weight's bracket (by the contest's number in it) and an athlete in it:
+// a contest fought, its two athletes (wins 1 or 0, its id); a bye judobase shows, its
+// athlete; any other, the likeliest athletes and their chances of being there and of
+// winning it (ajr/rating/chances.py).
+export type Slot = {
+  fight_no: number;
+  round: string; // F, BR, 1/2, REP, 1/4, 1/8…
+  athlete_id: number;
+  family_name: string | null;
+  given_name: string | null;
+  country: string | null;
+  here: number;
+  wins: number;
+  contest_id: number | null;
+};
+
+// A contest of a draw not fought yet, both athletes known: their ratings on the day as
+// the engine takes them, for the page to work out what each result would do. null: none
+// (fought: api.contest has it; or a database without it yet).
+export type UpcomingContest = {
+  contest_id: number;
+  competition_id: number;
+  competition: string;
+  competition_rank: string | null;
+  city: string | null;
+  country: string | null;
+  day: string;
+  weight: string;
+  round: string | null;
+  white_id: number;
+  white_family_name: string | null;
+  white_given_name: string | null;
+  white_country: string | null;
+  white_skill: number;
+  white_rd: number;
+  white_volatility: number;
+  blue_id: number;
+  blue_family_name: string | null;
+  blue_given_name: string | null;
+  blue_country: string | null;
+  blue_skill: number;
+  blue_rd: number;
+  blue_volatility: number;
+  tau: number;
+  rd_factor: number;
+};
+
+export async function upcomingContest(id: number): Promise<UpcomingContest | null> {
+  "use cache: remote";
+  dataCache();
+  try {
+    return (await rpc<UpcomingContest[]>("upcoming_contest", { contest_id: id }))[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function competitionSlots(id: number, weight: string): Promise<Slot[]> {
+  "use cache: remote";
+  dataCache();
+  try {
+    return await rpc<Slot[]>("competition_slots", { competition_id: id, weight });
+  } catch {
+    return []; // a database without the bracket's chances yet: the bracket from the contests
+  }
+}
 
 // At a tournament with a published draw: every athlete's chance of gold and of a
 // medal, the likeliest medallists of every weight first. Empty before the draw.
