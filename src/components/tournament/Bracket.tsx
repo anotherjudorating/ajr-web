@@ -135,13 +135,14 @@ function Box({ slot }: { slot: Slot }) {
   if (slot.kind === "open") return <div className="h-[58px] sm:h-[50px] border border-dashed border-rule bg-paper/40" aria-label="To be fought" />;
   if (slot.kind === "bye")
     return (
-      <div className="h-[58px] sm:h-[50px] border border-rule bg-paper text-[13px] sm:text-[12px]">
+      // no contest to open: the athlete's page
+      <Link href={`/athletes/${slot.id}`} className="block h-[58px] sm:h-[50px] border border-rule bg-paper text-[13px] sm:text-[12px] hover:border-ink">
         <div className="h-7 sm:h-6 px-2 flex items-center gap-1.5 font-semibold">
           <Flag ioc={slot.country} />
           <span className="truncate">{slot.name}</span>
         </div>
         <div className="h-7 sm:h-6 px-2 flex items-center text-muted" title="Bye">—</div>
-      </div>
+      </Link>
     );
   const c = slot.contest;
   const winner = sides(c).find((s) => s.id === c.winner_id);
