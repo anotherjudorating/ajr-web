@@ -48,13 +48,12 @@ export function AthleteView({
   const [recordSeen, setRecordSeen] = useState<string | null>(null);
   if (record !== recordSeen) {
     setRecordSeen(record);
-    // a week: the first at #1 (the age), the biggest P4P lead (the points)
-    const week = record?.match(/^(first-1|p4p-lead)-(\d{4}-\d{2}-\d{2})-(\d+)(?:~(.+))?$/);
+    // a week: the first at #1 (the age)
+    const week = record?.match(/^first-1-(\d{4}-\d{2}-\d{2})-(\d+)(?:~(.+))?$/);
     if (week) {
-      const [, kind, day, value, of] = week;
+      const [, day, age, of] = week;
       if (of && athlete.weights.includes(of)) setWeight(of);
-      const label = kind === "first-1" ? `First #1, at ${value}` : `Biggest P4P lead, ${value} points`;
-      setRun({ spans: [{ from: day, to: day }], label });
+      setRun({ spans: [{ from: day, to: day }], label: `First #1, at ${age}` });
     }
     const found = record?.match(/^(at-1|p4p-1|top-8)(-run)?(?:~(.+))?$/);
     if (found) {
