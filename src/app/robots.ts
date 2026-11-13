@@ -9,20 +9,16 @@ import { SITE } from "@/lib/seo";
 // indexed). Search and answer bots (Googlebot, Bingbot, OAI-SearchBot,
 // Claude-SearchBot, PerplexityBot) follow the first group; bots that only collect
 // training data get the cached core of the site (two of them, among the heaviest on
-// 2026-11-10, slowly); the SEO tools' link crawlers (half of the site's traffic then,
-// no visitors) a page every 10 s. Amazon's search bot and the answer bots are left be.
+// 2026-11-10, slowly); the SEO tools' link crawlers get nothing: half of the site's
+// traffic on 2026-11-10 and still ~150 MB a day each at a page every 10 s, no visitors.
+// Amazon's search bot and the answer bots are left be.
 export default function robots(): MetadataRoute.Robots {
   const closed = ["/api/", "/contests/", "/rankings/*/20", "/explore/*?"];
   const core = [...closed, "/athletes/", "/tournaments/", "/explore/", "/head-to-head"]; // training bots: the core only
   return {
     rules: [
       { userAgent: "*", allow: "/", disallow: closed },
-      {
-        userAgent: ["AhrefsBot", "SemrushBot", "SERankingBacklinksBot"],
-        allow: "/",
-        disallow: [...closed, "/head-to-head?"],
-        crawlDelay: 10,
-      },
+      { userAgent: ["AhrefsBot", "SemrushBot", "SERankingBacklinksBot", "MJ12bot", "DotBot"], disallow: "/" },
       {
         userAgent: ["GPTBot", "ClaudeBot", "CCBot", "Bytespider", "meta-externalagent", "Amazonbot", "Applebot-Extended"],
         allow: "/",

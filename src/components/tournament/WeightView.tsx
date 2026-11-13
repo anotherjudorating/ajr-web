@@ -654,8 +654,12 @@ function ContestRow({ contest: c }: { contest: CompetitionContest }) {
       </td>
       <td className={CELL}>
         {sides.map((s) => (
-          <div key={s.id} className={`h-6 flex items-center justify-center font-bold ${s.id === c.winner_id ? "text-gain" : "text-drop"}`}>
-            {s.id === c.winner_id ? "W" : "L"}
+          // a walkover: the one who did not fight WO
+          <div
+            key={s.id}
+            className={`h-6 flex items-center justify-center font-bold ${s.id === c.winner_id ? "text-gain" : c.real_fight ? "text-drop" : "text-[10px] text-muted"}`}
+          >
+            {s.id === c.winner_id ? "W" : c.real_fight ? "L" : "WO"}
           </div>
         ))}
       </td>
@@ -663,9 +667,9 @@ function ContestRow({ contest: c }: { contest: CompetitionContest }) {
         {sides.map((s) => (
           <div
             key={s.id}
-            className={`h-6 flex items-center justify-end ${s.id === c.winner_id ? "font-bold" : "font-semibold"} ${(s.change ?? 0) >= 0 ? "text-gain" : "text-drop"}`}
+            className={`h-6 flex items-center justify-end ${s.change === null ? "text-muted" : `${s.id === c.winner_id ? "font-bold" : "font-semibold"} ${s.change >= 0 ? "text-gain" : "text-drop"}`}`}
           >
-            {s.change === null ? "" : signed(s.change)}
+            {s.change === null ? "—" : signed(s.change)}
           </div>
         ))}
       </td>

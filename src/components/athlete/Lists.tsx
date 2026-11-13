@@ -5,8 +5,9 @@ import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HashScroll } from "@/components/HashScroll";
 import { RowLink } from "@/components/RowLink";
 import { anchor, SECTION } from "@/lib/anchors";
-import type { HistoryRow } from "@/lib/api";
-import { formatChance, shortCompetition, shortName } from "@/lib/format";
+import type { AthleteChance, HistoryRow } from "@/lib/api";
+import { dateRange, formatChance, shortCompetition, shortName } from "@/lib/format";
+import { tournamentPath, WEIGHTS } from "@/lib/weights";
 
 const H2 = "font-serif text-[20px] sm:text-[24px] font-bold text-ink border-b-2 border-ink pb-2";
 const H2_PLAIN = "font-serif text-[20px] sm:text-[24px] font-bold text-ink";
@@ -136,23 +137,60 @@ export function FrequentOpponents({ athleteId, contests }: { athleteId: number; 
   );
 }
 
-// Medal chances need the draws of coming tournaments, which the backend does not have yet.
-export function NextTournaments() {
+// The tournaments with a published draw the athlete is in and whose outcome is still
+// open: coming, or under way and still in; their chances of gold and of a medal. Out,
+// or the medal decided: gone (the history has it). Nothing open: no section.
+export function NextTournaments({ athleteId, chances, today }: { athleteId: number; chances: AthleteChance[]; today: string }) {
+  if (chances.length === 0) return null;
   return (
     <div>
-      <h2 className={H2}>Next tournaments</h2>
-      <table className="w-full border-collapse text-[13px] sm:text-[14px]">
+      <h2 className={H2}>Live and upcoming</h2>
+      <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <thead>
           <tr className="h-9 bg-panel border-b border-rule text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted">
-            <th className="w-[72px] sm:w-24 px-2 sm:px-3 text-left align-middle h-9 py-0">Dates</th>
+            <th className="w-[84px] sm:w-24 px-2 sm:px-3 text-left align-middle h-9 py-0">Dates</th>
             <th className="px-2 sm:px-3 text-left align-middle h-9 py-0">Tournament</th>
-            <th className="w-12 sm:w-16 px-2 sm:px-3 text-right align-middle h-9 py-0">Gold</th>
+            <th className="hidden sm:table-cell w-16 px-3 text-right align-middle h-9 py-0">Gold</th>
             <th className="w-14 sm:w-16 px-2 sm:px-3 text-right align-middle h-9 py-0">Medal</th>
             <th className="w-8 sm:w-10 px-0 text-right align-middle h-9 py-0" />
           </tr>
         </thead>
+        <tbody>
+          {chances.map((c) => {
+            const live = c.date_from <= today;
+            const weight = WEIGHTS.find((w) => w.api === c.weight);
+            return (
+              // the weight's page at the athlete's row
+              <RowLink
+                key={`${c.competition_id}-${c.weight}`}
+                href={`${tournamentPath(c.competition_id, c.weight)}#athlete-${athleteId}`}
+                className="border-b border-rule"
+              >
+                <td className="h-10 px-2 sm:px-3 text-muted whitespace-nowrap">{dateRange(c.date_from, c.date_to)}</td>
+                <td className="h-10 px-2 sm:px-3">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Flag ioc={c.country} />
+                    <span className="truncate font-semibold text-ink">{shortCompetition(c.competition).replace(/\s\d{4}$/, "")}</span>
+                    {weight && <span className="shrink-0 text-muted">{weight.label}</span>}
+                    {live && (
+                      <span className="shrink-0 flex items-center gap-1 text-[11px] font-semibold text-claret">
+                        <span className="w-1.5 h-1.5 rounded-full bg-claret" />
+                        Live
+                      </span>
+                    )}
+                  </div>
+                </td>
+                {/* a phone: the medal only */}
+                <td className="hidden sm:table-cell h-10 px-3 text-right text-ink">{formatChance(c.gold, 0)}</td>
+                <td className="h-10 px-2 sm:px-3 text-right text-ink">{formatChance(c.medal, 0)}</td>
+                <td className={CHEVRON_CELL}>
+                  <RowChevron />
+                </td>
+              </RowLink>
+            );
+          })}
+        </tbody>
       </table>
-      <p className="py-6 text-[14px] text-muted">Coming tournaments and medal chances will appear here.</p>
     </div>
   );
 }

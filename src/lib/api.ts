@@ -190,6 +190,32 @@ export async function canonicalAthlete(id: number): Promise<number | null> {
   return rpc<number | null>("canonical_athlete", { athlete_id: id });
 }
 
+// The tournaments with a published draw in which the athlete is in and their outcome
+// still open (api.athlete_chances): their chances of gold and of a medal. Empty for a
+// database without the function yet.
+export type AthleteChance = {
+  competition_id: number;
+  competition: string;
+  rank_name: string | null;
+  city: string | null;
+  country: string | null;
+  date_from: string;
+  date_to: string | null;
+  weight: string;
+  gold: number;
+  medal: number;
+};
+
+export async function athleteChances(id: number): Promise<AthleteChance[]> {
+  "use cache: remote";
+  dataCache();
+  try {
+    return await rpc<AthleteChance[]>("athlete_chances", { athlete_id: id });
+  } catch {
+    return [];
+  }
+}
+
 export async function athleteHistory(id: number): Promise<HistoryRow[]> {
   "use cache: remote";
   dataCache();

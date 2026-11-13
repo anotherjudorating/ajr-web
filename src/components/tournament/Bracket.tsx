@@ -109,7 +109,7 @@ function Box({ slot }: { slot: Slot }) {
             <Flag ioc={p.country} />
             <span className="truncate">{shortName(p.family_name, p.given_name)}</span>
             <span className="ml-auto w-10 pr-1 text-right tabular-nums text-muted">{pct(p.wins)}</span>
-            <span className="w-3 text-center text-muted">—</span>
+            <span className="w-4 text-center text-muted">—</span>
             <span className="w-9 text-right text-muted">—</span>
           </div>
         ))}
@@ -126,7 +126,7 @@ function Box({ slot }: { slot: Slot }) {
             </span>
             <span className="truncate">{shortName(p.family_name, p.given_name)}</span>
             <span className="ml-auto w-10 pr-1 text-right tabular-nums">{pct(p.wins)}</span>
-            <span className="w-3 text-center">—</span>
+            <span className="w-4 text-center">—</span>
             <span className="w-9 text-right">—</span>
           </div>
         ))}
@@ -159,8 +159,17 @@ function Box({ slot }: { slot: Slot }) {
             <Flag ioc={s.country} />
             <span className="truncate flex-1">{s.name}</span>
             {c.real_fight && s.chance !== null && <span className={`w-10 pr-1 text-right ${upset ? (won ? "text-gain" : "text-drop font-semibold") : ""}`} title={upset ? "An upset" : undefined}>{formatChance(s.chance, 0)}</span>}
-            <span className={`w-3 text-center font-bold ${won ? "text-gain" : "text-drop"}`}>{won ? "W" : "L"}</span>
-            <span className={`w-9 text-right font-semibold ${change === null ? "" : change >= 0 ? "text-gain" : "text-drop"}`}>{change === null ? "" : signed(change)}</span>
+            {/* a walkover: the one who did not fight WO, no rating change */}
+            {c.real_fight || won ? (
+              <span className={`w-4 text-center font-bold ${won ? "text-gain" : "text-drop"}`}>{won ? "W" : "L"}</span>
+            ) : (
+              <span className="w-4 text-center text-[10px] font-bold text-muted" title="Walkover: did not fight">
+                WO
+              </span>
+            )}
+            <span className={`w-9 text-right font-semibold ${change === null ? "text-muted font-normal" : change >= 0 ? "text-gain" : "text-drop"}`}>
+              {change === null ? "—" : signed(change)}
+            </span>
           </div>
         );
       })}
