@@ -30,6 +30,7 @@ export function RankChart({
   run = null,
   onClear,
   idle = [],
+  ends = true,
 }: {
   places: Places;
   weight: string;
@@ -39,6 +40,7 @@ export function RankChart({
   run?: Highlight | null;
   onClear?: () => void;
   idle?: { from: number; to: number }[];
+  ends?: boolean; // the latest places after the line (a phone: in the header)
 }) {
   useEffect(() => {
     if (!run || !onClear) return;
@@ -77,7 +79,8 @@ export function RankChart({
     const at = pointerX(e, LEFT, RIGHT);
     return shown.length ? nearest(shown, (w) => Math.abs(x(w.day) - at)) : null;
   });
-  const ticks = monthTicks(start, now, at.maxDates);
+  // the dates, none too close to today's at the right edge
+  const ticks = monthTicks(start, now, at.maxDates).filter((tick) => x(tick) < RIGHT - 90);
   const last = shown.at(-1);
   const band = y(8.5);
 
@@ -140,7 +143,7 @@ export function RankChart({
         )}
         {shown.length > 0 && <rect x={LEFT} y={TOP} width={RIGHT - LEFT} height={BOTTOM - TOP} fill="transparent" className="cursor-pointer" {...plot} />}
         {/* the latest week's places, after the line's end */}
-        {last && (
+        {ends && last && (
           <g fontFamily={FONT} fontSize="12">
             {/* the two places close together: one line */}
             {last.place !== null && last.p4p !== null && Math.abs(y(last.place) - y(last.p4p)) < 14 ? (
@@ -170,7 +173,7 @@ export function RankChart({
               {monthYear(new Date(tick).toISOString())}
             </text>
           ))}
-          <text x={RIGHT} y={at.datesY}>
+          <text x={RIGHT} y={at.datesY} textAnchor={ends ? "middle" : "end"}>
             {monthYear(new Date(now).toISOString())}
           </text>
         </g>

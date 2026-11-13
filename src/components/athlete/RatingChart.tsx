@@ -50,7 +50,7 @@ const DESKTOP: Layout = {
 };
 
 function phone(width: number): Layout {
-  const right = width - 80; // "Rating 2276" after it
+  const right = width - 10; // no end labels: the header over the chart has them
   return {
     width,
     height: 226,
@@ -207,14 +207,15 @@ export function RatingChart({
   const tipY = hovered ? (nearPeak ? Math.min(y(hovered.score), y(peak!.score)) - LABEL_ROOM : y(hovered.score)) : 0;
   // a dot on a period with a competition
   const dotted = real.filter((p) => p.events.length > 0);
-  const ticks = monthTicks(start, now, at.maxDates);
+  // the dates under the plot, none too close to today's at its right edge
+  const ticks = monthTicks(start, now, at.maxDates).filter((tick) => x(tick) < RIGHT - 90);
   // the end labels (Skill, −RD, Rating) next to the line's last point: at today's edge,
   // or, for an inactive athlete whose line ends earlier, right after that point (over
   // the inactive zone, on a paper halo)
   const labelX = inactive ? Math.min(x(last.day) + 12, at.width - (desktop ? 130 : 88)) : RIGHT + at.labels;
   // the Peak label (68 wide, centred over the peak) moved left so that it stops before
   // the end labels (Skill, uncertainty, Rating) and the plot's edge, right of its start
-  const peakShift = peak ? shiftOf(x(peak.day), LEFT, Math.min(RIGHT, labelX) - 6) : 0;
+  const peakShift = peak ? shiftOf(x(peak.day), LEFT, (desktop ? Math.min(RIGHT, labelX) : RIGHT) - 6) : 0;
 
   // Inactive: no contest for over a year (out of the tables), between competitions or
   // since the last one. The rating holds, its uncertainty grows, so the score drifts
@@ -280,7 +281,9 @@ export function RatingChart({
             weight={weight!}
             start={start}
             now={now}
-            at={base}
+            // a desktop: a narrower column for the places than for the rating's labels
+            at={desktop ? { ...base, right: base.width - 110 } : base}
+            ends={desktop}
             run={run}
             onClear={() => onRun?.(null)}
             // out of the tables a year after the last contest: the rank's idle spells start then
@@ -379,25 +382,28 @@ export function RatingChart({
               font={FONT}
             />
           )}
-          <g fontFamily={FONT} fontSize="12" stroke="#F3EEE3" strokeWidth={inactive ? 4 : 0} paintOrder="stroke" strokeLinejoin="round">
-            <text fill="#66605C" x={labelX} y={y(last.rating) + 4}>
-              Skill {last.rating}
-            </text>
-            <line
-              stroke="#D6CFC2"
-              strokeWidth="0.8"
-              x1={labelX + 4}
-              x2={labelX + 4}
-              y1={y(last.rating) + 11}
-              y2={y(last.score) - 11}
-            />
-            <text fill="#66605C" x={labelX + 12} y={(y(last.rating) + y(last.score)) / 2 + 4}>
-              −{last.rating - last.score}{desktop ? " uncertainty" : ""}
-            </text>
-            <text fill="#33302E" fontWeight="700" x={labelX} y={y(last.score) + 4}>
-              Rating {last.score}
-            </text>
-          </g>
+          {/* the end labels: a phone has them in the header over the chart */}
+          {desktop && (
+            <g fontFamily={FONT} fontSize="12" stroke="#F3EEE3" strokeWidth={inactive ? 4 : 0} paintOrder="stroke" strokeLinejoin="round">
+              <text fill="#66605C" x={labelX} y={y(last.rating) + 4}>
+                Skill {last.rating}
+              </text>
+              <line
+                stroke="#D6CFC2"
+                strokeWidth="0.8"
+                x1={labelX + 4}
+                x2={labelX + 4}
+                y1={y(last.rating) + 11}
+                y2={y(last.score) - 11}
+              />
+              <text fill="#66605C" x={labelX + 12} y={(y(last.rating) + y(last.score)) / 2 + 4}>
+                −{last.rating - last.score}{desktop ? " uncertainty" : ""}
+              </text>
+              <text fill="#33302E" fontWeight="700" x={labelX} y={y(last.score) + 4}>
+                Rating {last.score}
+              </text>
+            </g>
+          )}
           <g fill="#66605C" fontFamily={FONT} fontSize={at.font} textAnchor="middle">
             {ticks.map((tick) => (
               <text key={tick} x={x(tick)} y={at.datesY}>
@@ -405,7 +411,7 @@ export function RatingChart({
               </text>
             ))}
             {/* at the plot's right edge: when it is the canvas's (inactive), ends there */}
-            <text x={RIGHT} y={at.datesY} textAnchor={inactive ? "end" : "middle"}>
+            <text x={RIGHT} y={at.datesY} textAnchor={inactive || !desktop ? "end" : "middle"}>
               {monthYear(new Date(now).toISOString())}
             </text>
           </g>
