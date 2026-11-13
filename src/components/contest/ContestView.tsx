@@ -42,14 +42,19 @@ function Judogi({ side, className }: { side: Side; className: string }) {
 
 // The contest page, as in the prototype: the result, how it moved both ratings,
 // each athlete's way to it at this tournament and their earlier meetings.
+// `upcoming`: a contest not fought yet, worked out for the result picked (UpcomingContest).
+type Upcoming = { onPick: (athleteId: number) => void };
+
 export function ContestView({
   contest: c,
   whiteHistory,
   blueHistory,
+  upcoming,
 }: {
   contest: ContestDetail;
   whiteHistory: HistoryRow[];
   blueHistory: HistoryRow[];
+  upcoming?: Upcoming;
 }) {
   const weight = WEIGHTS.find((w) => w.api === c.weight);
   const weightName = weight ? weightTitle(weight) : (c.weight ?? "");
@@ -80,8 +85,8 @@ export function ContestView({
         {athleteOf(c, "white").name} vs {athleteOf(c, "blue").name} — {roundTitle(c.round)}, {weightName}, {c.competition}
       </h1>
 
-      <Result contest={c} />
-      {rated && <RatingChange contest={c} />}
+      <Result contest={c} upcoming={upcoming} />
+      {rated && <RatingChange contest={c} upcoming={upcoming} />}
 
       {(roads.white.length > 0 || roads.blue.length > 0) && (
         <section className="mt-14 lg:mt-16">
@@ -119,11 +124,11 @@ export function ContestView({
         </section>
       )}
 
-      {meetings.length > 0 && (
-        <section className="mt-14 lg:mt-16 grid grid-cols-1 lg:grid-cols-2 gap-y-6 lg:gap-x-24">
+      {/* the earlier meetings, or that there were none */}
+      <section className="mt-14 lg:mt-16 grid grid-cols-1 lg:grid-cols-2 gap-y-6 lg:gap-x-24">
           <div>
             <div className={HEAD}>
-              <h2 className={H2}>{meetingsTitle(c, meetings)}</h2>
+              <h2 className={H2}>{meetings.length ? meetingsTitle(c, meetings) : "Earlier meetings"}</h2>
               <Link
                 href={`/head-to-head?${new URLSearchParams({
                   ...(weight && { w: weight.slug }),
@@ -137,6 +142,11 @@ export function ContestView({
             </div>
             <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
               <tbody>
+                {meetings.length === 0 && (
+                  <tr className="border-b border-rule">
+                    <td className={`${CELL} text-muted`}>{upcoming ? "Their first meeting." : "Their first meeting: none before this one."}</td>
+                  </tr>
+                )}
                 {meetings.map((row) => {
                   const winner = athleteOf(c, row.won ? "white" : "blue");
                   return (
@@ -168,12 +178,11 @@ export function ContestView({
             </table>
           </div>
         </section>
-      )}
     </>
   );
 }
 
-function Result({ contest: c }: { contest: ContestDetail }) {
+function Result({ contest: c, upcoming }: { contest: ContestDetail; upcoming?: Upcoming }) {
   return (
     <section>
       <div className={HEAD}>
@@ -211,8 +220,8 @@ function Result({ contest: c }: { contest: ContestDetail }) {
             </div>
             <div className="flex items-center shrink-0 text-[16px] font-semibold tabular-nums">
               {athlete.scores.map((score, j) => (
-                <div key={j} className="w-8 sm:w-14 text-center">
-                  {score ?? 0}
+                <div key={j} className={`w-8 sm:w-14 text-center ${upcoming ? "text-muted" : ""}`}>
+                  {upcoming ? "—" : (score ?? 0)}
                 </div>
               ))}
               <div className="w-14 sm:w-24 flex justify-center gap-1">
@@ -224,7 +233,8 @@ function Result({ contest: c }: { contest: ContestDetail }) {
                 ))}
               </div>
               <div className="w-12 sm:w-24 text-right pr-1">
-                {c.winner_id === athlete.id && (
+                {upcoming && <span className="text-muted">—</span>}
+                {!upcoming && c.winner_id === athlete.id && (
                   <span className="text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border border-gain text-gain">
                     Win
                   </span>
@@ -236,7 +246,9 @@ function Result({ contest: c }: { contest: ContestDetail }) {
       })}
       <div className="h-10 sm:h-12 flex items-center justify-between">
         <span className="text-[12px] font-medium text-muted pl-1 sm:pl-3">{formatDate(c.day)}</span>
-        {c.walkover ? (
+        {upcoming ? (
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted pr-1">Not fought yet</span>
+        ) : c.walkover ? (
           <span className="inline-flex items-center gap-2 pr-1">
             <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted">Walkover</span>
             <span className="text-[12px] font-medium text-muted">not rated</span>
@@ -255,7 +267,7 @@ function Result({ contest: c }: { contest: ContestDetail }) {
   );
 }
 
-function RatingChange({ contest: c }: { contest: ContestDetail }) {
+function RatingChange({ contest: c, upcoming }: { contest: ContestDetail; upcoming?: Upcoming }) {
   const rows = SIDES.map((side) => ({ side, athlete: athleteOf(c, side) }));
   const TH = "px-3 h-9 py-0 align-middle text-[11px] font-bold uppercase tracking-wider text-muted";
   const TD = "px-3 h-10 sm:h-11 py-0 align-middle whitespace-nowrap";
@@ -265,9 +277,29 @@ function RatingChange({ contest: c }: { contest: ContestDetail }) {
     <section className="mt-14 lg:mt-16">
       <div className={HEAD}>
         <h2 className={H2}>Rating change</h2>
-        <Link href="/methodology" className={LINK}>
-          How ratings work
-        </Link>
+        {upcoming ? (
+          <div className="inline-flex shrink-0" role="group" aria-label="If this athlete wins">
+            {SIDES.map((side, i) => {
+              const athlete = athleteOf(c, side);
+              const on = c.winner_id === athlete.id;
+              return (
+                <button
+                  key={side}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => upcoming.onPick(athlete.id)}
+                  className={`h-7 px-2.5 text-[12px] font-semibold border cursor-pointer whitespace-nowrap ${i ? "-ml-px" : ""} ${on ? "border-ink bg-ink text-paper" : "border-rule bg-paper text-ink hover:border-ink"}`}
+                >
+                  {athlete.family ? athlete.name.split(" ")[0] : athlete.name} wins
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <Link href="/methodology" className={LINK}>
+            How ratings work
+          </Link>
+        )}
       </div>
       <table className="hidden sm:table w-full border-collapse text-[14px] tabular-nums">
         <thead>
@@ -286,7 +318,9 @@ function RatingChange({ contest: c }: { contest: ContestDetail }) {
                 <span className="inline-flex items-center gap-2 font-semibold">
                   <Judogi side={side} className="w-[6px] h-5" />
                   <Flag ioc={athlete.country} />
-                  {athlete.name}
+                  <Link href={`/athletes/${athlete.id}`} className="hover:underline">
+                    {athlete.name}
+                  </Link>
                 </span>
               </td>
               <td className={`${TD} text-right text-muted`}>{percent(athlete.chance)}</td>
@@ -314,7 +348,9 @@ function RatingChange({ contest: c }: { contest: ContestDetail }) {
                 <span className="inline-flex items-center gap-1.5">
                   <Judogi side={side} className="w-[6px] h-4" />
                   <Flag ioc={athlete.country} />
-                  {athlete.name}
+                  <Link href={`/athletes/${athlete.id}`} className="hover:underline">
+                    {athlete.name}
+                  </Link>
                 </span>
               </th>
             ))}
@@ -357,7 +393,17 @@ function RatingChange({ contest: c }: { contest: ContestDetail }) {
           </tr>
         </tbody>
       </table>
-      <p className="mt-2 text-[12px] text-muted">Rating = skill − RD. Lower RD, higher rating.</p>
+      <p className="mt-2 text-[12px] text-muted">
+        Rating = skill − RD. Lower RD, higher rating.
+        {upcoming && (
+          <>
+            {" "}Not fought yet: what the result picked would do.{" "}
+            <Link href="/methodology" className="text-claret hover:underline">
+              How ratings work
+            </Link>
+          </>
+        )}
+      </p>
     </section>
   );
 }
