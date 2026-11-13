@@ -35,6 +35,22 @@ export function AthleteHeader({
   run: Highlight | null; // the longest run shown on the chart
   onRun: (run: Highlight | null) => void;
 }) {
+  // a run of the table on the chart (its longest one alone)
+  // weeks of the table on the chart: the same label and spans
+  const shown = (weeks: Highlight) => run?.label === weeks.label && run.spans.length === weeks.spans.length;
+  // a number of the table that marks its weeks on the Rank chart (again: off)
+  const marker = (weeks: Highlight, value: number, bold: boolean) => (
+    <button
+      type="button"
+      title="Show it on the chart"
+      data-run
+      onClick={() => onRun(shown(weeks) ? null : weeks)}
+      className={`${bold ? "font-bold" : "font-medium"} text-sm cursor-pointer ${LINKED} ${shown(weeks) ? "text-claret" : "text-ink"}`}
+    >
+      {value}
+    </button>
+  );
+  const plural = (n: number) => `${n} ${n === 1 ? "week" : "weeks"}`;
   // the best place's table: the Monday it was first reached, at the athlete's row
   const slug = WEIGHTS.find((w) => w.api === weight)?.slug;
   const bestLink =
@@ -180,22 +196,9 @@ export function AthleteHeader({
                 .map(([label, phrase, streak]) => (
                   <div key={label} className="grid grid-cols-3 gap-4 py-0.5 items-start text-right">
                     <span className="text-muted text-left">{label}</span>
-                    <span className="font-bold text-sm text-ink">{streak.weeks}</span>
-                    {/* the run on the Rank chart (again: off) */}
-                    <span>
-                      <button
-                        type="button"
-                        title="Show it on the chart"
-                        data-run
-                        onClick={() => {
-                          const shown = run?.from === streak.from && run?.to === streak.to;
-                          onRun(shown ? null : { from: streak.from!, to: streak.to!, label: `${streak.longest} ${streak.longest === 1 ? "week" : "weeks"} ${phrase}` });
-                        }}
-                        className={`font-medium text-sm cursor-pointer ${LINKED} ${run?.from === streak.from && run?.to === streak.to ? "text-claret" : "text-ink"}`}
-                      >
-                        {streak.longest}
-                      </button>
-                    </span>
+                    {/* all its weeks, and its longest run */}
+                    <span>{marker({ spans: streak.spans, label: `${plural(streak.weeks)} ${phrase}` }, streak.weeks, true)}</span>
+                    <span>{marker({ spans: [{ from: streak.from!, to: streak.to! }], label: `${plural(streak.longest)} ${phrase}` }, streak.longest, false)}</span>
                   </div>
                 ))}
             </div>

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { scrollWhileGrowing } from "@/components/anchors";
+import { scrollWhileGrowing, useHash } from "@/components/anchors";
+import { SECTION, targetOf } from "@/lib/anchors";
 import { AthleteHeader } from "@/components/athlete/AthleteHeader";
 import { type Highlight, standingOf } from "@/lib/standing";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -41,6 +42,35 @@ export function AthleteView({
 
   // a longest run picked in the header: shown on the Rank chart
   const [run, setRun] = useState<Highlight | null>(null);
+  // a record of weeks (#rating-<kind>[-run]~<weight>: components/records/columns.tsx):
+  // its weight, and its weeks (all of them, or its longest run) marked on the Rank chart
+  const record = targetOf(useHash(), SECTION.rating);
+  const [recordSeen, setRecordSeen] = useState<string | null>(null);
+  if (record !== recordSeen) {
+    setRecordSeen(record);
+    // a week: the first at #1 (the age)
+    const week = record?.match(/^first-1-(\d{4}-\d{2}-\d{2})-(\d+)(?:~(.+))?$/);
+    if (week) {
+      const [, day, age, of] = week;
+      if (of && athlete.weights.includes(of)) setWeight(of);
+      setRun({ spans: [{ from: day, to: day }], label: `First #1, at ${age}` });
+    }
+    const found = record?.match(/^(at-1|p4p-1|top-8)(-run)?(?:~(.+))?$/);
+    if (found) {
+      const [, kind, longest, of] = found;
+      const at = of && athlete.weights.includes(of) ? of : weight;
+      setWeight(at);
+      const standing = standingOf(places, at, history);
+      const weeks = standing && { "at-1": standing.atOne, "p4p-1": standing.p4pAtOne, "top-8": standing.top8 }[kind];
+      const phrase = { "at-1": "at #1", "p4p-1": "at #1 pound for pound", "top-8": "in the top 8" }[kind];
+      if (weeks && weeks.weeks > 0)
+        setRun(
+          longest
+            ? { spans: [{ from: weeks.from!, to: weeks.to! }], label: `${weeks.longest} ${weeks.longest === 1 ? "week" : "weeks"} ${phrase}` }
+            : { spans: weeks.spans, label: `${weeks.weeks} ${weeks.weeks === 1 ? "week" : "weeks"} ${phrase}` },
+        );
+    }
+  }
   const pickWeight = (w: string) => {
     setRun(null);
     setWeight(w);

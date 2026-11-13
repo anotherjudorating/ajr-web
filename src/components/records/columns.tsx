@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Medal } from "@/components/Medal";
-import { anchor, SECTION } from "@/lib/anchors";
+import { anchor, athleteRow, SECTION } from "@/lib/anchors";
 import type { RecordRow } from "@/lib/api";
 import { monthYear, shortCompetition, shortName, signed } from "@/lib/format";
 import type { RecordInfo } from "@/lib/records";
@@ -394,6 +394,17 @@ const CONTESTS = new Set(["biggest_upsets", "longest_contest"]);
 const IN_A_WEIGHT = new Set(["least_likely_champion", "youngest_grand_slam_medal", "youngest_grand_slam_gold"]);
 // The section of the athlete's or the tournament's page a record is about
 // (lib/anchors.ts); other records open the page at the top.
+// The records of weeks at the top and what of them the athlete's Rank chart marks
+// (#rating-<kind>[-run]~<weight>: components/athlete/AthleteView.tsx).
+const WEEKS: Record<string, string> = {
+  longest_at_1: "at-1",
+  longest_at_1_run: "at-1-run",
+  longest_p4p_1: "p4p-1",
+  longest_p4p_1_run: "p4p-1-run",
+  most_weeks_in_top_8: "top-8",
+  most_weeks_in_top_8_run: "top-8-run",
+};
+const WEEK: Record<string, string> = { youngest_1: "first-1" };
 const ATHLETE_SECTION: Record<string, string> = {
   // the rating's records: the chart, the whole career
   highest_rating: SECTION.rating,
@@ -403,7 +414,6 @@ const ATHLETE_SECTION: Record<string, string> = {
   most_weeks_in_top_8_run: SECTION.rating,
   longest_p4p_1: SECTION.rating,
   longest_p4p_1_run: SECTION.rating,
-  biggest_p4p_lead: SECTION.rating,
   youngest_1: SECTION.rating,
   most_world_tour_medals: SECTION.results,
   most_world_tour_golds: SECTION.results,
@@ -429,6 +439,19 @@ export function rowLink(row: RecordRow): string | null {
     const weight = WEIGHTS.find((w) => w.api === row.weight && w.gender === (row.gender === "female" ? "women" : "men"));
     return weight ? `/tournaments/${row.competition_id}/${weight.slug}` : `/tournaments/${row.competition_id}`;
   }
+  // the biggest P4P lead: that week's pound-for-pound table (the Monday after its
+  // Sunday), at the athlete's row
+  if (row.record === "biggest_p4p_lead" && row.athlete_id && row.day && row.gender) {
+    const monday = new Date(`${row.day}T00:00:00Z`);
+    monday.setUTCDate(monday.getUTCDate() + ((8 - monday.getUTCDay()) % 7 || 7));
+    return `/rankings/p4p/${row.gender === "female" ? "women" : "men"}/${monday.toISOString().slice(0, 10)}#${athleteRow(row.athlete_id)}`;
+  }
+  // the records of a week (the first at #1): the Rank chart in their weight, the week
+  // marked with the record's value
+  if (row.athlete_id && WEEK[row.record] && row.day)
+    return anchor(`/athletes/${row.athlete_id}`, SECTION.rating, `${WEEK[row.record]}-${row.day}-${Math.round(row.value)}${row.weight ? `~${row.weight}` : ""}`);
+  // the records of weeks: the Rank chart in their weight, their weeks marked
+  if (row.athlete_id && WEEKS[row.record]) return anchor(`/athletes/${row.athlete_id}`, SECTION.rating, `${WEEKS[row.record]}${row.weight ? `~${row.weight}` : ""}`);
   if (row.athlete_id) return anchor(`/athletes/${row.athlete_id}`, ATHLETE_SECTION[row.record]);
   if (row.competition_id) return anchor(`/tournaments/${row.competition_id}`, TOURNAMENT_SECTION[row.record]);
   if (row.country) return `/countries/${row.country.toLowerCase()}`;

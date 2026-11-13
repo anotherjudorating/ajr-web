@@ -13,7 +13,7 @@ import { peakTableLink, SECTION } from "@/lib/anchors";
 import { formatDate, monthYear } from "@/lib/format";
 import { tournamentPath } from "@/lib/weights";
 import { type Places } from "@/lib/places";
-import type { Highlight } from "@/lib/standing";
+import { type Highlight, SINCE } from "@/lib/standing";
 
 // Where things go on the canvas. From md up, the prototype's chart: a 1000×280 canvas
 // scaled to the page (the plot from x 75 to 860, grid from 50, y 25 to 225). Scaled
@@ -50,7 +50,7 @@ const DESKTOP: Layout = {
 };
 
 function phone(width: number): Layout {
-  const right = width - 80; // "Rating 2276" after it
+  const right = width - 10; // no end labels: the header over the chart has them
   return {
     width,
     height: 226,
@@ -106,9 +106,11 @@ export function RatingChart({
 }) {
 
   const now = new Date(today).getTime();
-  // an athlete idle for years: the whole history rather than an empty window
   const lastContest = history.length ? new Date(history[0].fought_on).getTime() : now;
-  const [range, setRange] = useState<Range>(now - lastContest > 3.5 * YEAR ? "All" : "4Y");
+  // the last year; idle over a year: four (the last results in it); idle over two: the
+  // whole career (a comeback makes the last contest recent again)
+  const idleFor = now - lastContest;
+  const [range, setRange] = useState<Range>(idleFor > 2 * YEAR ? "All" : idleFor > YEAR ? "4Y" : "1Y");
   // the rating, or the place every week in the picked weight and pound for pound
   const [view, setView] = useState<"rating" | "rank">("rating");
   const ranked = places !== null && weight !== null && places.weeks.some((week) => week?.[1] === weight);
@@ -169,7 +171,8 @@ export function RatingChart({
     : undefined;
   const points: Point[] = careerLine(history, inactive ? null : { day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 }, period, split);
   const years = RANGES[range];
-  const from = years === null ? points[0].day : now - years * YEAR;
+  // All: from SINCE (as the records), unless the whole career was before it
+  const from = years === null ? (points.at(-1)!.day >= SINCE ? Math.max(points[0].day, SINCE) : points[0].day) : now - years * YEAR;
   const shown = points.filter((p) => p.day >= from);
   // the line comes in from the left edge, from the last point before the window
   const outside = points.filter((p) => p.day < from).at(-1);
@@ -207,14 +210,15 @@ export function RatingChart({
   const tipY = hovered ? (nearPeak ? Math.min(y(hovered.score), y(peak!.score)) - LABEL_ROOM : y(hovered.score)) : 0;
   // a dot on a period with a competition
   const dotted = real.filter((p) => p.events.length > 0);
-  const ticks = monthTicks(start, now, at.maxDates);
+  // the dates under the plot, none too close to today's at its right edge
+  const ticks = monthTicks(start, now, at.maxDates).filter((tick) => x(tick) < RIGHT - 90);
   // the end labels (Skill, −RD, Rating) next to the line's last point: at today's edge,
   // or, for an inactive athlete whose line ends earlier, right after that point (over
   // the inactive zone, on a paper halo)
   const labelX = inactive ? Math.min(x(last.day) + 12, at.width - (desktop ? 130 : 88)) : RIGHT + at.labels;
   // the Peak label (68 wide, centred over the peak) moved left so that it stops before
   // the end labels (Skill, uncertainty, Rating) and the plot's edge, right of its start
-  const peakShift = peak ? shiftOf(x(peak.day), LEFT, Math.min(RIGHT, labelX) - 6) : 0;
+  const peakShift = peak ? shiftOf(x(peak.day), LEFT, (desktop ? Math.min(RIGHT, labelX) : RIGHT) - 6) : 0;
 
   // Inactive: no contest for over a year (out of the tables), between competitions or
   // since the last one. The rating holds, its uncertainty grows, so the score drifts
@@ -280,7 +284,9 @@ export function RatingChart({
             weight={weight!}
             start={start}
             now={now}
-            at={base}
+            // a desktop: a narrower column for the places than for the rating's labels
+            at={desktop ? { ...base, right: base.width - 110 } : base}
+            ends={desktop}
             run={run}
             onClear={() => onRun?.(null)}
             // out of the tables a year after the last contest: the rank's idle spells start then
@@ -379,25 +385,28 @@ export function RatingChart({
               font={FONT}
             />
           )}
-          <g fontFamily={FONT} fontSize="12" stroke="#F3EEE3" strokeWidth={inactive ? 4 : 0} paintOrder="stroke" strokeLinejoin="round">
-            <text fill="#66605C" x={labelX} y={y(last.rating) + 4}>
-              Skill {last.rating}
-            </text>
-            <line
-              stroke="#D6CFC2"
-              strokeWidth="0.8"
-              x1={labelX + 4}
-              x2={labelX + 4}
-              y1={y(last.rating) + 11}
-              y2={y(last.score) - 11}
-            />
-            <text fill="#66605C" x={labelX + 12} y={(y(last.rating) + y(last.score)) / 2 + 4}>
-              −{last.rating - last.score}{desktop ? " uncertainty" : ""}
-            </text>
-            <text fill="#33302E" fontWeight="700" x={labelX} y={y(last.score) + 4}>
-              Rating {last.score}
-            </text>
-          </g>
+          {/* the end labels: a phone has them in the header over the chart */}
+          {desktop && (
+            <g fontFamily={FONT} fontSize="12" stroke="#F3EEE3" strokeWidth={inactive ? 4 : 0} paintOrder="stroke" strokeLinejoin="round">
+              <text fill="#66605C" x={labelX} y={y(last.rating) + 4}>
+                Skill {last.rating}
+              </text>
+              <line
+                stroke="#D6CFC2"
+                strokeWidth="0.8"
+                x1={labelX + 4}
+                x2={labelX + 4}
+                y1={y(last.rating) + 11}
+                y2={y(last.score) - 11}
+              />
+              <text fill="#66605C" x={labelX + 12} y={(y(last.rating) + y(last.score)) / 2 + 4}>
+                −{last.rating - last.score}{desktop ? " uncertainty" : ""}
+              </text>
+              <text fill="#33302E" fontWeight="700" x={labelX} y={y(last.score) + 4}>
+                Rating {last.score}
+              </text>
+            </g>
+          )}
           <g fill="#66605C" fontFamily={FONT} fontSize={at.font} textAnchor="middle">
             {ticks.map((tick) => (
               <text key={tick} x={x(tick)} y={at.datesY}>
@@ -405,14 +414,15 @@ export function RatingChart({
               </text>
             ))}
             {/* at the plot's right edge: when it is the canvas's (inactive), ends there */}
-            <text x={RIGHT} y={at.datesY} textAnchor={inactive ? "end" : "middle"}>
+            <text x={RIGHT} y={at.datesY} textAnchor={inactive || !desktop ? "end" : "middle"}>
               {monthYear(new Date(now).toISOString())}
             </text>
           </g>
         </svg>
         )}
         {/* the career's peak, when it is before the window: a way to it */}
-        {!rank && boxWidth !== null && !peak && athlete.peak_on && athlete.peak_score !== null && range !== "All" && (
+        {/* (a peak before SINCE: not on the chart, no way to it) */}
+        {!rank && boxWidth !== null && !peak && athlete.peak_on && athlete.peak_score !== null && range !== "All" && Date.parse(athlete.peak_on) >= SINCE && (
           <button
             type="button"
             onClick={() => setRange("All")}
@@ -447,8 +457,26 @@ export function RatingChart({
           </ChartTip>
         )}
       </div>
-      {/* the legend under the chart: the title and the switches alone over it */}
-      <div className="mt-1">
+      {/* the legend under the chart: the title and the switches alone over it; marked
+          weeks' label under it, in the room before the next section (nothing moves) */}
+      <div className="mt-1 relative">
+        {rank && run && (
+          <div className="absolute top-full left-0 mt-2">
+            <div className="inline-flex items-center gap-1.5 pl-1.5 border border-claret bg-paper text-[11px] leading-4 font-semibold text-ink">
+              {run.label}
+              {/* one run: its months */}
+              {run.spans.length === 1 &&
+                (monthYear(run.spans[0].from) === monthYear(run.spans[0].to)
+                  ? `, ${monthYear(run.spans[0].from)}`
+                  : `, ${monthYear(run.spans[0].from)} – ${monthYear(run.spans[0].to)}`)}
+              {onRun && (
+                <button type="button" onClick={() => onRun(null)} aria-label="Take the mark off" title="Take the mark off (Esc)" className="px-1.5 text-claret hover:bg-claret/10 cursor-pointer">
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         {rank ? (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
             <span className="inline-flex items-center gap-1.5">

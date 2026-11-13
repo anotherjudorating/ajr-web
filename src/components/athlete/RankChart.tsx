@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { ChartTip, monthTicks, nearest, pointerX, useChartPointer } from "@/components/chart";
 import { formatDate, monthYear } from "@/lib/format";
 import type { Places } from "@/lib/places";
-import type { Highlight } from "@/lib/standing";
+import { type Highlight, SINCE } from "@/lib/standing";
 
 type Layout = { width: number; height: number; gridLeft: number; valuesX: number; left: number; right: number; top: number; rowGap: number; datesY: number; maxDates: number; font: number };
 type Week = { day: number; place: number | null; p4p: number | null };
@@ -30,6 +30,7 @@ export function RankChart({
   run = null,
   onClear,
   idle = [],
+  ends = true,
 }: {
   places: Places;
   weight: string;
@@ -39,6 +40,7 @@ export function RankChart({
   run?: Highlight | null;
   onClear?: () => void;
   idle?: { from: number; to: number }[];
+  ends?: boolean; // the latest places after the line (a phone: in the header)
 }) {
   useEffect(() => {
     if (!run || !onClear) return;
@@ -55,7 +57,7 @@ export function RankChart({
   const from = Date.parse(`${places.from}T00:00:00Z`);
   const weeks: Week[] = places.weeks
     .map((week, i) => ({ day: from + 7 * DAY * i, place: week && week[1] === weight ? week[0] : null, p4p: week?.[2] ?? null }))
-    .filter((w) => w.day >= start && w.day <= now);
+    .filter((w) => w.day >= Math.max(start, SINCE) && w.day <= now);
   const { left: LEFT, right: RIGHT, top: TOP } = at;
   const BOTTOM = TOP + 5 * at.rowGap;
   const worst = Math.max(8, ...weeks.flatMap((w) => [w.place ?? 0, w.p4p ?? 0]));
@@ -77,7 +79,8 @@ export function RankChart({
     const at = pointerX(e, LEFT, RIGHT);
     return shown.length ? nearest(shown, (w) => Math.abs(x(w.day) - at)) : null;
   });
-  const ticks = monthTicks(start, now, at.maxDates);
+  // the dates, none too close to today's at the right edge
+  const ticks = monthTicks(start, now, at.maxDates).filter((tick) => x(tick) < RIGHT - 90);
   const last = shown.at(-1);
   const band = y(8.5);
 
@@ -119,15 +122,29 @@ export function RankChart({
             );
           })}
         {run && (
-          <g pointerEvents="none">
-            <rect
-              x={x(Date.parse(run.from))}
-              y={TOP}
-              width={Math.max(x(Date.parse(run.to) + 7 * DAY) - x(Date.parse(run.from)), 2)}
-              height={BOTTOM - TOP}
-              fill="#990F3D"
-              fillOpacity="0.12"
-            />
+          <g pointerEvents="none" fill="#990F3D" fillOpacity="0.12">
+            {/* one week (a record's day): a line and the athlete's place that week */}
+            {run.spans.length === 1 && run.spans[0].from === run.spans[0].to && (() => {
+              // the Monday's table on or after it holds the weekend before (lib/places.ts)
+              const day = Date.parse(run.spans[0].from);
+              const week = weeks.find((w) => w.day >= day && w.day - day < 7 * DAY && w.place !== null);
+              const at = week ? week.day : day;
+              return (
+                <g fillOpacity="1">
+                  <line x1={x(at)} x2={x(at)} y1={TOP} y2={BOTTOM} stroke="#990F3D" strokeWidth="1.5" />
+                  {week && <circle cx={x(week.day)} cy={y(week.place!)} r="5" fill="#990F3D" />}
+                </g>
+              );
+            })()}
+            {run.spans.map((span) => (
+              <rect
+                key={span.from}
+                x={x(Date.parse(span.from))}
+                y={TOP}
+                width={Math.max(x(Date.parse(span.to) + 7 * DAY) - x(Date.parse(span.from)), 2)}
+                height={BOTTOM - TOP}
+              />
+            ))}
           </g>
         )}
         <path d={path("p4p")} fill="none" stroke="#66605C" strokeWidth="1.2" strokeDasharray="4,3" />
@@ -140,7 +157,7 @@ export function RankChart({
         )}
         {shown.length > 0 && <rect x={LEFT} y={TOP} width={RIGHT - LEFT} height={BOTTOM - TOP} fill="transparent" className="cursor-pointer" {...plot} />}
         {/* the latest week's places, after the line's end */}
-        {last && (
+        {ends && last && (
           <g fontFamily={FONT} fontSize="12">
             {/* the two places close together: one line */}
             {last.place !== null && last.p4p !== null && Math.abs(y(last.place) - y(last.p4p)) < 14 ? (
@@ -170,25 +187,11 @@ export function RankChart({
               {monthYear(new Date(tick).toISOString())}
             </text>
           ))}
-          <text x={RIGHT} y={at.datesY}>
+          <text x={RIGHT} y={at.datesY} textAnchor={ends ? "middle" : "end"}>
             {monthYear(new Date(now).toISOString())}
           </text>
         </g>
       </svg>
-      {run && (
-        // the run's label over its band, kept inside the chart
-        <div
-          className="absolute top-0 -translate-x-1/2 inline-flex items-center gap-1.5 pl-1.5 border border-claret bg-paper text-[11px] font-semibold text-ink whitespace-nowrap z-20"
-          style={{ left: `${Math.min(Math.max((((x(Date.parse(run.from)) + x(Date.parse(run.to))) / 2) / at.width) * 100, 18), 82)}%` }}
-        >
-          {run.label}, {monthYear(run.from)} – {monthYear(run.to)}
-          {onClear && (
-            <button type="button" onClick={onClear} aria-label="Take the mark off" title="Take the mark off (Esc)" className="px-1.5 py-0.5 text-claret hover:bg-claret/10 cursor-pointer">
-              ×
-            </button>
-          )}
-        </div>
-      )}
       {hovered && (
         <ChartTip left={(x(hovered.day) / at.width) * 100} top={((hovered.place !== null ? y(hovered.place) : TOP) / at.height) * 100} hold={hold} docked={touched}>
           <div className="font-semibold text-ink">Week of {formatDate(new Date(hovered.day).toISOString().slice(0, 10))}</div>
