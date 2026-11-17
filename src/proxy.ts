@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { client, overloaded } from "@/lib/data-client";
+import { takePage } from "@/lib/page-limit";
 import { SITE } from "@/lib/seo";
 
 // While the database cannot keep up (the data client's breaker open, or its queue half
@@ -19,7 +20,33 @@ export function proxy(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
     return NextResponse.redirect(`${SITE}${pathname}${search}`, 308);
   }
-  if (overloaded() && CRAWLER.test(request.headers.get("user-agent") ?? "")) {
+  const crawler = CRAWLER.test(request.headers.get("user-agent") ?? "");
+  // A page's HTML as a browser asks for it (Accept: text/html; not Next's navigation and
+  // prefetch requests, whose RSC header and ?_rsc= Next removes before this runs), per
+  // visitor's IP as Cloudflare gives it; search engines are left to their own pace.
+  const ip = request.headers.get("cf-connecting-ip");
+  if (
+    ip &&
+    !crawler &&
+    request.method === "GET" &&
+    (request.headers.get("accept") ?? "").includes("text/html") &&
+    !request.nextUrl.pathname.startsWith("/api/")
+  ) {
+    const page = takePage(ip);
+    if (!page.ok) {
+      return new NextResponse(
+        "Too many pages at once, please slow down. The whole data set is at /data.",
+        {
+          status: 429,
+          headers: {
+            "retry-after": String(page.retryAfter),
+            "cache-control": "no-store",
+          },
+        },
+      );
+    }
+  }
+  if (overloaded() && crawler) {
     client.counts.shed++;
     return new NextResponse("The site is busy, please come back later.", {
       status: 503,
@@ -31,5 +58,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // pages only: not the site's assets, not the health check
-  matcher: ["/((?!_next/|api/health|icon.svg|favicon.ico|robots.txt|sitemap.xml|llms.txt).*)"],
+  matcher: [
+    "/((?!_next/|api/health|icon.svg|favicon.ico|robots.txt|sitemap.xml|llms.txt).*)",
+  ],
 };
