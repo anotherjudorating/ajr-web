@@ -241,7 +241,29 @@ resource "cloudflare_ruleset" "waf_custom" {
           http.request.uri.path wildcard "/archive/*/*"
         )))
     EOT
+    }, {
+    # Mid-November 2026: tens of thousands of IPs a day (residential proxies in the US,
+    # Brazil, Argentina, Bangladesh...) reading pages with Chrome 120 to 122 user agents,
+    # long out of date for a person. A managed challenge costs a person one click at
+    # most and stops the scraper. Search engines and other verified bots pass
+    # (cf.client.bot); /api/ is left out (the update job's revalidation, the search
+    # index), and data.<domain> too (the site's own server reads it as "node"). Bot
+    # Fight Mode would challenge those as well, with no exceptions on the free plan.
+    description = "www: a managed challenge for out-of-date Chrome (scrapers)"
+    action      = "managed_challenge"
+    enabled     = true
+    expression  = <<-EOT
+      (http.host in {"www.${var.domain}" "${var.domain}"} and not cf.client.bot
+        and not starts_with(http.request.uri.path, "/api/")
+        and (${local.old_chrome}))
+    EOT
   }]
+}
+
+# "Chrome/70." to "Chrome/124." in the user agent (the free plan has no regular
+# expressions); Chrome 125 came out in May 2024.
+locals {
+  old_chrome = join(" or ", [for v in range(70, 125) : "http.user_agent contains \"Chrome/${v}.\""])
 }
 
 # Free plan: one rule, 10 s periods. The site itself reads data.<domain> from Render's
