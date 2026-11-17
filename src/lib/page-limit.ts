@@ -11,19 +11,34 @@ const IDLE_MS = 60_000; // a bucket untouched this long is full again: dropped
 const SWEEP_MS = 30_000;
 
 type Bucket = { tokens: number; at: number };
+// `seen`: the page requests the proxy saw, by kind (visitor or crawler, asking for HTML
+// or not, which address headers came: their names only, never an address), to tell
+// from /api/health why the limit stays idle.
+type Seen = Record<string, number>;
 const state = globalThis as unknown as {
-  pageLimit?: { buckets: Map<string, Bucket>; swept: number; refused: number };
+  pageLimit?: {
+    buckets: Map<string, Bucket>;
+    swept: number;
+    refused: number;
+    seen: Seen;
+  };
 };
 const limit = (state.pageLimit ??= {
   buckets: new Map(),
   swept: 0,
   refused: 0,
+  seen: {} as Seen,
 });
+
+export function noteRequest(kind: string) {
+  limit.seen[kind] = (limit.seen[kind] ?? 0) + 1;
+}
 
 /** For /api/health: the pages refused since the start, the IPs being followed. */
 export const pageLimitStats = () => ({
   refused: limit.refused,
   ips: limit.buckets.size,
+  seen: limit.seen,
 });
 
 /** Whether this IP may load one more page now; if not, the seconds until it may. */
