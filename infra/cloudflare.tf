@@ -332,7 +332,7 @@ locals {
   html_edge_ttl = 10800 # 3 hours
   ratelimit_data = (
     length(var.render_outbound_ips) == 0
-    ? "http.host eq \"data.${var.domain}\""
-    : "http.host eq \"data.${var.domain}\" and not ip.src in {${join(" ", var.render_outbound_ips)}}"
+    ? "(http.host eq \"data.${var.domain}\")"
+    : "(http.host eq \"data.${var.domain}\" and not ip.src in {${join(" ", var.render_outbound_ips)}})"
   )
 }
