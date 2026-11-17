@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { client, overloaded } from "@/lib/data-client";
-import { takePage } from "@/lib/page-limit";
+import { noteRequest, takePage } from "@/lib/page-limit";
 import { SITE } from "@/lib/seo";
 
 // While the database cannot keep up (the data client's breaker open, or its queue half
@@ -24,22 +24,32 @@ export function proxy(request: NextRequest) {
   // A page's HTML as a browser asks for it (Accept: text/html; not Next's navigation and
   // prefetch requests, whose RSC header and ?_rsc= Next removes before this runs), per
   // visitor's IP as Cloudflare gives it; search engines are left to their own pace.
-  const ip = request.headers.get("cf-connecting-ip");
-  if (
-    ip &&
-    !crawler &&
-    request.method === "GET" &&
-    (request.headers.get("accept") ?? "").includes("text/html") &&
-    !request.nextUrl.pathname.startsWith("/api/")
-  ) {
-    const page = takePage(ip);
-    if (!page.ok) {
+  const headers = request.headers;
+  const ip = headers.get("cf-connecting-ip") ?? headers.get("true-client-ip");
+  const html = (headers.get("accept") ?? "").includes("text/html");
+  const page =
+    request.method === "GET" && !request.nextUrl.pathname.startsWith("/api/");
+  if (page) {
+    noteRequest(
+      [
+        crawler ? "crawler" : "visitor",
+        html ? "html" : "other",
+        ...["cf-connecting-ip", "true-client-ip", "x-real-ip"].filter((name) =>
+          headers.has(name),
+        ),
+        `xff${(headers.get("x-forwarded-for") ?? "").split(",").filter(Boolean).length}`,
+      ].join(" "),
+    );
+  }
+  if (ip && page && html && !crawler) {
+    const taken = takePage(ip);
+    if (!taken.ok) {
       return new NextResponse(
         "Too many pages at once, please slow down. The whole data set is at /data.",
         {
           status: 429,
           headers: {
-            "retry-after": String(page.retryAfter),
+            "retry-after": String(taken.retryAfter),
             "cache-control": "no-store",
           },
         },
