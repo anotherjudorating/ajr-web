@@ -105,11 +105,13 @@ resource "cloudflare_ruleset" "cache" {
   phase       = "http_request_cache_settings"
 
   rules = [
-    # The pages' HTML, 10 minutes at the edge: every request for a page was a render on
+    # The pages' HTML, 3 hours at the edge: every request for a page was a render on
     # Render (2026-11-10: 29 thousand HTML requests a day, 1% from the cache; the home
-    # page alone 650). Not purged on an update: the site refreshes a page on the visit
-    # after it (stale-while-revalidate), so a purge would cache the stale copy; 10
-    # minutes bound the delay instead. Only the plain page: not Next's navigation and
+    # page alone 650; 2026-11-17: a scraper reading every page 2 or 3 times within the
+    # hour, 10 minutes caught none of it). The update job purges www after a publish
+    # that changed the site (ajr-backend .github/refresh-site.sh), after telling the
+    # site, whose data then expires (expire: 0, not stale-while-revalidate): the next
+    # visit renders the new data and the edge keeps that. Only the plain page: not Next's navigation and
     # prefetch data (the same address with an RSC header and a ?_rsc= query), not a
     # filtered or paired URL (a query), not the API. The edge TTL override caches the
     # streamed pages too (an athlete, a nation: private, no-store from the origin; seen
@@ -117,7 +119,7 @@ resource "cloudflare_ruleset" "cache" {
     # left alone: the free plan cannot set it ("not entitled").
     # Header names: lower case over HTTP/2 and 3, as sent over HTTP/1.1.
     {
-      description = "www: a page's HTML, 10 minutes at the edge"
+      description = "www: a page's HTML, 3 hours at the edge (purged after a publish)"
       expression  = <<-EOT
         (http.host eq "www.${var.domain}" and http.request.method eq "GET"
           and http.request.uri.query eq ""
@@ -134,7 +136,39 @@ resource "cloudflare_ruleset" "cache" {
         cache = true
         edge_ttl = {
           mode            = "override_origin"
-          default         = 600
+          default         = local.html_edge_ttl
+          status_code_ttl = [{ status_code = 404, value = 60 }]
+        }
+        browser_ttl = { mode = "respect_origin" }
+      }
+    },
+    # A head-to-head pair (/head-to-head?a=…&b=…&w=…): the same, keyed by the three
+    # parameters the page reads, in their order (a pair's two orders are two pages: the
+    # first athlete stands on the left). 27% of the scraper's requests on 2026-11-17,
+    # each two athletes' whole histories from the database, and none cached (a query).
+    # The views are counted by the browser (POST /api/matchup-view), not by the render.
+    {
+      description = "www: a head-to-head pair's HTML, 3 hours at the edge, keyed by a, b, w"
+      expression  = <<-EOT
+        (http.host eq "www.${var.domain}" and http.request.method eq "GET"
+          and http.request.uri.path eq "/head-to-head" and http.request.uri.query ne ""
+          and not any(http.request.headers.names[*] == "rsc")
+          and not any(http.request.headers.names[*] == "RSC")
+          and not any(http.request.headers.names[*] == "next-router-prefetch")
+          and not any(http.request.headers.names[*] == "Next-Router-Prefetch"))
+      EOT
+      action      = "set_cache_settings"
+      enabled     = true
+      action_parameters = {
+        cache = true
+        cache_key = {
+          custom_key = {
+            query_string = { include = { list = ["a", "b", "w"] } }
+          }
+        }
+        edge_ttl = {
+          mode            = "override_origin"
+          default         = local.html_edge_ttl
           status_code_ttl = [{ status_code = 404, value = 60 }]
         }
         browser_ttl = { mode = "respect_origin" }
@@ -273,8 +307,13 @@ resource "cloudflare_zone_setting" "challenge_ttl" {
   value      = 86400
 }
 
-# Free plan: one rule, 10 s periods. The site itself reads data.<domain> from Render's
-# few outbound IPs: they are left out once it does (render_outbound_ips).
+# Free plan: one rule, 10 s periods, so data.<domain> and the site's pages share it.
+# The site itself reads data.<domain> from Render's few outbound IPs: they are left out
+# once it does (render_outbound_ips). The pages (2026-11-17): a scraper passing the
+# managed challenge fetched ~100 pages in 10 s from each of a few dozen IPs; a person
+# opens a page or two in 10 s, Googlebot less than one a second. Not counted: verified
+# bots, the assets (/_next/), the API, and Next's navigation and prefetch requests
+# (an RSC header): a person scrolling a table prefetches its links.
 resource "cloudflare_ruleset" "ratelimit" {
   zone_id     = data.cloudflare_zone.site.zone_id
   name        = "default"
@@ -283,14 +322,10 @@ resource "cloudflare_ruleset" "ratelimit" {
   phase       = "http_ratelimit"
 
   rules = [{
-    description = "data.: 60 requests per 10 s per IP"
+    description = "data. and the site's pages: 60 requests per 10 s per IP"
     action      = "block"
     enabled     = true
-    expression = (
-      length(var.render_outbound_ips) == 0
-      ? "(http.host eq \"data.${var.domain}\")"
-      : "(http.host eq \"data.${var.domain}\" and not ip.src in {${join(" ", var.render_outbound_ips)}})"
-    )
+    expression  = "(${local.ratelimit_data}) or (${local.ratelimit_pages})"
     ratelimit = {
       characteristics     = ["cf.colo.id", "ip.src"]
       period              = 10
@@ -298,4 +333,23 @@ resource "cloudflare_ruleset" "ratelimit" {
       mitigation_timeout  = 10
     }
   }]
+}
+
+locals {
+  html_edge_ttl = 10800 # 3 hours
+  ratelimit_data = (
+    length(var.render_outbound_ips) == 0
+    ? "http.host eq \"data.${var.domain}\""
+    : "http.host eq \"data.${var.domain}\" and not ip.src in {${join(" ", var.render_outbound_ips)}}"
+  )
+  ratelimit_pages = join(" and ", [
+    "http.host in {\"www.${var.domain}\" \"${var.domain}\"}",
+    "not cf.client.bot",
+    "not starts_with(http.request.uri.path, \"/_next/\")",
+    "not starts_with(http.request.uri.path, \"/api/\")",
+    "not any(http.request.headers.names[*] == \"rsc\")",
+    "not any(http.request.headers.names[*] == \"RSC\")",
+    "not any(http.request.headers.names[*] == \"next-router-prefetch\")",
+    "not any(http.request.headers.names[*] == \"Next-Router-Prefetch\")",
+  ])
 }
