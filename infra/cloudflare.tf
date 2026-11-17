@@ -242,28 +242,35 @@ resource "cloudflare_ruleset" "waf_custom" {
         )))
     EOT
     }, {
-    # Mid-November 2026: tens of thousands of IPs a day (residential proxies in the US,
-    # Brazil, Argentina, Bangladesh...) reading pages with Chrome 120 to 122 user agents,
-    # long out of date for a person. A managed challenge costs a person one click at
-    # most and stops the scraper. Search engines and other verified bots pass
-    # (cf.client.bot); /api/ is left out (the update job's revalidation, the search
-    # index), and data.<domain> too (the site's own server reads it as "node"). Bot
-    # Fight Mode would challenge those as well, with no exceptions on the free plan.
-    description = "www: a managed challenge for out-of-date Chrome (scrapers)"
+    # Mid-November 2026: a scraper read every page from tens of thousands of IPs a day
+    # (residential proxies), fetching the HTML only, never a script: no browser. Its
+    # first user agents were out-of-date Chrome; challenged, it switched within hours to
+    # a current Chrome on a Mac, the same as people's. So every request for a page is
+    # challenged, whatever it says it is: a browser passes (in a second or two, a tick
+    # at most, once a day: challenge_ttl), a script does not. Verified bots pass
+    # (cf.client.bot: Google, Bing, Yandex...). Left out: /api/ (the update job's
+    # revalidation, the search index), /_next/ (scripts and styles, fetched by a
+    # browser that already passed), the files crawlers read, and data.<domain> (the
+    # site's own server reads it as "node"). Bot Fight Mode would challenge those too,
+    # with no exceptions on the free plan.
+    description = "www: a managed challenge for every page (scrapers)"
     action      = "managed_challenge"
     enabled     = true
     expression  = <<-EOT
       (http.host in {"www.${var.domain}" "${var.domain}"} and not cf.client.bot
         and not starts_with(http.request.uri.path, "/api/")
-        and (${local.old_chrome}))
+        and not starts_with(http.request.uri.path, "/_next/")
+        and not http.request.uri.path in {"/robots.txt" "/sitemap.xml" "/llms.txt" "/icon.svg" "/favicon.ico"})
     EOT
   }]
 }
 
-# "Chrome/70." to "Chrome/124." in the user agent (the free plan has no regular
-# expressions); Chrome 125 came out in May 2024.
-locals {
-  old_chrome = join(" or ", [for v in range(70, 125) : "http.user_agent contains \"Chrome/${v}.\""])
+# How long a passed challenge lasts: a day (Cloudflare's default is 30 minutes), so a
+# person sees it at most once a day.
+resource "cloudflare_zone_setting" "challenge_ttl" {
+  zone_id    = data.cloudflare_zone.site.zone_id
+  setting_id = "challenge_ttl"
+  value      = 86400
 }
 
 # Free plan: one rule, 10 s periods. The site itself reads data.<domain> from Render's
