@@ -272,24 +272,30 @@ resource "cloudflare_ruleset" "waf_custom" {
     EOT
     }, {
     # Mid-November 2026: a scraper read every page from tens of thousands of IPs a day
-    # (residential proxies), fetching the HTML only, never a script: no browser. Its
-    # first user agents were out-of-date Chrome; challenged, it switched within hours to
-    # a current Chrome on a Mac, the same as people's. So every request for a page is
-    # challenged, whatever it says it is: a browser passes (in a second or two, a tick
-    # at most, once a day: challenge_ttl), a script does not. Verified bots pass
-    # (cf.client.bot: Google, Bing, Yandex...). Left out: /api/ (the update job's
-    # revalidation, the search index), /_next/ (scripts and styles, fetched by a
-    # browser that already passed), the files crawlers read, and data.<domain> (the
-    # site's own server reads it as "node"). Bot Fight Mode would challenge those too,
-    # with no exceptions on the free plan.
-    description = "www: a managed challenge for every page (scrapers)"
+    # (residential proxies), switching its user agent to a current Chrome as soon as
+    # the out-of-date ones were challenged. A managed challenge stops a script whatever
+    # it says it is (a browser passes in a second or two, once a day: challenge_ttl).
+    # On every page it also met the people (no visits counted on 18 November), so it
+    # guards only what is heavy and endless: an athlete, a tournament, a contest, a
+    # head-to-head pair, a past week's table, a filtered list. The home page, the
+    # weights' tables, P4P, the teams, the records and the methodology are few, cached
+    # at the edge for hours (the cache rules), and open. Verified bots pass
+    # (cf.client.bot: Google, Bing, Yandex...); the site's pages are also limited per IP
+    # (src/proxy.ts). Bot Fight Mode would challenge the site's own reads of
+    # data.<domain> too, with no exceptions on the free plan.
+    description = "www: a managed challenge on the heavy pages (scrapers)"
     action      = "managed_challenge"
     enabled     = true
     expression  = <<-EOT
-      (http.host in {"www.${var.domain}" "${var.domain}"} and not cf.client.bot
-        and not starts_with(http.request.uri.path, "/api/")
-        and not starts_with(http.request.uri.path, "/_next/")
-        and not http.request.uri.path in {"/robots.txt" "/sitemap.xml" "/llms.txt" "/icon.svg" "/favicon.ico"})
+      (http.host in {"www.${var.domain}" "${var.domain}"} and not cf.client.bot and (
+        starts_with(http.request.uri.path, "/athletes/") or
+        starts_with(http.request.uri.path, "/tournaments/") or
+        starts_with(http.request.uri.path, "/contests/") or
+        http.request.uri.path eq "/head-to-head" or
+        http.request.uri.path wildcard "/rankings/*/20*" or
+        http.request.uri.path wildcard "/rankings/*/*/20*" or
+        (starts_with(http.request.uri.path, "/explore") and http.request.uri.query ne "")
+      ))
     EOT
   }]
 }
