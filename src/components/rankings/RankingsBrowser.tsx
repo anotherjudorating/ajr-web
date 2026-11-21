@@ -29,7 +29,7 @@ const SORTS = {
 const PAST_SORTS = { "rating-desc": SORTS["rating-desc"], "rating-asc": SORTS["rating-asc"] };
 type Sort = keyof typeof SORTS;
 
-const COLUMNS = 14;
+const COLUMNS = 15; // every column, the phones-only IJF one included
 
 
 function sortRows(rows: LeaderboardRow[], sort: Sort): LeaderboardRow[] {
@@ -241,12 +241,14 @@ export function RankingsBrowser({
               <tr ref={headerRow} className="bg-panel border-b border-rule">
                 <th className={`${TH} w-9 sm:w-12 px-1 text-right tabular-nums whitespace-nowrap`}>#</th>
                 <th className={`${TH} w-10 sm:w-14 px-1 text-center tabular-nums whitespace-nowrap relative group cursor-help`}>
-                  <span>↑↓</span>
+                  <span>90d</span>
                   <Tip center>Rank change, last 90 days</Tip>
                 </th>
                 <th className={`${TH} text-left truncate`}>Athlete</th>
                 <th className={`${TH} hidden sm:table-cell text-left sm:w-28`}>NAT</th>
                 <th className={`${TH} w-14 sm:w-20 text-right tabular-nums`}>Rating</th>
+                {/* phones: the IJF place only, next to ours in the first column (wider screens: place and difference, further right) */}
+                <th className={`${TH} sm:hidden w-9 px-1 text-right tabular-nums`}>IJF</th>
                 <th className={`${TH} w-12 sm:w-16 text-right relative group cursor-help hidden sm:table-cell`}>
                   <span>+/-</span>
                   <Tip>Rating change, last 90 days</Tip>
@@ -326,6 +328,9 @@ export function RankingsBrowser({
                             <span>{row.score}</span>
                           </div>
                         </div>
+                      </td>
+                      <td className={`${CELL} sm:hidden w-9 px-1 text-right tabular-nums whitespace-nowrap text-muted`}>
+                        {row.wrl_place ?? "–"}
                       </td>
                       <td className={`${CELL} w-12 text-right font-medium hidden sm:table-cell ${change90.color}`}>
                         {change90.text}
