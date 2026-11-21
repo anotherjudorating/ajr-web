@@ -21,6 +21,19 @@ const YEAR = 365 * 24 * 3600 * 1000;
 
 type Side = { athlete: Athlete; history: HistoryRow[]; places: Places | null };
 
+// The methodology's calculator with these two as they are today, the winner to pick.
+// The site keeps no volatility here: the calculator takes Glicko-2's usual 0.06.
+function calculatorLink(a: Athlete, b: Athlete): string {
+  if (a.rating === null || a.rd === null || b.rating === null || b.rd === null) return "/methodology#calc";
+  const query = new URLSearchParams({
+    a: [a.rating, a.rd, 0.06].join(","),
+    b: [b.rating, b.rd, 0.06].join(","),
+    an: shortName(a.family_name, a.given_name),
+    bn: shortName(b.family_name, b.given_name),
+  });
+  return `/methodology?${query}#calc`;
+}
+
 // Two athletes side by side: their chances today, both ratings over time and every
 // meeting between them.
 export function Comparison({ a, b, today }: { a: Side; b: Side; today: string }) {
@@ -42,7 +55,7 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
         <div className="flex items-baseline justify-between gap-3 border-b-2 border-ink pb-2">
           <h2 className={H2}>Current chances</h2>
           <Link
-            href="/methodology"
+            href={calculatorLink(a.athlete, b.athlete)}
             className="font-serif shrink-0 whitespace-nowrap text-[14px] font-semibold text-claret hover:underline"
           >
             How ratings work

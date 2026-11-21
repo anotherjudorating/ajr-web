@@ -342,6 +342,8 @@ export async function popularMatchupRows(fallback: number[]): Promise<PopularMat
   return rpc<PopularMatchupRow[]>("popular_matchups", { fallback: `{${fallback.join(",")}}` });
 }
 
+export type Glicko = { skill: number; rd: number; volatility: number };
+
 export type ContestDetail = {
   contest_id: number;
   competition_id: number;
@@ -386,6 +388,9 @@ export type ContestDetail = {
   blue_rd_after: number | null;
   blue_score_before: number | null;
   blue_score_after: number | null;
+  // the exact state before the contest, for the methodology's step by step
+  white_glicko: Glicko | null;
+  blue_glicko: Glicko | null;
   // a walkover, not rated: tagged Fusen-Gachi by judobase, or nothing was fought
   walkover: "fusen" | "likely" | null;
 };

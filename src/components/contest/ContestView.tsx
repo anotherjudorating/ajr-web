@@ -268,6 +268,23 @@ function Result({ contest: c, upcoming }: { contest: ContestDetail; upcoming?: U
   );
 }
 
+// The methodology's calculator with this contest: both athletes as they were
+// before it (exact), the winner; its maths gives the change this page shows.
+function methodologyLink(c: ContestDetail): string {
+  const a = c.white_glicko; // white on the left, as the calculator marks it
+  const b = c.blue_glicko;
+  if (!a || !b || c.winner_id === null) return "/methodology#calc";
+  const query = new URLSearchParams({
+    a: [a.skill, a.rd, a.volatility].join(","),
+    b: [b.skill, b.rd, b.volatility].join(","),
+    an: shortName(c.white_family_name, c.white_given_name),
+    bn: shortName(c.blue_family_name, c.blue_given_name),
+    won: c.winner_id === c.white_id ? "a" : "b",
+    contest: String(c.contest_id),
+  });
+  return `/methodology?${query}#calc`;
+}
+
 // A walkover: why it changes no rating.
 function Walkover({ contest: c }: { contest: ContestDetail }) {
   const loser = c.winner_id === athleteOf(c, "white").id ? athleteOf(c, "blue") : athleteOf(c, "white");
@@ -320,7 +337,7 @@ function RatingChange({ contest: c, upcoming }: { contest: ContestDetail; upcomi
             })}
           </div>
         ) : (
-          <Link href="/methodology" className={LINK}>
+          <Link href={methodologyLink(c)} className={LINK}>
             How ratings work
           </Link>
         )}
