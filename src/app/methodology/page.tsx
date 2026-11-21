@@ -17,7 +17,11 @@ import data from "@/data/methodology.json";
 // PROTOTYPE of the methodology, one page in three parts: why the rating exists (a
 // story), how the rating is counted (the number, the calculator), does it work (the
 // benchmark, ajr-backend benchmark/). The numbers: src/data/methodology.json.
-export const metadata: Metadata = { title: "How the rating works", robots: { index: false } }; // until the owner approves
+export const metadata: Metadata = {
+  title: "How the rating works",
+  description:
+    "Why Another Judo Rating exists, how a contest moves it and how well it predicts: Paris 2024, IJF points against strength, a calculator, and a test on 24,503 contests against the IJF ranking.",
+};
 
 const P = "mt-5";
 const LINK = "underline decoration-rule underline-offset-2 hover:decoration-ink";
