@@ -144,11 +144,18 @@ export function useRowMark(active: boolean, key = ""): { row: string; day: strin
 export function useRowScroll(id: string, ready: boolean, key = id): void {
   const scrolledFor = useRef("");
   useLayoutEffect(() => {
-    const row = ready ? document.getElementById(id) : null;
+    const row = ready ? findRow(id) : null;
     if (!row || scrolledFor.current === key) return;
     scrolledFor.current = key;
     if (goingTo !== id) scrollToRow(row);
   });
+}
+
+// A row by its id, or (a second layout of the same rows: the tournament's podium on wide
+// screens) by data-row: the one shown.
+function findRow(id: string): HTMLElement | null {
+  const rows = [document.getElementById(id), ...document.querySelectorAll<HTMLElement>(`[data-row="${CSS.escape(id)}"]`)];
+  return rows.find((row) => row && row.offsetParent !== null) ?? rows[0] ?? null;
 }
 
 function scrollToRow(row: HTMLElement): void {
@@ -167,7 +174,7 @@ export function goToRow(id: string): void {
   window.history.pushState(null, "", `#${id}`);
   window.dispatchEvent(new HashChangeEvent("hashchange"));
   requestAnimationFrame(() => {
-    const row = document.getElementById(id);
+    const row = findRow(id);
     if (row) scrollToRow(row);
     goingTo = "";
   });

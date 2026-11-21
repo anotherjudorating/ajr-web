@@ -77,21 +77,21 @@ export const RECORDS: RecordInfo[] = [
     ),
   },
   {
-    name: "most_weeks_in_top_10",
-    slug: "most-weeks-in-the-top-10",
+    name: "most_weeks_in_top_8",
+    slug: "most-weeks-in-the-top-8",
     group: "ratings",
-    title: "Most weeks in the top 10",
+    title: "Most weeks in the top 8",
     breakAfter: "Most weeks",
-    description: "Weeks in the top 10 of a weight's ranking since 2011, in total; a week counts once even if the athlete stood in two weights.",
+    description: "Weeks in the top 8 of a weight's ranking (the seeds of a World Championships or an Olympics) since 2011, in total; a week counts once even if the athlete stood in two weights.",
     methodology: true,
     subject: "athlete",
     noun: "athletes",
     weights: true,
     sortLabel: "weeks",
     views: weeks(
-      "most_weeks_in_top_10",
-      "Weeks in the top 10 of a weight's ranking since 2011, in total; a week counts once even if the athlete stood in two weights.",
-      "The longest unbroken run in the top 10 of a weight's ranking since 2011.",
+      "most_weeks_in_top_8",
+      "Weeks in the top 8 of a weight's ranking (the seeds of a World Championships or an Olympics) since 2011, in total; a week counts once even if the athlete stood in two weights.",
+      "The longest unbroken run in the top 8 of a weight's ranking since 2011.",
     ),
   },
   {
@@ -389,6 +389,7 @@ export const MOVED: Record<string, string> = {
   "most-predictable-tournament": "most-unpredictable-tournament",
   "longest-at-1-nation": "highest-team-rating",
   "most-medals-at-one-tournament": "most-medals",
+  "most-weeks-in-the-top-10": "most-weeks-in-the-top-8",
 };
 
 // The view of a record picked by ?view= (the first when none or unknown).

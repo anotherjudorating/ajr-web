@@ -14,6 +14,12 @@ import { formatDate, shortCompetition } from "@/lib/format";
 import { LEVELS, levelOf } from "@/lib/levels";
 import { tournamentPath, WEIGHTS } from "@/lib/weights";
 
+// The levels too long for one line of a phone's Results table.
+const SHORT: Record<string, string> = {
+  "World Championships": "World Ch.",
+  "Continental Championships": "Continental Ch.",
+  "Continental Opens & Cups": "Opens & Cups",
+};
 const H2 = "font-serif text-[20px] sm:text-[24px] font-bold text-ink border-b-2 border-ink pb-2";
 const KINDS: MedalKind[] = ["gold", "silver", "bronze"];
 // The places without a medal, as columns: key, heading, tooltip.
@@ -117,11 +123,11 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                   aria-expanded={isOpen}
                 >
                   <td className={`${ROW_CELL} font-medium`}>
-                    {/* the two continental levels break after "Continental" on a phone */}
-                    {level.title.startsWith("Continental ") ? (
+                    {/* a phone: the long levels shortened to one line (two lines filled the row) */}
+                    {SHORT[level.title] ? (
                       <>
-                        Continental <br className="sm:hidden" />
-                        {level.title.slice("Continental ".length)}
+                        <span className="sm:hidden">{SHORT[level.title]}</span>
+                        <span className="hidden sm:inline">{level.title}</span>
                       </>
                     ) : (
                       level.title

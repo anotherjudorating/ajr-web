@@ -1,15 +1,8 @@
-import Link from "next/link";
-
-import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Flag } from "@/components/Flag";
 import type { Competition } from "@/lib/api";
 import { dateRange, shortCompetition } from "@/lib/format";
-import { MEN, WOMEN, type Weight, weightTitle } from "@/lib/weights";
+import { TournamentCrumbs, WeightTabs } from "@/components/tournament/TournamentNav";
 
-const TAB = "px-1 py-1.5 sm:px-2 whitespace-nowrap";
-const ACTIVE = `${TAB} font-bold text-ink border-b-2 border-claret`;
-const IDLE = `${TAB} tabular-nums text-muted hover:text-ink`;
-const LIVE = `${TAB} tabular-nums text-claret font-semibold`;
 const DIVIDER = <span className="inline-block w-px h-3 bg-rule mx-3 align-middle" />;
 
 // "Baku World Senior Championships 2026 Individuals" -> without "Individuals"
@@ -26,37 +19,20 @@ export function stateOf(c: Competition, today: string): TournamentState {
 }
 
 // The way back to Explore, the name, the place (and while it is not over, the days
-// and Upcoming or Live) and the weights: All (the overview), then every weight of
-// the draw, men and women on their own rows; the weights under way in claret.
+// and Upcoming or Live) and the weights: in the tournament's layout, it stays while
+// its weights change (the weight shown is read from the address: TournamentNav).
 export function TournamentHeader({
   competition: c,
-  weight,
   state = "over",
   live = new Set(),
 }: {
   competition: Competition;
-  weight?: Weight;
   state?: TournamentState;
   live?: Set<string>;
 }) {
-  const rows = [
-    { label: "Men", weights: MEN },
-    { label: "Women", weights: WOMEN },
-  ]
-    .map((row) => ({ ...row, weights: row.weights.filter((w) => c.weights.includes(w.api)) }))
-    .filter((row) => row.weights.length > 0);
-  const short = shortCompetition(c.name);
-
   return (
     <>
-      <Breadcrumbs
-        className="pt-[33.25px] sm:pt-[41.25px] md:pt-[42.75px]"
-        trail={[
-          { href: "/explore/tournaments", label: "Tournaments" },
-          ...(weight ? [{ href: `/tournaments/${c.id}`, label: short }] : []),
-        ]}
-        current={weight ? weightTitle(weight) : short}
-      />
+      <TournamentCrumbs id={c.id} short={shortCompetition(c.name)} />
       <h1 className="font-serif mt-3 text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold tracking-[-0.015em]">
         {tournamentName(c.name)}
       </h1>
@@ -85,28 +61,41 @@ export function TournamentHeader({
           </>
         )}
       </div>
-      <nav className="mt-6 flex flex-col gap-1 sm:max-w-[560px]" aria-label="Weight categories">
-        {rows.map((row) => (
-          <div key={row.label} className="flex items-center">
-            <span className="w-14 shrink-0 text-[11px] font-bold uppercase tracking-wider text-muted">{row.label}</span>
-            <div className="flex flex-1 items-center justify-between sm:justify-start sm:gap-2 text-[13px] sm:text-[15px]">
-              <Link href={`/tournaments/${c.id}`} className={weight ? IDLE : ACTIVE}>
-                All
-              </Link>
-              {row.weights.map((w) => (
-                <Link
-                  key={w.slug}
-                  href={`/tournaments/${c.id}/${w.slug}`}
-                  title={live.has(w.api) ? "Live" : undefined}
-                  className={w === weight ? ACTIVE : live.has(w.api) ? LIVE : IDLE}
-                >
-                  {w.label}
-                </Link>
-              ))}
+      <WeightTabs id={c.id} weights={c.weights} live={[...live]} all={state !== "over"} />
+    </>
+  );
+}
+
+// While a weight's or the overview's data loads, under the header that stays: the
+// shapes of a podium and of a table, so that the page does not jump.
+export function TournamentSkeleton() {
+  const bar = "bg-rule/50 animate-pulse";
+  return (
+    <div aria-busy="true" aria-label="Loading">
+      <div className="mt-10 lg:mt-12 border-b-2 border-ink pb-2">
+        <div className={`h-6 w-32 ${bar}`} />
+      </div>
+      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6 md:gap-x-14">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="flex items-start gap-3">
+            <div className={`w-5 h-6 ${bar}`} />
+            <div className="flex-1 space-y-2">
+              <div className={`h-5 w-3/4 ${bar}`} />
+              <div className={`h-3 w-1/3 ${bar}`} />
             </div>
           </div>
         ))}
-      </nav>
-    </>
+      </div>
+      <div className="mt-14 border-b-2 border-ink pb-2">
+        <div className={`h-6 w-40 ${bar}`} />
+      </div>
+      {Array.from({ length: 8 }, (_, i) => (
+        <div key={i} className="h-11 border-b border-rule flex items-center gap-3 px-2">
+          <div className={`h-3 w-6 ${bar}`} />
+          <div className={`h-3 flex-1 max-w-[240px] ${bar}`} />
+          <div className={`h-3 w-12 ml-auto ${bar}`} />
+        </div>
+      ))}
+    </div>
   );
 }

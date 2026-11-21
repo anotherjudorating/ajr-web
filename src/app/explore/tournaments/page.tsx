@@ -24,9 +24,10 @@ export default function TournamentsPage({ searchParams }: PageProps<"/explore/to
 }
 
 async function Tournaments({ searchParams }: { searchParams: PageProps<"/explore/tournaments">["searchParams"] }) {
-  const latestYear = Number(((await lastUpdate()) ?? "1970").slice(0, 4));
+  const today = ((await lastUpdate()) ?? "1970-01-01").slice(0, 10);
+  const latestYear = Number(today.slice(0, 4));
   const asked = Number((await searchParams).year);
   const year = asked >= 2009 && asked <= latestYear ? asked : latestYear;
   const rows = await competitions(year);
-  return <TournamentsBrowser key={year} rows={rows} year={year} latestYear={latestYear} />;
+  return <TournamentsBrowser key={year} rows={rows} year={year} latestYear={latestYear} today={today} />;
 }

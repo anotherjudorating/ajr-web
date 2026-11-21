@@ -8,6 +8,8 @@ import type { Athlete } from "@/lib/api";
 import type { LastRating } from "@/lib/inactive";
 import { peakTableLink } from "@/lib/anchors";
 import { fullName, ijfProfile, monthYear } from "@/lib/format";
+import type { Highlight, Standing } from "@/lib/standing";
+import { WEIGHTS } from "@/lib/weights";
 
 const LABEL = "text-xs uppercase tracking-wider text-muted font-semibold";
 const BIG = "font-serif text-[28px] leading-tight font-bold text-ink";
@@ -20,13 +22,39 @@ export function AthleteHeader({
   onWeight,
   today,
   inactive,
+  standing,
+  run,
+  onRun,
 }: {
   athlete: Athlete;
   weight: string | null;
   onWeight: (weight: string) => void;
   today: string;
   inactive: LastRating | null; // over a year without a contest: the rating then
+  standing: Standing | null; // the best place and the weeks at the top, in this weight
+  run: Highlight | null; // the longest run shown on the chart
+  onRun: (run: Highlight | null) => void;
 }) {
+  // a run of the table on the chart (its longest one alone)
+  // weeks of the table on the chart: the same label and spans
+  const shown = (weeks: Highlight) => run?.label === weeks.label && run.spans.length === weeks.spans.length;
+  // a number of the table that marks its weeks on the Rank chart (again: off)
+  const marker = (weeks: Highlight, value: number, bold: boolean) => (
+    <button
+      type="button"
+      title="Show it on the chart"
+      data-run
+      onClick={() => onRun(shown(weeks) ? null : weeks)}
+      className={`${bold ? "font-bold" : "font-medium"} text-sm cursor-pointer ${LINKED} ${shown(weeks) ? "text-claret" : "text-ink"}`}
+    >
+      {value}
+    </button>
+  );
+  const plural = (n: number) => `${n} ${n === 1 ? "week" : "weeks"}`;
+  // the best place's table: the Monday it was first reached, at the athlete's row
+  const slug = WEIGHTS.find((w) => w.api === weight)?.slug;
+  const bestLink =
+    standing && slug ? `${standing.bestOn >= today ? `/rankings/${slug}` : `/rankings/${slug}/${standing.bestOn}`}#athlete-${athlete.id}` : null;
   const peakLink = peakTableLink(athlete, today);
   const age = athlete.birth_year ? Number(today.slice(0, 4)) - athlete.birth_year : null;
   // an inactive athlete: the rating after the last contest, not today's (lowered only
@@ -97,6 +125,21 @@ export function AthleteHeader({
                 <span className={`${BIG} mt-1`}>{athlete.place ? `#${athlete.place}` : "–"}</span>
               )}
             </div>
+            {standing ? (
+              <div className="flex flex-col items-start">
+                <span className={LABEL}>Best</span>
+                <div className="flex items-center gap-2 mt-1">
+                  {bestLink ? (
+                    <Link href={bestLink} className={`${BIG} ${LINKED}`} title="The table of that week">
+                      #{standing.best}
+                    </Link>
+                  ) : (
+                    <span className={BIG}>#{standing.best}</span>
+                  )}
+                  <span className="text-xs text-muted leading-tight">{monthYear(standing.bestOn)}</span>
+                </div>
+              </div>
+            ) : (
             <div className="flex flex-col items-start">
               <span className={LABEL}>Peak</span>
               <div className="flex items-center gap-2 mt-1">
@@ -116,6 +159,7 @@ export function AthleteHeader({
                 )}
               </div>
             </div>
+            )}
             <div
               className="flex flex-col items-start"
               title="Position in the IJF World Ranking List. ↑ higher in IJF than in AJR, ↓ lower. Opens the athlete's IJF profile."
@@ -133,6 +177,32 @@ export function AthleteHeader({
             </div>
           </div>
 
+          {standing && (standing.atOne.weeks > 0 || standing.p4pAtOne.weeks > 0) && (
+            // the weeks at #1: in this weight and pound for pound (only the rows with a
+            // week), each with its longest run
+            <div className="mt-4 tabular-nums text-xs">
+              <div className="grid grid-cols-3 gap-4 pb-1 text-[11px] uppercase tracking-wider text-muted font-semibold text-right">
+                <span className="text-left">Weeks</span>
+                <span>Total</span>
+                <span>Longest run</span>
+              </div>
+              {(
+                [
+                  ["At #1", "at #1", standing.atOne],
+                  ["P4P #1", "at #1 pound for pound", standing.p4pAtOne],
+                ] as const
+              )
+                .filter(([, , streak]) => streak.weeks > 0)
+                .map(([label, phrase, streak]) => (
+                  <div key={label} className="grid grid-cols-3 gap-4 py-0.5 items-start text-right">
+                    <span className="text-muted text-left">{label}</span>
+                    {/* all its weeks, and its longest run */}
+                    <span>{marker({ spans: streak.spans, label: `${plural(streak.weeks)} ${phrase}` }, streak.weeks, true)}</span>
+                    <span>{marker({ spans: [{ from: streak.from!, to: streak.to! }], label: `${plural(streak.longest)} ${phrase}` }, streak.longest, false)}</span>
+                  </div>
+                ))}
+            </div>
+          )}
           <div className="mt-5 flex justify-between items-end gap-4">
             <div className="flex flex-col">
               <div className="font-serif text-[56px] leading-none font-bold text-ink tabular-nums">{score}</div>

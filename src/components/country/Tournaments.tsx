@@ -9,7 +9,7 @@ import { PERIOD_EVENT, type PeriodPick } from "@/components/country/NationChart"
 import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { CsvButton, SearchBox, Select, ToolbarRow } from "@/components/explore/Controls";
-import { Pagination, saveCsv } from "@/components/rankings/TableParts";
+import { Pagination, saveCsv, SHORT_SIZES } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import { H2, HEAD_CELL, ROW_CELL } from "@/components/tournament/styles";
 import type { CountryTournament } from "@/lib/api";
@@ -18,7 +18,6 @@ import { nationRow } from "@/lib/anchors";
 import { LEVELS, levelOf } from "@/lib/levels";
 
 const KINDS: MedalKind[] = ["gold", "silver", "bronze"];
-const SIZES = [10, 20, 50];
 const SORTS = [
   { value: "date-desc", label: "Sort: date ↓" },
   { value: "date-asc", label: "Sort: date ↑" },
@@ -82,7 +81,7 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
   return (
     <section id="tournaments">
       <h2 className={H2}>Tournaments</h2>
-      <ToolbarRow>
+      <ToolbarRow inPage>
         <SearchBox value={query} onChange={reset(setQuery)} placeholder="Search tournament" />
         <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
           <Select
@@ -146,14 +145,14 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
         </tbody>
       </table>
       {rows.length === 0 && <p className="py-6 text-[14px] text-muted">No tournaments match these filters.</p>}
-      {rows.length > SIZES[0] && (
+      {rows.length > SHORT_SIZES[0] && (
         <Pagination
           total={rows.length}
           first={(page - 1) * size}
           count={shown.length}
           noun="tournaments"
           pageSize={size}
-          sizes={SIZES}
+          sizes={SHORT_SIZES}
           onPageSize={(value) => {
             setSize(value);
             setPage(1);

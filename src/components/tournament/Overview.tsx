@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { useHash, useRowMark, useRowScroll } from "@/components/anchors";
 import { HashScroll } from "@/components/HashScroll";
@@ -14,7 +15,7 @@ import { UpsetCard } from "@/components/UpsetCard";
 import { NationMedals } from "@/components/tournament/NationMedals";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
 import type { Competition, CompetitionContest, CompetitionResult, MedalChance } from "@/lib/api";
-import { formatChance, shortName, signed } from "@/lib/format";
+import { shortName, signed } from "@/lib/format";
 import { liveWeights } from "@/lib/live";
 import { MEN, type Weight, WEIGHTS, weightTitle, WOMEN } from "@/lib/weights";
 
@@ -25,35 +26,19 @@ const EXPERIENCE = 10; // rated contests before the tournament to count in the g
 const isMedal = (r: CompetitionResult) => r.result !== null && MEDALS.includes(r.result);
 const gainOf = (r: CompetitionResult) => r.score_after - r.score_before;
 
-// A weight's four lines on the overview: its medallists once it is over, until then
-// the four likeliest medallists of the draw.
-type Line = { athleteId: number; kind: MedalKind; predicted: boolean; country: string | null; name: string; value: React.ReactNode };
-const PLACES: MedalKind[] = ["gold", "silver", "bronze", "bronze"];
+// A weight's lines on the overview: its medallists once it is over (none before).
+type Line = { athleteId: number; kind: MedalKind; country: string | null; name: string; value: React.ReactNode };
 
-
-function linesOf(weight: Weight, medallists: CompetitionResult[], chances: MedalChance[]): Line[] {
+function linesOf(weight: Weight, medallists: CompetitionResult[]): Line[] {
   const won = medallists.filter((r) => r.weight === weight.api);
-  if (won.some((r) => r.result === "gold")) {
-    return won.map((r) => ({
-      athleteId: r.athlete_id,
-      kind: r.result as MedalKind,
-      predicted: false,
-      country: r.country,
-      name: shortName(r.family_name, r.given_name),
-      value: <span className={`font-semibold ${gainOf(r) >= 0 ? "text-gain" : "text-drop"}`}>{signed(gainOf(r))}</span>,
-    }));
-  }
-  return chances
-    .filter((c) => c.weight === weight.api)
-    .slice(0, 4)
-    .map((c, i) => ({
-      athleteId: c.athlete_id,
-      kind: PLACES[i],
-      predicted: true,
-      country: c.country,
-      name: shortName(c.family_name, c.given_name),
-      value: <span className="font-semibold">{formatChance(c.medal)}</span>,
-    }));
+  if (!won.some((r) => r.result === "gold")) return [];
+  return won.map((r) => ({
+    athleteId: r.athlete_id,
+    kind: r.result as MedalKind,
+    country: r.country,
+    name: shortName(r.family_name, r.given_name),
+    value: <span className={`font-semibold ${gainOf(r) >= 0 ? "text-gain" : "text-drop"}`}>{signed(gainOf(r))}</span>,
+  }));
 }
 
 // The tournament page: medallists of every weight (the likeliest ones for weights
@@ -75,25 +60,16 @@ export function Overview({
   const year = c.date_from.slice(0, 4);
   return (
     <>
-      <div className="mt-10 lg:mt-12 grid grid-cols-1 lg:grid-cols-2 gap-y-14 lg:gap-x-24">
-        {[
-          { title: "Men", weights: MEN },
-          { title: "Women", weights: WOMEN },
-        ].map(({ title, weights }) => (
-          <Medallists
-            key={title}
-            id={c.id}
-            title={title}
-            groups={weights.map((w) => ({ weight: w, live: live.has(w.api), lines: linesOf(w, medallists, chances) }))}
-          />
-        ))}
-      </div>
+      <Podium id={c.id} groups={{ Men: MEN, Women: WOMEN }} medallists={medallists} live={live} />
       <div className="mt-14 lg:mt-16 grid grid-cols-1 lg:grid-cols-2 gap-y-14 lg:gap-x-24 items-start">
-        <NationMedals medallists={medallists} />
+        <NationMedals
+          medallists={medallists}
+          nations={[...results, ...chances].flatMap((r) => (r.country ? [{ country: r.country, weight: r.weight }] : []))}
+        />
         <div className="flex flex-col gap-y-14 lg:gap-y-16">
           <Upsets
             contests={contests}
-            total={c.upsets}
+            total={c.upsets ?? 0}
             href={`/explore/contests?year=${year}&tournament=${c.id}&result=upsets&sort=chance-asc`}
           />
           <Gains results={results} href={`/explore/contests?year=${year}&tournament=${c.id}`} />
@@ -103,75 +79,167 @@ export function Overview({
   );
 }
 
-// Four lines a weight: the weight (and Live) and the chevron span them.
-function Medallists({
+const PLACE: Record<MedalKind, string> = { gold: "1", silver: "2", bronze: "3" };
+
+// Men or women. Wide screens: every weight a row of its four medallists, as a weight's
+// page heads. Phones: a line each medallist, the weight (and Live) spanning its lines.
+// A weight not over: dashes (its chances are on its page).
+function Podium({
   id,
-  title,
   groups,
+  medallists,
+  live,
 }: {
   id: number;
-  title: string;
-  groups: { weight: Weight; live: boolean; lines: Line[] }[];
+  groups: Record<"Men" | "Women", Weight[]>;
+  medallists: CompetitionResult[];
+  live: Set<string>;
 }) {
-  // a medallist picked in the medals by nation (#medallist-<weight>-<id>): marked, scrolled to
-  // (in this section only: the men's and the women's would both scroll)
+  // a medallist picked in the medals by nation (#medallist-…): their gender shown, marked
   const hash = useHash();
-  const shown = groups.filter((g) => g.lines.length > 0);
-  const marks = (g: { weight: Weight; lines: Line[] }) => g.lines.some((line) => medallistRow(g.weight.slug, line.athleteId) === hash);
-  const mine = shown.some(marks);
-  const lit = useRowMark(mine, hash);
-  useRowScroll(hash, mine);
-  if (shown.length === 0) return null;
-  const anchorId = title === "Men" ? SECTION.men : title === "Women" ? SECTION.women : undefined;
+  const [picked, setPicked] = useState<{ gender: "Men" | "Women"; hash: string }>({ gender: "Men", hash: "" });
+  const hashed = (["Men", "Women"] as const).find((g) =>
+    groups[g].some((w) => linesOf(w, medallists).some((l) => medallistRow(w.slug, l.athleteId) === hash)),
+  );
+  // #men, #women (the sections' old anchors): that gender
+  const named = hash === SECTION.men ? "Men" : hash === SECTION.women ? "Women" : undefined;
+  if ((hashed ?? named) && picked.hash !== hash) setPicked({ gender: (hashed ?? named)!, hash });
+  const gender = picked.gender;
+  const setGender = (g: "Men" | "Women") => setPicked({ gender: g, hash });
+  const lit = useRowMark(Boolean(hashed), hash);
+  useRowScroll(hash, Boolean(hashed) && picked.hash === hash);
+  const rows = groups[gender].map((w) => ({ weight: w, lines: linesOf(w, medallists) }));
+  const weightCell = (weight: Weight, span: number) => (
+    <td rowSpan={span} className="relative h-10 py-2.5 px-2 sm:px-3 w-14 sm:w-16 whitespace-nowrap text-muted align-top border-b border-rule">
+      {/* the weight's cell opens the weight's page (the rows: the athlete's row there) */}
+      <Link href={`/tournaments/${id}/${weight.slug}`} className="absolute inset-0" aria-label={`${weight.label} kg`} />
+      <span className="block">{weight.label}</span>
+      {live.has(weight.api) && (
+        <span className="flex items-center gap-1 text-[11px] leading-[14px] font-semibold text-claret">
+          <span className="w-1.5 h-1.5 rounded-full bg-claret" />
+          Live
+        </span>
+      )}
+    </td>
+  );
   return (
-    <section id={anchorId}>
-      {anchorId && <HashScroll id={anchorId} />}
+    <section id={named ? hash : undefined} className="mt-12">
+      {named && <HashScroll id={hash} />}
       <div className={HEAD}>
-        <h2 className={H2}>{title}</h2>
+        <h2 className={H2}>Podium</h2>
+        <div className="flex items-center gap-3 text-[13px] sm:text-[14px]" role="group" aria-label="Men or women">
+          {(["Men", "Women"] as const).map((g) => (
+            <button
+              key={g}
+              type="button"
+              aria-pressed={gender === g}
+              onClick={() => setGender(g)}
+              className={`px-1 pb-0.5 border-b-2 cursor-pointer ${gender === g ? "font-bold text-ink border-claret" : "text-muted hover:text-ink border-transparent"}`}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
       </div>
-      <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
-        <tbody>
-          {shown.map(({ weight, live, lines }) =>
-            lines.map((line, i) => (
-              // the weight's page at the athlete's row in its results, opened
-              <RowLink
-                key={`${weight.slug}-${line.athleteId}`}
-                id={medallistRow(weight.slug, line.athleteId)}
-                href={`/tournaments/${id}/${weight.slug}#athlete-${line.athleteId}`}
-                className={`${i === lines.length - 1 ? "border-b border-rule" : "border-b border-rule/50"} ${hash === medallistRow(weight.slug, line.athleteId) ? lit.row : ""}`}
-              >
-                {i === 0 && (
-                  <td
-                    rowSpan={lines.length}
-                    className={`relative h-10 py-2.5 px-2 sm:px-3 w-14 sm:w-16 whitespace-nowrap text-muted align-top border-b border-rule ${marks({ weight, lines }) ? lit.row : ""}`}
-                  >
-                    {/* the weight's cell opens the weight's page (the rows: the athlete's row there) */}
-                    <Link href={`/tournaments/${id}/${weight.slug}`} className="absolute inset-0" aria-label={`${weight.label} kg`} />
-                    <span className="block">{weight.label}</span>
-                    {live && (
-                      <span className="flex items-center gap-1 text-[11px] leading-[14px] font-semibold text-claret">
-                        <span className="w-1.5 h-1.5 rounded-full bg-claret" />
-                        Live
-                      </span>
-                    )}
-                  </td>
-                )}
-                <td className="h-9 py-0 px-2 sm:px-3 align-middle">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <Medal kind={line.kind} predicted={line.predicted} className="w-3.5 h-4" />
-                    <Flag ioc={line.country} />
-                    {/* the name: the athlete's page */}
-                    <Link href={`/athletes/${line.athleteId}`} className="truncate hover:underline">
+      <div className="hidden lg:block">
+        {rows.map(({ weight, lines }) => {
+          const label = (
+            <>
+              <span className="block font-serif text-[18px] font-semibold text-ink">{weight.label}</span>
+              {live.has(weight.api) && (
+                <span className="flex items-center gap-1 text-[11px] font-semibold text-claret">
+                  <span className="w-1.5 h-1.5 rounded-full bg-claret" />
+                  Live
+                </span>
+              )}
+            </>
+          );
+          const grid = "grid grid-cols-[96px_repeat(4,minmax(0,1fr))] gap-x-8 items-start py-4 border-b border-rule";
+          // not over: the whole row opens the weight's page
+          if (lines.length === 0)
+            return (
+              <Link key={weight.slug} href={`/tournaments/${id}/${weight.slug}`} className={`${grid} hover:bg-panel/40`}>
+                <span className="pl-3">{label}</span>
+                {[0, 1, 2, 3].map((i) => (
+                  <span key={i} className="pt-0.5 font-serif text-[16px] text-muted">
+                    —
+                  </span>
+                ))}
+              </Link>
+            );
+          return (
+            <div key={weight.slug} className={grid}>
+              <Link href={`/tournaments/${id}/${weight.slug}`} className="pl-3 hover:underline">
+                {label}
+              </Link>
+              {lines.map((line) => (
+                <div
+                  key={line.athleteId}
+                  data-row={medallistRow(weight.slug, line.athleteId)}
+                  className={`flex items-start gap-2.5 min-w-0 -m-1 p-1 ${medallistRow(weight.slug, line.athleteId) === hash ? lit.row : ""}`}
+                >
+                  <Medal kind={line.kind} className="w-4 h-5 mt-0.5" />
+                  <div className="min-w-0">
+                    <Link
+                      href={`/tournaments/${id}/${weight.slug}#athlete-${line.athleteId}`}
+                      className="block font-serif text-[16px] leading-[20px] font-semibold text-ink truncate hover:underline"
+                    >
                       {line.name}
                     </Link>
+                    <div className="mt-1 flex items-center gap-1.5 text-[12px] leading-[16px] text-muted">
+                      <Flag ioc={line.country} />
+                      <span>{line.country}</span>
+                      {line.value && <span className="ml-1 tabular-nums">{line.value}</span>}
+                    </div>
                   </div>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+      <table className="lg:hidden w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
+        <tbody>
+          {rows.map(({ weight, lines }) =>
+            lines.length === 0 ? (
+              // not over: the whole line opens the weight's page
+              <RowLink key={weight.slug} href={`/tournaments/${id}/${weight.slug}`} label={`${weight.label} kg`} className="border-b border-rule">
+                {weightCell(weight, 1)}
+                <td colSpan={2} className="h-10 px-2 sm:px-3 text-muted">
+                  —
                 </td>
-                <td className="h-9 py-0 px-2 sm:px-3 align-middle text-right whitespace-nowrap w-16">{line.value}</td>
                 <td className={CHEVRON_CELL}>
                   <RowChevron />
                 </td>
               </RowLink>
-            )),
+            ) : (
+              lines.map((line, i) => (
+                // the weight's page at the athlete's row in its results, opened
+                <RowLink
+                  key={`${weight.slug}-${line.athleteId}`}
+                  id={medallistRow(weight.slug, line.athleteId)}
+                  href={`/tournaments/${id}/${weight.slug}#athlete-${line.athleteId}`}
+                  className={`${i === lines.length - 1 ? "border-b border-rule" : "border-b border-rule/50"} ${hash === medallistRow(weight.slug, line.athleteId) ? lit.row : ""}`}
+                >
+                  {i === 0 && weightCell(weight, lines.length)}
+                  <td className="h-9 py-0 px-2 sm:px-3 align-middle">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      {/* the place: a medal is too small on a phone */}
+                      <span className="w-4 shrink-0 font-semibold text-ink">{PLACE[line.kind]}</span>
+                      <Flag ioc={line.country} />
+                      {/* the name: the athlete's page */}
+                      <Link href={`/athletes/${line.athleteId}`} className="truncate hover:underline">
+                        {line.name}
+                      </Link>
+                    </div>
+                  </td>
+                  <td className="h-9 py-0 px-2 sm:px-3 align-middle text-right whitespace-nowrap w-16">{line.value}</td>
+                  <td className={CHEVRON_CELL}>
+                    <RowChevron />
+                  </td>
+                </RowLink>
+              ))
+            ),
           )}
         </tbody>
       </table>

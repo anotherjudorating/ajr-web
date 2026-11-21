@@ -9,6 +9,8 @@ import { pageNumbers } from "@/lib/pages";
 // above, the pages below, the header cells and their tips.
 
 export const PAGE_SIZES = [20, 50, 100];
+// A table inside a page (a weight's results, an athlete's contests, a nation's tournaments).
+export const SHORT_SIZES = [10, 20, 50];
 export const CONTROL =
   "h-8 py-0 px-2.5 bg-paper border border-rule text-[12px] text-ink focus:outline-none focus:border-ink cursor-pointer min-w-0";
 export const TH = "px-2 py-2 sm:px-3 sm:py-2.5 text-[10px] sm:text-[11px] text-muted uppercase tracking-wider font-semibold";

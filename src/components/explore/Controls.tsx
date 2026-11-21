@@ -3,8 +3,9 @@ import { CONTROL } from "@/components/rankings/TableParts";
 
 // The parts of the Explore toolbars, as in the prototype (the rankings toolbar's look).
 
-export function ToolbarRow({ children }: { children: React.ReactNode }) {
-  return <div className="mt-6 border-b-2 border-ink pb-2 flex flex-col lg:flex-row lg:items-center gap-2">{children}</div>;
+// `inPage`: under a section's title in a page (as the athlete's contests), closer to it.
+export function ToolbarRow({ children, inPage = false }: { children: React.ReactNode; inPage?: boolean }) {
+  return <div className={`${inPage ? "mt-3" : "mt-6"} border-b-2 border-ink pb-2 flex flex-col lg:flex-row lg:items-center gap-2`}>{children}</div>;
 }
 
 export function SearchBox({

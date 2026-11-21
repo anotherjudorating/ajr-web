@@ -50,7 +50,7 @@ async function Contests({ searchParams }: { searchParams: PageProps<"/explore/co
     <ContestsBrowser
       rows={rows}
       filters={{ ...filters, year: String(year), size: String(size), page: String(page) }}
-      tournaments={tournaments.map((t) => ({ id: t.id, name: t.name, rank: t.rank_name, country: t.country }))}
+      tournaments={tournaments.filter((t) => t.contests !== null /* fought */).map((t) => ({ id: t.id, name: t.name, rank: t.rank_name, country: t.country }))}
       years={years}
     />
   );

@@ -8,7 +8,7 @@ import { Flag } from "@/components/Flag";
 import { CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { isUpset } from "@/components/rankings/Changes";
-import { PAGE_SIZES } from "@/components/rankings/TableParts";
+import { SHORT_SIZES } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import { SECTION } from "@/lib/anchors";
 import type { HistoryRow } from "@/lib/api";
@@ -74,7 +74,7 @@ export function Contests({
   const levels = LEVELS.map((l) => l.title).filter((title) => all.some((c) => levelOf(c.competition_rank) === title));
   const [result, setResult] = useState<Result>(preset?.result ?? "");
   const [sort, setSort] = useState<Sort>(preset?.sort ?? "date-desc");
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(SHORT_SIZES[0]);
   const [page, setPage] = useState(1);
 
   const years = [...new Set(contests.map((c) => c.fought_on.slice(0, 4)))];
@@ -254,7 +254,7 @@ export function Contests({
           <span className="inline-block w-px h-3 bg-rule" />
           <div className="flex items-center gap-1.5">
             <span>Show</span>
-            {PAGE_SIZES.map((size) => (
+            {SHORT_SIZES.map((size) => (
               <button
                 key={size}
                 type="button"
