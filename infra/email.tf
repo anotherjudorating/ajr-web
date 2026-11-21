@@ -31,3 +31,19 @@ resource "cloudflare_email_routing_rule" "data" {
     value = [cloudflare_email_routing_address.owner.email]
   }]
 }
+
+# info@: the site's contact (the Contact page), to the same mailbox.
+resource "cloudflare_email_routing_rule" "info" {
+  zone_id = data.cloudflare_zone.site.zone_id
+  name    = "info@ to the owner"
+  enabled = true
+  matchers = [{
+    type  = "literal"
+    field = "to"
+    value = "info@${var.domain}"
+  }]
+  actions = [{
+    type  = "forward"
+    value = [cloudflare_email_routing_address.owner.email]
+  }]
+}

@@ -255,6 +255,23 @@ function Result({ contest: c }: { contest: ContestDetail }) {
   );
 }
 
+// The methodology's calculator with this contest: both athletes as they were
+// before it (exact), the winner; its maths gives the change this page shows.
+function methodologyLink(c: ContestDetail): string {
+  const a = c.white_glicko; // white on the left, as the calculator marks it
+  const b = c.blue_glicko;
+  if (!a || !b || c.winner_id === null) return "/methodology#calc";
+  const query = new URLSearchParams({
+    a: [a.skill, a.rd, a.volatility].join(","),
+    b: [b.skill, b.rd, b.volatility].join(","),
+    an: shortName(c.white_family_name, c.white_given_name),
+    bn: shortName(c.blue_family_name, c.blue_given_name),
+    won: c.winner_id === c.white_id ? "a" : "b",
+    contest: String(c.contest_id),
+  });
+  return `/methodology?${query}#calc`;
+}
+
 function RatingChange({ contest: c }: { contest: ContestDetail }) {
   const rows = SIDES.map((side) => ({ side, athlete: athleteOf(c, side) }));
   const TH = "px-3 h-9 py-0 align-middle text-[11px] font-bold uppercase tracking-wider text-muted";
@@ -265,7 +282,7 @@ function RatingChange({ contest: c }: { contest: ContestDetail }) {
     <section className="mt-14 lg:mt-16">
       <div className={HEAD}>
         <h2 className={H2}>Rating change</h2>
-        <Link href="/methodology" className={LINK}>
+        <Link href={methodologyLink(c)} className={LINK}>
           How ratings work
         </Link>
       </div>
