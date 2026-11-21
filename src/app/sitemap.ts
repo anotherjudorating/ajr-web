@@ -30,6 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...["mixed", "men", "women"].map((kind) => page(`/rankings/teams/${kind}`, today)),
     page("/records", today),
     page("/data", today),
+    page("/methodology"),
     page("/contact"),
     page("/head-to-head"),
     ...["athletes", "contests", "tournaments", "nations"].map((list) => page(`/explore/${list}`, today)),
