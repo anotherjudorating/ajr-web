@@ -7,7 +7,7 @@ import { MEN, WOMEN } from "@/lib/weights";
 const TAB = "px-1 py-1.5 text-[13px] sm:text-[15px] sm:px-2 tabular-nums whitespace-nowrap cursor-pointer";
 const ACTIVE = "font-bold text-ink border-b-2 border-claret";
 const INACTIVE = "hover:text-ink transition-colors text-muted";
-const LABEL = "min-w-12 shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted";
+const LABEL = "min-w-12 pr-1.5 shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted";
 
 // MEN: P4P −60 … +100 / WOMEN: P4P −48 … +78 / TEAMS: Mixed Men Women.
 // `current` is the path of the open table; `query` keeps its day ("/2024-06-01")

@@ -33,7 +33,7 @@ const NOT_WORDS = [
   /Another Judo Rating(, rating history)?/g,
   /\S+\.(?:csv|gz|md|json)\b/g,
   /\b(?:[A-Z][\w'.-]+ )+(?:Grand Slam|Grand Prix|Open|Cup|Masters|Championships|Games|Mixed Teams)\b(?: Mixed Teams)?( \d{4})?/g,
-  /(?<=\p{Script=Cyrillic} )Open\b/gu, // a level's name kept in Latin ("континентальные Open")
+  /(?<=\p{Script=Cyrillic}\.? )Open\b/gu, // a level's name kept in Latin ("континентальные Open", "Конт. Open")
   /rating deviation/g, // RD spelled out
 ];
 const ALL = process.argv.includes("--all");

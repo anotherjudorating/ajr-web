@@ -15,7 +15,7 @@ const SHOW = 5;
 const ACTIVE = "font-bold text-ink border-claret";
 const INACTIVE = "text-muted hover:text-ink border-transparent";
 // as the weight switcher's, wide enough for "Athletes"
-const LABEL = "min-w-[72px] shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted";
+const LABEL = "min-w-[72px] pr-1.5 shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted";
 
 // The group tab lives in the URL's hash (#medals), as in the prototype.
 function subscribe(onChange: () => void) {
