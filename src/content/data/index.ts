@@ -1,0 +1,9 @@
+// The /data page's text by language (app/[lang]/data/page.tsx reads DATA_PROSE[lang]).
+
+import type { Lang } from "@/i18n/locales";
+
+import { en } from "./en";
+import { ru } from "./ru";
+import type { DataProse } from "./types";
+
+export const DATA_PROSE: Record<Lang, DataProse> = { en, ru };

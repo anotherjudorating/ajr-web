@@ -2,16 +2,6 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
-// The pages and components whose strings are not in the dictionary yet (src/i18n):
-// the long texts the translation plan moves to src/content/<page>/<lang>.tsx in
-// stage 1b. Everything else must take its words from the dictionary.
-const NOT_YET_IN_DICTIONARY = [
-  // "*" stands for the [lang] folder: in a glob, brackets would be a character class
-  "src/app/*/methodology/page.tsx",
-  "src/app/*/data/page.tsx",
-  "src/app/*/contact/page.tsx",
-];
-
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -62,10 +52,10 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // No English in the JSX: every visible string comes from the dictionary, so that a
-    // translation cannot miss one. Punctuation, signs and numbers are not words.
+    // No English in the JSX: every visible string comes from the dictionary (src/i18n)
+    // or a language's prose (src/content/<page>/<lang>.tsx), so that a translation
+    // cannot miss one. Punctuation, signs and numbers are not words.
     files: ["src/app/**/*.tsx", "src/components/**/*.tsx"],
-    ignores: NOT_YET_IN_DICTIONARY,
     rules: {
       "react/jsx-no-literals": [
         "error",
