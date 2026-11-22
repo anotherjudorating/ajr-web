@@ -1,4 +1,8 @@
+"use client";
+
 import type { ReactNode } from "react";
+
+import { useDict, useI18n } from "@/i18n/client";
 
 // The prototype's 404 layout: a big word, a headline, a lead and a search box.
 // Used for "not found", for errors and for sections that are not built yet.
@@ -15,6 +19,7 @@ export function ErrorPage({
   action?: ReactNode; // under the lead, e.g. "Try again"
   compact?: boolean; // under other content (e.g. the weight switcher): less space above
 }) {
+  const d = useDict();
   return (
     <div className={`max-w-[640px] ${compact ? "pt-4" : "pt-16 sm:pt-24 lg:pt-[120px]"} pb-16`}>
       <div className="font-serif text-[96px] sm:text-[120px] font-bold leading-none text-ink tabular-nums tracking-tight mb-4 select-none">
@@ -38,11 +43,11 @@ export function ErrorPage({
           </span>
           <input
             type="search"
-            placeholder="Search athletes or tournaments"
+            placeholder={d.site.errors.searchPlaceholder}
             className="w-full h-[44px] pl-11 pr-4 text-sm sm:text-base bg-paper border border-rule rounded-none text-ink placeholder:text-muted focus:outline-none focus:border-ink transition-colors"
           />
         </div>
-        <p className="text-xs sm:text-sm text-muted mt-2">Try the surname only, e.g. “Tasoev”.</p>
+        <p className="text-xs sm:text-sm text-muted mt-2">{d.site.errors.searchTip}</p>
       </div>
     </div>
   );
@@ -50,12 +55,13 @@ export function ErrorPage({
 
 // A section that exists in the design but is not built yet.
 export function NotBuilt({ section, compact = false }: { section: string; compact?: boolean }) {
+  const { d, t } = useI18n();
   return (
     <ErrorPage
       compact={compact}
-      big="Soon"
-      title={`${section} is on its way.`}
-      lead="This part of the site is not built yet. The rankings are live."
+      big={d.site.errors.soon}
+      title={t(d.site.errors.onItsWay, { section })}
+      lead={d.site.errors.notBuilt}
     />
   );
 }

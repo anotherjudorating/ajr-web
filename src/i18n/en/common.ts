@@ -20,6 +20,7 @@ export const common = {
     ofFinal: "{code} final", // "1/8 final"
     tour: "Round {n}", // a tour of a round robin
   },
+  ratingGap: "Rating gap {points} points",
   // The results as the database names them.
   results: { gold: "Gold", silver: "Silver", bronze: "Bronze", "5th": "5th", "7th": "7th" },
   contests: forms({ one: "{n} contest", other: "{n} contests" }),
