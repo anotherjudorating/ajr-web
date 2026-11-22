@@ -9,16 +9,11 @@ import { Flag } from "@/components/Flag";
 import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { RowLink } from "@/components/RowLink";
 import { HEAD_CELL, Pagination, PlaceholderRows, ROW_CELL, saveCsv, Tip, Toolbar } from "@/components/rankings/TableParts";
+import { useI18n } from "@/i18n/client";
 import type { TeamRow } from "@/lib/api";
 import { nationRow } from "@/lib/anchors";
 
-const SORTS = {
-  "rating-desc": "Sort: rating ↓",
-  "rating-asc": "Sort: rating ↑",
-  "led-desc": "Sort: top 1 ↓",
-  "top8-desc": "Sort: top 8 ↓",
-} as const;
-type Sort = keyof typeof SORTS;
+type Sort = "rating-desc" | "rating-asc" | "led-desc" | "top8-desc";
 
 // Nations by the average rating of their best athlete in every weight.
 export function TeamsBrowser({
@@ -38,12 +33,19 @@ export function TeamsBrowser({
   csvName: string;
   loading?: boolean;
 }) {
+  const { d, t } = useI18n();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("");
   const [sort, setSort] = useState<Sort>("rating-desc");
   const [pageSize, setPageSize] = useState(50);
   const [page, setPage] = useState(1);
+  const sorts: Record<Sort, string> = {
+    "rating-desc": d.rankings.sorts.ratingDesc,
+    "rating-asc": d.rankings.sorts.ratingAsc,
+    "led-desc": d.rankings.sorts.ledDesc,
+    "top8-desc": d.rankings.sorts.top8Desc,
+  };
 
   const countries = useMemo(
     () =>
@@ -96,7 +98,7 @@ export function TeamsBrowser({
       <Toolbar
         query={query}
         onQuery={reset(setQuery)}
-        placeholder="Search nation"
+        placeholder={d.rankings.toolbar.searchNation}
         countries={countries}
         country={country}
         onCountry={reset(setCountry)}
@@ -105,7 +107,7 @@ export function TeamsBrowser({
         id={TABLE_START}
         dayMark={lit.day}
         onDay={(day) => router.push(day >= latest ? path : `${path}/${day}`)}
-        sorts={SORTS}
+        sorts={sorts}
         sort={sort}
         onSort={setSort}
         onCsv={() => downloadCsv(shown, csvName)}
@@ -115,22 +117,19 @@ export function TeamsBrowser({
           <thead>
             <tr className="bg-panel border-b border-rule">
               <th className={`${HEAD_CELL} w-9 sm:w-12 text-right`}>#</th>
-              <th className={`${HEAD_CELL} text-left`}>Nation</th>
+              <th className={`${HEAD_CELL} text-left`}>{d.rankings.columns.nation}</th>
               <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-20 whitespace-nowrap text-right relative group cursor-help`}>
-                <span>Top 1</span>
-                <Tip>Weights where the nation has the best athlete of all nations</Tip>
+                <span>{d.rankings.columns.top1}</span>
+                <Tip>{d.rankings.tips.top1}</Tip>
               </th>
               <th className={`${HEAD_CELL} w-12 sm:w-20 whitespace-nowrap text-right relative group cursor-help`}>
-                <span>Top 8</span>
-                <Tip>Weights where the nation&apos;s best athlete is among the 8 best nations</Tip>
+                <span>{d.rankings.columns.top8}</span>
+                <Tip>{d.rankings.tips.top8}</Tip>
               </th>
               <th className={`${HEAD_CELL} w-24 sm:w-40 whitespace-nowrap text-right relative group cursor-help`}>
-                <span className="sm:hidden">Leaders avg</span>
-                <span className="hidden sm:inline">Leaders rating avg</span>
-                <Tip>
-                  Average rating of the nation&apos;s best athlete in each of the {weights} weights; a weight
-                  without one counts as that table&apos;s last place
-                </Tip>
+                <span className="sm:hidden">{d.rankings.columns.leadersAvg}</span>
+                <span className="hidden sm:inline">{d.rankings.columns.leadersRatingAvg}</span>
+                <Tip>{t(d.rankings.tips.leadersAvg, { weights })}</Tip>
               </th>
               <th className="w-8 sm:w-10 h-9 py-0" />
             </tr>
@@ -141,7 +140,7 @@ export function TeamsBrowser({
               <RowLink
                 key={row.country ?? index}
                 href={row.country ? `/countries/${row.country.toLowerCase()}` : "/rankings/teams/mixed"}
-                label={row.country_name ?? row.country ?? "Open"}
+                label={row.country_name ?? row.country ?? undefined}
                 id={row.country ? nationRow(row.country) : undefined}
                 className={`border-b border-rule hover:bg-panel/60 ${row.country === marked ? lit.row : ""}`}
               >
@@ -165,7 +164,7 @@ export function TeamsBrowser({
             {!loading && shown.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-3 py-6 text-[14px] text-muted">
-                  No nations match these filters.
+                  {d.rankings.noNations}
                 </td>
               </tr>
             )}
@@ -177,7 +176,7 @@ export function TeamsBrowser({
         total={shown.length}
         first={first}
         count={pageRows.length}
-        noun="nations"
+        noun={d.common.nations}
         pageSize={pageSize}
         onPageSize={reset(setPageSize)}
         page={currentPage}

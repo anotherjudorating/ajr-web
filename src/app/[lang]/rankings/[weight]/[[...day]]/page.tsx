@@ -6,10 +6,9 @@ import { BreadcrumbData } from "@/components/Breadcrumbs";
 import { RankingsBrowser } from "@/components/rankings/RankingsBrowser";
 import { countryNames, leaderboard } from "@/lib/api";
 import { tableDay } from "@/lib/days";
-import { WEIGHTS, weightBySlug, weightTitle } from "@/lib/weights";
-import { formatDate } from "@/lib/format";
+import { WEIGHTS, weightBySlug } from "@/lib/weights";
 import { alternatesFor, NOINDEX, podium } from "@/lib/seo";
-import { currentLang } from "@/i18n/server";
+import { i18n } from "@/i18n/server";
 
 // All 14 tables are rendered ahead of time and refreshed with the data (next.config.ts).
 export function generateStaticParams() {
@@ -20,14 +19,15 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/rankings/[
   const { weight: slug, day } = await params;
   const weight = weightBySlug(slug);
   if (!weight) notFound(); // a crawler is sent the head first: only here does a 404 get its status
-  const title = `${weightTitle(weight)} judo world ranking`;
+  const { lang, d, f, t } = await i18n();
+  const title = t(d.rankings.weight.title, { weight: f.weightTitle(weight) });
   const { past } = await tableDay(day);
   const leaders = podium(await leaderboard(weight.api, past));
-  const strongest = `The strongest ${weightTitle(weight).toLowerCase()} judoka${past ? ` on ${formatDate(past)}` : ""}`;
-  const description = leaders ? `${strongest}: ${leaders}.` : `${strongest}.`;
-  const lang = await currentLang();
+  const lower = f.weightTitle(weight).toLowerCase();
+  const strongest = past ? t(d.rankings.weight.strongestOn, { weight: lower, date: f.formatDate(past) }) : t(d.rankings.weight.strongest, { weight: lower });
+  const description = leaders ? t(d.rankings.weight.description, { strongest, leaders }) : t(d.rankings.weight.descriptionShort, { strongest });
   return past
-    ? { title: `${title} on ${formatDate(past)}`, description, alternates: alternatesFor(lang, `/rankings/${slug}/${(day ?? []).join("/")}`, { indexed: false }), robots: NOINDEX } // a past day
+    ? { title: t(d.rankings.pastTitle, { title, date: f.formatDate(past) }), description, alternates: alternatesFor(lang, `/rankings/${slug}/${(day ?? []).join("/")}`, { indexed: false }), robots: NOINDEX } // a past day
     : { title, description, alternates: alternatesFor(lang, `/rankings/${slug}`) };
 }
 
@@ -51,6 +51,7 @@ async function Rankings({ params }: { params: PageProps<"/[lang]/rankings/[weigh
   const { weight: slug, day } = await params;
   const weight = weightBySlug(slug);
   if (!weight) notFound();
+  const { d, f, t } = await i18n();
   const { asOf, latest, past } = await tableDay(day);
   const rows = await leaderboard(weight.api, past);
   const names = await countryNames(rows.map((r) => r.country));
@@ -58,8 +59,8 @@ async function Rankings({ params }: { params: PageProps<"/[lang]/rankings/[weigh
 
   return (
     <>
-      <h1 className="sr-only">{weightTitle(weight)} judo world ranking</h1>
-      <BreadcrumbData trail={[{ href: "/rankings", label: "Rankings" }]} current={weightTitle(weight)} />
+      <h1 className="sr-only">{t(d.rankings.weight.title, { weight: f.weightTitle(weight) })}</h1>
+      <BreadcrumbData trail={[{ href: "/rankings", label: d.rankings.breadcrumb }]} current={f.weightTitle(weight)} />
       <RankingsBrowser
         key={`${path}-${asOf}`}
         rows={rows.slice(0, FIRST_ROWS)}

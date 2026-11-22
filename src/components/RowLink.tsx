@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "@/components/Link";
+import { useDict } from "@/i18n/client";
 import { useLocalePath, useRouter } from "@/i18n/navigation";
 import { Children, cloneElement, isValidElement } from "react";
 
@@ -8,13 +9,14 @@ import { Children, cloneElement, isValidElement } from "react";
 // the row (an athlete's name) still opens its own page, and Cmd/Ctrl or the middle
 // button opens the row's page in a new tab. The first cell holds a real link to it,
 // out of sight: search engines follow it, and the keyboard reaches the row by it.
-export function RowLink({ href, label = "Open", className = "", id, children }: {
+export function RowLink({ href, label, className = "", id, children }: {
   href: string;
   id?: string; // an anchor on the row
-  label?: string; // the hidden link's text
+  label?: string; // the hidden link's text ("Open" without one)
   className?: string;
   children: React.ReactNode;
 }) {
+  const d = useDict();
   const router = useRouter();
   const p = useLocalePath();
   const cells = Children.toArray(children);
@@ -24,7 +26,7 @@ export function RowLink({ href, label = "Open", className = "", id, children }: 
     cells[first] = cloneElement(child, {}, (
       <>
         <Link href={href} className="sr-only">
-          {label}
+          {label ?? d.site.rowLink.open}
         </Link>
         {child.props.children}
       </>

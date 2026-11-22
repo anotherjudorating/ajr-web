@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "@/components/Link";
 
 import { Flag } from "@/components/Flag";
 import { RowChevron } from "@/components/Icon";
 import { changeText, placesText } from "@/components/rankings/Changes";
+import { useDict } from "@/i18n/client";
 import type { HomeRow } from "@/lib/api";
 import { shortName } from "@/lib/format";
 
@@ -19,7 +22,8 @@ export function HomeAthlete({
   nation?: boolean; // the flag and code in a column of their own from sm; before the name below
   score?: boolean;
 }) {
-  const places = placesText(row.places_up_90d);
+  const d = useDict();
+  const places = placesText(row.places_up_90d, "new", d.rankings.changes);
   const change = changeText(row.score_change_90d);
   return (
     // a real link (not a click handler), so that crawlers find the athletes from here

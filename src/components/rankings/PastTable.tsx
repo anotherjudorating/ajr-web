@@ -6,6 +6,7 @@ import { useRouter } from "@/i18n/navigation";
 import { Flag } from "@/components/Flag";
 import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HEAD_CELL, ROW_CELL } from "@/components/rankings/TableParts";
+import { useDict } from "@/i18n/client";
 import type { LeaderboardRow } from "@/lib/api";
 import { fullName, shortName } from "@/lib/format";
 import { athleteRow } from "@/lib/anchors";
@@ -13,16 +14,17 @@ import { athleteRow } from "@/lib/anchors";
 // A weight's table on a past day: places, names, nations, ratings and ages then.
 // The changes, trend, IJF place and latest tournament are only built for today.
 export function PastTable({ rows, year, mark = () => "", empty = rows.length === 0 }: { rows: LeaderboardRow[]; year: number; mark?: (id: number) => string; empty?: boolean }) {
+  const d = useDict();
   const router = useRouter();
   return (
     <table className="w-full table-fixed border-collapse text-left">
       <thead>
         <tr className="bg-panel border-b border-rule">
           <th className={`${HEAD_CELL} w-9 sm:w-12 text-right`}>#</th>
-          <th className={`${HEAD_CELL} text-left`}>Athlete</th>
-          <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-28 text-left`}>NAT</th>
-          <th className={`${HEAD_CELL} w-14 sm:w-20 text-right`}>Rating</th>
-          <th className={`${HEAD_CELL} w-12 sm:w-16 text-right`}>Age</th>
+          <th className={`${HEAD_CELL} text-left`}>{d.rankings.columns.athlete}</th>
+          <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-28 text-left`}>{d.rankings.columns.nat}</th>
+          <th className={`${HEAD_CELL} w-14 sm:w-20 text-right`}>{d.rankings.columns.rating}</th>
+          <th className={`${HEAD_CELL} w-12 sm:w-16 text-right`}>{d.rankings.columns.age}</th>
           <th className="w-8 sm:w-10 h-9 py-0" />
         </tr>
       </thead>
@@ -60,7 +62,7 @@ export function PastTable({ rows, year, mark = () => "", empty = rows.length ===
         {empty && (
           <tr>
             <td colSpan={7} className="px-3 py-6 text-[14px] text-muted">
-              No athletes match these filters.
+              {d.rankings.noAthletes}
             </td>
           </tr>
         )}

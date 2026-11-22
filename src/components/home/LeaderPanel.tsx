@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { HomeAthlete } from "@/components/home/HomeAthlete";
 import { H2 } from "@/components/tournament/styles";
+import { useI18n } from "@/i18n/client";
 import type { HomeRow } from "@/lib/api";
 import type { Weight } from "@/lib/weights";
 
@@ -20,6 +21,7 @@ export function LeaderPanel({
   rows: HomeRow[];
   p4p: { href: string; label: string };
 }) {
+  const { d, t } = useI18n();
   const [picked, setPicked] = useState("");
   const weight = weights.find((w) => w.slug === picked);
   const shown = weight
@@ -39,10 +41,10 @@ export function LeaderPanel({
             onChange={(e) => setPicked(e.target.value)}
             className="w-28 sm:w-36 border border-rule bg-paper text-ink text-xs py-1 px-2 focus:outline-none focus:border-ink cursor-pointer"
           >
-            <option value="">All weights</option>
+            <option value="">{d.home.leaders.allWeights}</option>
             {weights.map((w) => (
               <option key={w.slug} value={w.slug}>
-                {w.label} kg
+                {t(d.rankings.weightKg, { label: w.label })}
               </option>
             ))}
           </select>

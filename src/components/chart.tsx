@@ -1,10 +1,16 @@
+"use client";
+
 import Link from "@/components/Link";
 import { Fragment, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import type { HistoryRow } from "@/lib/api";
 import { placesText } from "@/components/rankings/Changes";
+import { useI18n } from "@/i18n/client";
+import type { Dict } from "@/i18n/en";
+import type { Format } from "@/i18n/format";
+import { t } from "@/i18n/t";
 import { type Places, placeOn } from "@/lib/places";
-import { formatDate, monthYear, signed } from "@/lib/format";
+import { signed } from "@/lib/format";
 
 // What the site's line charts (an athlete's rating, head-to-head, a nation's) share:
 // the value scale, the dates under the plot, the nearest point to the pointer and
@@ -49,12 +55,20 @@ export type Period = "week" | "month" | "quarter";
 export const PERIOD: Record<Range, Period> = { "1Y": "week", "4Y": "month", All: "quarter" };
 const DAY = 24 * 3600 * 1000;
 
+// The words a line's points are named with, in the page's language: "Today", "Week of
+// {date}", "Q{n} {year}", and the dates' format. From usePeriodNames() in a chart.
+export type PeriodNames = Dict["rankings"]["chart"] & { f: Pick<Format, "formatDate" | "monthYear"> };
+export function usePeriodNames(): PeriodNames {
+  const { d, f } = useI18n();
+  return { ...d.rankings.chart, f };
+}
+
 // A period's name, for the tip: "Week of 3 Nov 2025", "Nov 2025", "Q4 2025".
-export function periodName(period: Period, day: number): string {
+export function periodName(period: Period, day: number, names: PeriodNames): string {
   const date = new Date(day);
-  if (period === "week") return `Week of ${formatDate(new Date(day - 6 * DAY).toISOString().slice(0, 10))}`;
-  if (period === "month") return monthYear(date.toISOString());
-  return `Q${Math.floor(date.getUTCMonth() / 3) + 1} ${date.getUTCFullYear()}`;
+  if (period === "week") return t(names.weekOf, { date: names.f.formatDate(new Date(day - 6 * DAY).toISOString().slice(0, 10)) });
+  if (period === "month") return names.f.monthYear(date.toISOString());
+  return t(names.quarter, { n: Math.floor(date.getUTCMonth() / 3) + 1, year: date.getUTCFullYear() });
 }
 
 // The ends of the periods from `from` to before `to`: Sundays, the last days of
@@ -117,14 +131,15 @@ export type LinePoint = {
 // last contest for an inactive athlete (null).
 // `split`: a day of its own on the line (the athlete's peak): it ends a part of its
 // period, with what it has and the competitions so far (one under way too), and the
-// period's end starts from it.
+// period's end starts from it. `names`: the periods' names in the page's language.
 export function careerLine(
   history: HistoryRow[],
   today: { day: number; rating: number; score: number } | null,
   period: Period,
-  split?: { day: number; rating: number; score: number; period: string },
+  split: { day: number; rating: number; score: number; period: string } | undefined,
+  names: PeriodNames,
 ): LinePoint[] {
-  if (history.length === 0) return today ? [{ ...today, period: "Today", before: null, events: [], idle: true }] : [];
+  if (history.length === 0) return today ? [{ ...today, period: names.today, before: null, events: [], idle: true }] : [];
   // every competition's first contest (history is latest first) and its last
   const first = new Map<number, HistoryRow>();
   for (const contest of history) first.set(contest.competition_id, contest);
@@ -169,7 +184,7 @@ export function careerLine(
       day,
       rating: on("rating", day),
       score: on("score", day),
-      period: own ? split.period : today && day === lastDay ? "Today" : periodName(period, day),
+      period: own ? split.period : today && day === lastDay ? names.today : periodName(period, day, names),
       before: i ? on("score", days[i - 1]) : null,
       events,
       idle: events.length === 0,
@@ -348,10 +363,11 @@ export function useChartPointer<T>(
 
 // A competition in a tip: its name and day.
 export function TipHeading({ name, day }: { name: string; day: string }) {
+  const { f } = useI18n();
   return (
     <>
       <div className="font-semibold text-ink">{name}</div>
-      <div className="text-muted mt-0.5">{formatDate(day)}</div>
+      <div className="text-muted mt-0.5">{f.formatDate(day)}</div>
     </>
   );
 }
@@ -373,7 +389,8 @@ export function TipChange({ before, after, muted = false }: { before: number; af
 // side (the rating at its start › at its end; an athlete not at the competition
 // drifting, in grey) and the places (Rank, P4P) at its start › at its end.
 export type TipLine = { color?: string; name?: string; before: number | null; after: number; inactive?: boolean; extra?: ReactNode };
-export type TipPlace = { label: string; before: number | null; after: number | null };
+// `kind`: the place in the weight's table (rank) or pound for pound (p4p); TipPlaces names it.
+export type TipPlace = { kind: "rank" | "p4p"; before: number | null; after: number | null };
 // `action`: what a click on the point does with a mouse, as a button for a finger.
 export function TipBody({ title, href, day, lines, places = [], action, children }: {
   title: string;
@@ -384,6 +401,7 @@ export function TipBody({ title, href, day, lines, places = [], action, children
   action?: { label: string; onClick: () => void };
   children?: ReactNode; // after the lines: the period's competitions
 }) {
+  const { d } = useI18n();
   return (
     <>
       {href ? (
@@ -405,7 +423,7 @@ export function TipBody({ title, href, day, lines, places = [], action, children
           ) : (
             <TipChange before={line.before} after={line.after} muted={line.inactive} />
           )}
-          {line.inactive && <span className="text-muted">inactive</span>}
+          {line.inactive && <span className="text-muted">{d.rankings.chart.inactive}</span>}
         </div>
         {line.extra && <div className={line.color ? "pl-[18px]" : ""}>{line.extra}</div>}
         </Fragment>
@@ -425,13 +443,14 @@ export function TipBody({ title, href, day, lines, places = [], action, children
 // The places of a tip, in one row: at the period's end and the places gained over it
 // (Rank #3 ↑2  P4P #12 ↓1).
 export function TipPlaces({ places }: { places: TipPlace[] }) {
+  const { d } = useI18n();
   return (
     <div className="mt-0.5 mb-2 flex items-center gap-3 text-muted tabular-nums empty:hidden">
       {places
         .filter((place) => place.after !== null)
         .map((place) => (
-          <span key={place.label}>
-            {place.label} <span className="text-ink">#{place.after}</span>
+          <span key={place.kind}>
+            {place.kind === "p4p" ? "P4P" : d.rankings.chart.rank} <span className="text-ink">#{place.after}</span>
             {/* places gained over the period, as the tables' ↑2 / ↓3 */}
             {place.before !== null && place.after !== null && place.before !== place.after && (
               <span className={`ml-1 font-bold ${placesText(place.before - place.after).color}`}>{placesText(place.before - place.after).text}</span>
@@ -449,8 +468,8 @@ export function tipPlaces(places: Places | null, from: number | null, to: number
   if (!end) return [];
   const start = from === null ? null : placeOn(places, from);
   return [
-    { label: "Rank", before: start?.place ?? null, after: end.place },
-    { label: "P4P", before: start?.p4p ?? null, after: end.p4p },
+    { kind: "rank", before: start?.place ?? null, after: end.place },
+    { kind: "p4p", before: start?.p4p ?? null, after: end.p4p },
   ];
 }
 
@@ -465,6 +484,7 @@ export function PeakLabel({ x, y, score, shift = 0, href, title, font }: {
   title?: string;
   font: string;
 }) {
+  const { d, t } = useI18n();
   const label = (
     <g transform={`translate(${x}, ${y})`}>
       {title && <title>{title}</title>}
@@ -478,7 +498,7 @@ export function PeakLabel({ x, y, score, shift = 0, href, title, font }: {
         y="-24"
       />
       <text fill={INK} fontFamily={font} fontSize="11" fontWeight="600" textAnchor="middle" x={shift} y="-12">
-        Peak {score}
+        {t(d.rankings.chart.peak, { score })}
       </text>
     </g>
   );
