@@ -1,24 +1,17 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/components/Link";
+import { useRouter } from "@/i18n/navigation";
 import { useMemo, useState } from "react";
 
 import { Flag } from "@/components/Flag";
 import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HEAD_CELL, PlaceholderRows, ROW_CELL, saveCsv, Tip, Toolbar } from "@/components/rankings/TableParts";
+import { useI18n } from "@/i18n/client";
 import type { P4PRow } from "@/lib/api";
 import { shortName, signed } from "@/lib/format";
 
-const SORTS = {
-  "lead-desc": "Sort: lead ↓",
-  "lead-asc": "Sort: lead ↑",
-  "rating-desc": "Sort: rating ↓",
-  "rating-asc": "Sort: rating ↑",
-} as const;
-type Sort = keyof typeof SORTS;
-
-const weightLabel = (weight: string) => `${weight.replace("-", "−")} kg`;
+type Sort = "lead-desc" | "lead-asc" | "rating-desc" | "rating-asc";
 
 const NO_NAMES: Record<string, string> = {};
 
@@ -41,17 +34,26 @@ export function P4PBrowser({
   countryNames?: Record<string, string>; // IOC code → name, for the table's countries (lib/api.ts countryNames)
   loading?: boolean;
 }) {
+  const { d, f, t } = useI18n();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("");
   const [sort, setSort] = useState<Sort>("lead-desc");
+  const sorts: Record<Sort, string> = {
+    "lead-desc": d.rankings.sorts.leadDesc,
+    "lead-asc": d.rankings.sorts.leadAsc,
+    "rating-desc": d.rankings.sorts.ratingDesc,
+    "rating-asc": d.rankings.sorts.ratingAsc,
+  };
+  // "−73 kg"
+  const weightLabel = (weight: string) => t(d.rankings.weightKg, { label: weight.replace("-", "−") });
 
   const countries = useMemo(
     () =>
       [...new Set(rows.map((r) => r.country).filter((c): c is string => !!c))]
-        .map((code) => ({ code, name: countryNames[code] ?? code }))
+        .map((code) => ({ code, name: f.country(code, countryNames[code]) }))
         .sort((a, b) => a.name.localeCompare(b.name)),
-    [rows, countryNames],
+    [rows, countryNames, f],
   );
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -75,7 +77,7 @@ export function P4PBrowser({
         asOf={asOf}
         latest={latest}
         onDay={(day) => router.push(day >= latest ? path : `${path}/${day}`)}
-        sorts={SORTS}
+        sorts={sorts}
         sort={sort}
         onSort={setSort}
         onCsv={() => downloadCsv(shown, csvName)}
@@ -85,14 +87,14 @@ export function P4PBrowser({
           <thead>
             <tr className="bg-panel border-b border-rule">
               <th className={`${HEAD_CELL} w-9 sm:w-12 text-right`}>#</th>
-              <th className={`${HEAD_CELL} text-left`}>Athlete</th>
-              <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-28 text-left`}>Country</th>
-              <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-24 text-left`}>Weight</th>
+              <th className={`${HEAD_CELL} text-left`}>{d.rankings.columns.athlete}</th>
+              <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-28 text-left`}>{d.rankings.columns.country}</th>
+              <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-24 text-left`}>{d.rankings.columns.weight}</th>
               <th className={`${HEAD_CELL} w-14 sm:w-24 text-right relative group cursor-help`}>
-                <span>Lead</span>
-                <Tip>Points ahead of the average of the next 7 in own weight</Tip>
+                <span>{d.rankings.columns.lead}</span>
+                <Tip>{d.rankings.tips.lead}</Tip>
               </th>
-              <th className={`${HEAD_CELL} w-14 sm:w-20 text-right`}>Rating</th>
+              <th className={`${HEAD_CELL} w-14 sm:w-20 text-right`}>{d.rankings.columns.rating}</th>
               <th className="hidden sm:table-cell w-8 h-9 py-0" />
             </tr>
           </thead>
@@ -134,7 +136,7 @@ export function P4PBrowser({
             {!loading && shown.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-3 py-6 text-[14px] text-muted">
-                  No athletes match these filters.
+                  {d.rankings.noAthletes}
                 </td>
               </tr>
             )}

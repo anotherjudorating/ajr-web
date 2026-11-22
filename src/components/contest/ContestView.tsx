@@ -1,13 +1,18 @@
-import Link from "next/link";
+"use client";
+
+import Link from "@/components/Link";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Flag } from "@/components/Flag";
 import { Arrow, CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { isUpset } from "@/components/rankings/Changes";
 import { RowLink } from "@/components/RowLink";
+import { useI18n } from "@/i18n/client";
+import type { Dict } from "@/i18n/en";
+import { t } from "@/i18n/t";
 import type { ContestDetail, HistoryRow } from "@/lib/api";
-import { formatChance, formatDate, monthYear, roundCode, roundTitle, shortCompetition, shortName, signed } from "@/lib/format";
-import { WEIGHTS, weightTitle } from "@/lib/weights";
+import { roundCode, shortCompetition, shortName, signed } from "@/lib/format";
+import { WEIGHTS } from "@/lib/weights";
 
 const H2 = "font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight";
 const HEAD = "flex items-baseline justify-between gap-3 border-b-2 border-ink pb-2";
@@ -56,8 +61,9 @@ export function ContestView({
   blueHistory: HistoryRow[];
   upcoming?: Upcoming;
 }) {
+  const { d, f, t } = useI18n();
   const weight = WEIGHTS.find((w) => w.api === c.weight);
-  const weightName = weight ? weightTitle(weight) : (c.weight ?? "");
+  const weightName = weight ? f.weightTitle(weight) : (c.weight ?? "");
   const rated = c.white_win_probability !== null;
   const histories = { white: whiteHistory, blue: blueHistory };
 
@@ -75,14 +81,20 @@ export function ContestView({
       <Breadcrumbs
         className="pt-[33.25px] sm:pt-[41.25px] md:pt-[42.75px] mb-4"
         trail={[
-          { href: "/explore/tournaments", label: "Tournaments" },
+          { href: "/explore/tournaments", label: d.contest.tournaments },
           { href: `/tournaments/${c.competition_id}`, label: shortCompetition(c.competition) },
           { href: weight && `/tournaments/${c.competition_id}/${weight.slug}`, label: weightName },
         ]}
-        current={c.round ? roundTitle(c.round) : "Contest"}
+        current={c.round ? f.roundTitle(c.round) : d.contest.contest}
       />
       <h1 className="sr-only">
-        {athleteOf(c, "white").name} vs {athleteOf(c, "blue").name} — {roundTitle(c.round)}, {weightName}, {c.competition}
+        {t(d.contest.heading, {
+          white: athleteOf(c, "white").name,
+          blue: athleteOf(c, "blue").name,
+          round: f.roundTitle(c.round),
+          weight: weightName,
+          competition: c.competition,
+        })}
       </h1>
 
       <Result contest={c} upcoming={upcoming} />
@@ -92,7 +104,9 @@ export function ContestView({
       {(roads.white.length > 0 || roads.blue.length > 0) && (
         <section className="mt-14 lg:mt-16">
           <div className={HEAD}>
-            <h2 className={H2}>Road to the {c.round ? roundTitle(c.round).replace(/^[A-Z]/, (l) => l.toLowerCase()) : "contest"}</h2>
+            <h2 className={H2}>
+              {c.round ? t(d.contest.road.title, { round: f.roundTitle(c.round).replace(/^\p{Lu}/u, (l) => l.toLowerCase()) }) : d.contest.road.titleContest}
+            </h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-6 lg:gap-x-24 mt-4">
             {SIDES.map((side) => {
@@ -113,7 +127,7 @@ export function ContestView({
                       ))}
                       {roads[side].length === 0 && (
                         <tr>
-                          <td className={`${CELL} text-muted`}>First contest of the tournament.</td>
+                          <td className={`${CELL} text-muted`}>{d.contest.road.first}</td>
                         </tr>
                       )}
                     </tbody>
@@ -129,7 +143,7 @@ export function ContestView({
       <section className="mt-14 lg:mt-16 grid grid-cols-1 lg:grid-cols-2 gap-y-6 lg:gap-x-24">
           <div>
             <div className={HEAD}>
-              <h2 className={H2}>{meetings.length ? meetingsTitle(c, meetings) : "Earlier meetings"}</h2>
+              <h2 className={H2}>{meetings.length ? meetingsTitle(d, c, meetings) : d.contest.meetings.title}</h2>
               <Link
                 href={`/head-to-head?${new URLSearchParams({
                   ...(weight && { w: weight.slug }),
@@ -138,14 +152,14 @@ export function ContestView({
                 })}`}
                 className={LINK}
               >
-                Head-to-head
+                {d.contest.meetings.headToHead}
               </Link>
             </div>
             <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
               <tbody>
                 {meetings.length === 0 && (
                   <tr className="border-b border-rule">
-                    <td className={`${CELL} text-muted`}>{upcoming ? "Their first meeting." : "Their first meeting: none before this one."}</td>
+                    <td className={`${CELL} text-muted`}>{upcoming ? d.contest.meetings.first : d.contest.meetings.firstBefore}</td>
                   </tr>
                 )}
                 {meetings.map((row) => {
@@ -153,8 +167,8 @@ export function ContestView({
                   return (
                     <RowLink key={row.contest_id} href={`/contests/${row.contest_id}`} className={ROW}>
                       <td className={`w-[76px] sm:w-28 ${CELL} whitespace-nowrap text-muted`}>
-                        <span className="sm:hidden">{monthYear(row.fought_on)}</span>
-                        <span className="hidden sm:inline">{formatDate(row.fought_on)}</span>
+                        <span className="sm:hidden">{f.monthYear(row.fought_on)}</span>
+                        <span className="hidden sm:inline">{f.formatDate(row.fought_on)}</span>
                       </td>
                       <td className={`${CELL} truncate`}>
                         <span className="sm:hidden">{shortCompetition(row.competition)}</span>
@@ -168,7 +182,7 @@ export function ContestView({
                         </div>
                       </td>
                       <td className={`${CHEVRON_CELL}`}>
-                        <Link href={`/contests/${row.contest_id}`} aria-label="The contest">
+                        <Link href={`/contests/${row.contest_id}`} aria-label={d.contest.road.theContest}>
                           <RowChevron />
                         </Link>
                       </td>
@@ -184,19 +198,21 @@ export function ContestView({
 }
 
 function Result({ contest: c, upcoming }: { contest: ContestDetail; upcoming?: Upcoming }) {
+  const { d, f } = useI18n();
+  const words = d.contest.result;
   return (
     <section>
       <div className={HEAD}>
-        <h2 className={H2}>Contest result</h2>
+        <h2 className={H2}>{words.title}</h2>
       </div>
       <div className="flex items-center justify-between border-b border-rule py-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted">
-        <div className="flex-1 min-w-0 pl-1 sm:pl-3">Athlete</div>
+        <div className="flex-1 min-w-0 pl-1 sm:pl-3">{words.athlete}</div>
         <div className="flex items-center shrink-0">
-          <div className="w-8 sm:w-14 text-center">I</div>
-          <div className="w-8 sm:w-14 text-center">W</div>
-          <div className="w-8 sm:w-14 text-center">Y</div>
-          <div className="w-14 sm:w-24 text-center">Shido</div>
-          <div className="w-12 sm:w-24 text-right pr-1">Result</div>
+          <div className="w-8 sm:w-14 text-center">{words.ippon}</div>
+          <div className="w-8 sm:w-14 text-center">{words.wazaari}</div>
+          <div className="w-8 sm:w-14 text-center">{words.yuko}</div>
+          <div className="w-14 sm:w-24 text-center">{words.shido}</div>
+          <div className="w-12 sm:w-24 text-right pr-1">{words.result}</div>
         </div>
       </div>
       {SIDES.map((side, i) => {
@@ -237,7 +253,7 @@ function Result({ contest: c, upcoming }: { contest: ContestDetail; upcoming?: U
                 {upcoming && <span className="text-muted">—</span>}
                 {!upcoming && c.winner_id === athlete.id && (
                   <span className="text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border border-gain text-gain">
-                    Win
+                    {words.win}
                   </span>
                 )}
               </div>
@@ -246,20 +262,20 @@ function Result({ contest: c, upcoming }: { contest: ContestDetail; upcoming?: U
         );
       })}
       <div className="h-10 sm:h-12 flex items-center justify-between">
-        <span className="text-[12px] font-medium text-muted pl-1 sm:pl-3">{formatDate(c.day)}</span>
+        <span className="text-[12px] font-medium text-muted pl-1 sm:pl-3">{f.formatDate(c.day)}</span>
         {upcoming ? (
-          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted pr-1">Not fought yet</span>
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted pr-1">{words.notFoughtYet}</span>
         ) : c.walkover ? (
           <span className="inline-flex items-center gap-2 pr-1">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted">Walkover</span>
-            <span className="text-[12px] font-medium text-muted">not rated</span>
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted">{words.walkover}</span>
+            <span className="text-[12px] font-medium text-muted">{words.notRated}</span>
           </span>
         ) : c.duration && (
           <span className="inline-flex items-center gap-2 pr-1">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted">Time</span>
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted">{words.time}</span>
             <span className="text-[16px] font-semibold tabular-nums">
               {clock(c.duration)}
-              {c.golden_score && <span className="ml-1.5 text-[11px] font-bold text-muted">GS</span>}
+              {c.golden_score && <span className="ml-1.5 text-[11px] font-bold text-muted">{words.goldenScore}</span>}
             </span>
           </span>
         )}
@@ -287,28 +303,29 @@ function methodologyLink(c: ContestDetail): string {
 
 // A walkover: why it changes no rating.
 function Walkover({ contest: c }: { contest: ContestDetail }) {
+  const { d, t } = useI18n();
+  const words = d.contest.walkover;
   const loser = c.winner_id === athleteOf(c, "white").id ? athleteOf(c, "blue") : athleteOf(c, "white");
   return (
     <section className="mt-14 lg:mt-16">
       <div className={HEAD}>
-        <h2 className={H2}>Rating change</h2>
+        <h2 className={H2}>{words.title}</h2>
         <Link href="/methodology" className={LINK}>
-          How ratings work
+          {words.howRatingsWork}
         </Link>
       </div>
       <p className="mt-4 max-w-2xl text-[14px] sm:text-[15px] text-ink">
-        {c.walkover === "fusen"
-          ? `A walkover: ${loser.name} did not come out to fight (Fusen-Gachi).`
-          : "A walkover: nothing was fought, no clock and no score."}{" "}
-        <span className="text-muted">
-          A win without a fight says nothing about who is stronger, so it changes neither rating.
-        </span>
+        {c.walkover === "fusen" ? t(words.fusen, { name: loser.name }) : words.nothingFought}{" "}
+        <span className="text-muted">{words.noChange}</span>
       </p>
     </section>
   );
 }
 
 function RatingChange({ contest: c, upcoming }: { contest: ContestDetail; upcoming?: Upcoming }) {
+  const { d, f, t } = useI18n();
+  const words = d.contest.ratingChange;
+  const percent = (value: number | null) => (value === null ? "–" : f.formatChance(value));
   const rows = SIDES.map((side) => ({ side, athlete: athleteOf(c, side) }));
   const TH = "px-3 h-9 py-0 align-middle text-[11px] font-bold uppercase tracking-wider text-muted";
   const TD = "px-3 h-10 sm:h-11 py-0 align-middle whitespace-nowrap";
@@ -317,9 +334,9 @@ function RatingChange({ contest: c, upcoming }: { contest: ContestDetail; upcomi
   return (
     <section className="mt-14 lg:mt-16">
       <div className={HEAD}>
-        <h2 className={H2}>Rating change</h2>
+        <h2 className={H2}>{words.title}</h2>
         {upcoming ? (
-          <div className="inline-flex shrink-0" role="group" aria-label="If this athlete wins">
+          <div className="inline-flex shrink-0" role="group" aria-label={words.ifWins}>
             {SIDES.map((side, i) => {
               const athlete = athleteOf(c, side);
               const on = c.winner_id === athlete.id;
@@ -331,25 +348,25 @@ function RatingChange({ contest: c, upcoming }: { contest: ContestDetail; upcomi
                   onClick={() => upcoming.onPick(athlete.id)}
                   className={`h-7 px-2.5 text-[12px] font-semibold border cursor-pointer whitespace-nowrap ${i ? "-ml-px" : ""} ${on ? "border-ink bg-ink text-paper" : "border-rule bg-paper text-ink hover:border-ink"}`}
                 >
-                  {athlete.family ? athlete.name.split(" ")[0] : athlete.name} wins
+                  {t(words.wins, { name: athlete.family ? athlete.name.split(" ")[0] : athlete.name })}
                 </button>
               );
             })}
           </div>
         ) : (
           <Link href={methodologyLink(c)} className={LINK}>
-            How ratings work
+            {words.howRatingsWork}
           </Link>
         )}
       </div>
       <table className="hidden sm:table w-full border-collapse text-[14px] tabular-nums">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${TH} text-left`}>Athlete</th>
-            <th className={`${TH} text-right w-24`}>Chance</th>
-            <th className={`${TH} text-right w-56`}>Skill</th>
-            <th className={`${TH} text-right w-32`}>RD</th>
-            <th className={`${TH} text-right w-56`}>Rating</th>
+            <th className={`${TH} text-left`}>{words.athlete}</th>
+            <th className={`${TH} text-right w-24`}>{words.chance}</th>
+            <th className={`${TH} text-right w-56`}>{words.skill}</th>
+            <th className={`${TH} text-right w-32`}>{words.rd}</th>
+            <th className={`${TH} text-right w-56`}>{words.rating}</th>
           </tr>
         </thead>
         <tbody>
@@ -399,7 +416,7 @@ function RatingChange({ contest: c, upcoming }: { contest: ContestDetail; upcomi
         </thead>
         <tbody>
           <tr className="border-b border-rule">
-            <td className={LABEL}>Chance</td>
+            <td className={LABEL}>{words.chance}</td>
             {rows.map(({ side, athlete }) => (
               <td key={side} className={`${MOBILE} text-muted`}>
                 {percent(athlete.chance)}
@@ -407,7 +424,7 @@ function RatingChange({ contest: c, upcoming }: { contest: ContestDetail; upcomi
             ))}
           </tr>
           <tr className="border-b border-rule">
-            <td className={LABEL}>Skill</td>
+            <td className={LABEL}>{words.skill}</td>
             {rows.map(({ side, athlete }) => (
               <td key={side} className={MOBILE}>
                 <Sum pair={athlete.rating} weight="font-semibold" />
@@ -415,7 +432,7 @@ function RatingChange({ contest: c, upcoming }: { contest: ContestDetail; upcomi
             ))}
           </tr>
           <tr className="border-b border-rule">
-            <td className={LABEL}>RD</td>
+            <td className={LABEL}>{words.rd}</td>
             {rows.map(({ side, athlete }) => (
               <td key={side} className={MOBILE}>
                 {athlete.rd[0]}
@@ -425,7 +442,7 @@ function RatingChange({ contest: c, upcoming }: { contest: ContestDetail; upcomi
             ))}
           </tr>
           <tr>
-            <td className={LABEL}>Rating</td>
+            <td className={LABEL}>{words.rating}</td>
             {rows.map(({ side, athlete }) => (
               <td key={side} className={MOBILE}>
                 <Sum pair={athlete.score} weight="font-bold" bold />
@@ -435,12 +452,13 @@ function RatingChange({ contest: c, upcoming }: { contest: ContestDetail; upcomi
         </tbody>
       </table>
       <p className="mt-2 text-[12px] text-muted">
-        Rating = skill − RD. Lower RD, higher rating.
+        {words.formula}
         {upcoming && (
           <>
-            {" "}Not fought yet: what the result picked would do.{" "}
+            {" "}
+            {words.picked}{" "}
             <Link href="/methodology" className="text-claret hover:underline">
-              How ratings work
+              {words.howRatingsWork}
             </Link>
           </>
         )}
@@ -466,7 +484,8 @@ function Sum({ pair: [before, after], weight, bold = false }: { pair: (number | 
 
 // An earlier contest of the athlete at the tournament.
 function RoadRow({ row }: { row: HistoryRow }) {
-  const chance = formatChance(row.win_probability);
+  const { d, f } = useI18n();
+  const chance = f.formatChance(row.win_probability);
   const gain = row.score_after - row.score_before;
   return (
     <RowLink href={`/contests/${row.contest_id}`} className={ROW}>
@@ -485,7 +504,7 @@ function RoadRow({ row }: { row: HistoryRow }) {
             <span
               className={`text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border ${row.won ? "border-gain text-gain" : "border-drop text-drop"}`}
             >
-              Upset
+              {d.contest.road.upset}
             </span>
           )}
           {chance}
@@ -493,7 +512,7 @@ function RoadRow({ row }: { row: HistoryRow }) {
       </td>
       <td className={`w-12 ${CELL} text-right font-bold ${row.won ? "text-gain" : "text-drop"}`}>{signed(gain)}</td>
       <td className={`${CHEVRON_CELL}`}>
-        <Link href={`/contests/${row.contest_id}`} aria-label="The contest">
+        <Link href={`/contests/${row.contest_id}`} aria-label={d.contest.road.theContest}>
           <RowChevron />
         </Link>
       </td>
@@ -502,20 +521,16 @@ function RoadRow({ row }: { row: HistoryRow }) {
 }
 
 // "Heydarov leads 2–1" of the earlier meetings (rows of the white athlete's history).
-function meetingsTitle(c: ContestDetail, meetings: HistoryRow[]): string {
+function meetingsTitle(d: Dict, c: ContestDetail, meetings: HistoryRow[]): string {
   const white = meetings.filter((row) => row.won).length;
   const blue = meetings.length - white;
-  if (white === blue) return `Level at ${white}–${blue}`;
+  if (white === blue) return t(d.contest.meetings.level, { white, blue });
   const leader = white > blue ? c.white_family_name : c.blue_family_name;
-  return `${shortName(leader, null)} leads ${Math.max(white, blue)}–${Math.min(white, blue)}`;
+  return t(d.contest.meetings.leads, { name: shortName(leader, null), more: Math.max(white, blue), fewer: Math.min(white, blue) });
 }
 
 // "00:02:41" -> "2:41"
 function clock(duration: string): string {
   const [hours, minutes, seconds] = duration.split(":").map(Number);
   return `${hours * 60 + minutes}:${String(seconds).padStart(2, "0")}`;
-}
-
-function percent(value: number | null): string {
-  return value === null ? "–" : formatChance(value);
 }

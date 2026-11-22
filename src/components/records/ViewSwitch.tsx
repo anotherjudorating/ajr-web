@@ -1,3 +1,7 @@
+"use client";
+
+import { viewText } from "@/components/records/text";
+import { useDict } from "@/i18n/client";
 import type { RecordInfo } from "@/lib/records";
 
 const ACTIVE = "font-bold text-ink border-claret";
@@ -11,19 +15,21 @@ export function ViewSwitch({ info, current, onPick, href }: {
   onPick?: (key: string) => void;
   href?: (key: string) => string;
 }) {
+  const d = useDict();
   if (!info.views) return null;
   return (
-    <div className="flex items-center gap-3 text-[12px] sm:text-[13px]" role="group" aria-label="View">
+    <div className="flex items-center gap-3 text-[12px] sm:text-[13px]" role="group" aria-label={d.records.viewSwitch.label}>
       {info.views.map((v) => {
         const className = `px-1 pb-0.5 border-b-2 whitespace-nowrap ${v.key === current ? ACTIVE : INACTIVE}`;
+        const { label } = viewText(d, info, v);
         return href ? (
           <a key={v.key} href={href(v.key)} className={className} aria-current={v.key === current ? "true" : undefined}>
-            {v.label}
+            {label}
           </a>
         ) : (
           <button key={v.key} type="button" onClick={() => onPick?.(v.key)} className={`${className} cursor-pointer`}
                   aria-pressed={v.key === current}>
-            {v.label}
+            {label}
           </button>
         );
       })}

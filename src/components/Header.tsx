@@ -1,17 +1,20 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "@/components/Link";
+import { usePathname } from "@/i18n/navigation";
 import { useState } from "react";
 
 import { Icon } from "@/components/Icon";
+import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { SiteSearch } from "@/components/SiteSearch";
+import { useDict } from "@/i18n/client";
+import type { Dict } from "@/i18n/en";
 
-const SECTIONS = [
-  { label: "Rankings", href: "/rankings" },
-  { label: "Explore", href: "/explore", also: ["/tournaments", "/contests", "/countries"] },
-  { label: "Head-to-head", href: "/head-to-head" },
-  { label: "Records", href: "/records" },
+const SECTIONS: { label: keyof Dict["site"]["header"]; href: string; also?: string[] }[] = [
+  { label: "rankings", href: "/rankings" },
+  { label: "explore", href: "/explore", also: ["/tournaments", "/contests", "/countries"] },
+  { label: "headToHead", href: "/head-to-head" },
+  { label: "records", href: "/records" },
 ];
 
 // A section's own pages and the pages its lists open (a tournament, a contest).
@@ -30,6 +33,7 @@ export function CurrentHeader() {
 // Desktop: the name, the sections and a search box. Below md: the name and a
 // search button on the first row, the sections on a fixed second row.
 export function Header({ pathname }: { pathname: string }) {
+  const d = useDict();
   const [mobileSearch, setMobileSearch] = useState(false);
 
   return (
@@ -41,7 +45,7 @@ export function Header({ pathname }: { pathname: string }) {
               href="/"
               className="font-serif text-[22px] leading-[28px] font-bold tracking-tight whitespace-nowrap text-ink"
             >
-              Another Judo Rating
+              {d.site.name}
             </Link>
             <nav className="flex items-center gap-6 lg:gap-8 h-full ml-8 lg:ml-12">
               {SECTIONS.map(({ label, href }) => (
@@ -55,15 +59,16 @@ export function Header({ pathname }: { pathname: string }) {
                       : "text-muted hover:text-ink border-transparent"
                   }`}
                 >
-                  {label}
+                  {d.site.header[label]}
                 </Link>
               ))}
             </nav>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
+            <LanguageSwitch pathname={pathname} bare />
             <Link
               href="/explore/athletes"
-              aria-label="Search"
+              aria-label={d.site.header.search}
               className="hidden md:flex lg:hidden w-10 h-10 -mr-2 items-center justify-center text-muted hover:text-ink"
             >
               <Icon size={22} name="search" />
@@ -80,7 +85,7 @@ export function Header({ pathname }: { pathname: string }) {
               <SiteSearch wide autoFocus />
               <button
                 type="button"
-                aria-label="Close search"
+                aria-label={d.site.header.closeSearch}
                 onClick={() => setMobileSearch(false)}
                 className="w-8 h-8 flex items-center justify-center text-muted hover:text-ink cursor-pointer"
               >
@@ -93,11 +98,13 @@ export function Header({ pathname }: { pathname: string }) {
                 href="/"
                 className="font-serif text-[20px] leading-[28px] font-bold tracking-tight text-ink whitespace-nowrap"
               >
-                Another Judo Rating
+                {d.site.name}
               </Link>
+              {/* ml-auto: with the switcher hidden the row is as before (two ends) */}
+              <LanguageSwitch pathname={pathname} bare className="ml-auto" />
               <button
                 type="button"
-                aria-label="Search athletes or tournaments"
+                aria-label={d.site.header.searchAthletes}
                 onClick={() => setMobileSearch(true)}
                 className="w-10 h-10 flex items-center justify-center text-muted hover:text-ink transition-colors cursor-pointer"
               >
@@ -120,7 +127,7 @@ export function Header({ pathname }: { pathname: string }) {
                 : "text-muted hover:text-ink border-transparent"
             }`}
           >
-            {label}
+            {d.site.header[label]}
           </Link>
         ))}
       </nav>

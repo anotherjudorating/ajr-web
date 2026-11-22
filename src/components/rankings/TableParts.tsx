@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/Icon";
+import { useI18n } from "@/i18n/client";
+import type { Plural } from "@/i18n/t";
 import { pageNumbers } from "@/lib/pages";
 
 // What the rankings tables (a weight, pound for pound, nations) share: the toolbar
@@ -23,7 +25,7 @@ export const ROW_CELL = "px-2 sm:px-3 h-10 sm:h-11 py-0 align-middle";
 export function Toolbar<Sort extends string>({
   query,
   onQuery,
-  placeholder = "Search athlete",
+  placeholder,
   countries,
   country,
   onCountry,
@@ -41,7 +43,7 @@ export function Toolbar<Sort extends string>({
   dayMark?: string; // the date's mark: the table a link opened marked (its day)
   query: string;
   onQuery: (query: string) => void;
-  placeholder?: string;
+  placeholder?: string; // "Search athlete" without one
   countries: { code: string; name: string }[];
   country: string;
   onCountry: (country: string) => void;
@@ -53,6 +55,7 @@ export function Toolbar<Sort extends string>({
   onSort: (sort: Sort) => void;
   onCsv: () => void;
 }) {
+  const { d } = useI18n();
   return (
     <div id={id} className="mt-6 border-b-2 border-ink pb-2 flex flex-col lg:flex-row lg:items-center gap-2">
       <div className="relative w-full md:w-72 lg:w-56 shrink-0">
@@ -65,7 +68,7 @@ export function Toolbar<Sort extends string>({
           type="text"
           value={query}
           onChange={(e) => onQuery(e.target.value)}
-          placeholder={placeholder}
+          placeholder={placeholder ?? d.rankings.toolbar.searchAthlete}
           className="w-full h-8 pl-8 pr-2.5 bg-paper border border-rule text-[12px] placeholder:text-muted focus:outline-none focus:border-ink"
         />
       </div>
@@ -75,7 +78,7 @@ export function Toolbar<Sort extends string>({
           onChange={(e) => onCountry(e.target.value)}
           className={`${CONTROL} md:w-[110px]`} // the prototype's width, whatever the names
         >
-          <option value="">All countries</option>
+          <option value="">{d.rankings.toolbar.allCountries}</option>
           {countries.map(({ code, name }) => (
             <option key={code} value={code}>
               {name}
@@ -87,7 +90,7 @@ export function Toolbar<Sort extends string>({
           value={asOf}
           min="2005-01-01"
           max={latest}
-          title="Ranking as of this date"
+          title={d.rankings.toolbar.asOf}
           onChange={(e) => e.target.value && onDay(e.target.value)}
           className={`${CONTROL} md:w-[111px] tabular-nums ${dayMark}`} // its width with a date, also while loading
         />
@@ -108,7 +111,7 @@ export function Toolbar<Sort extends string>({
           className="w-full md:w-auto shrink-0 h-8 px-3 inline-flex items-center justify-center gap-1.5 border border-rule text-[12px] text-ink hover:border-ink"
         >
           <Icon size={16} name="download" className="text-muted" />
-          Export CSV
+          {d.rankings.toolbar.exportCsv}
         </button>
       </div>
     </div>
@@ -133,7 +136,7 @@ export function Pagination({
   total: number;
   first: number; // index of the page's first row
   count: number; // rows on the page
-  noun: string; // "athletes", "nations"
+  noun: string | Plural; // the rows' count with its noun (d.common.athletes), or the name of one in common ("athletes", "nations")
   pageSize: number;
   sizes?: number[];
   onPageSize: (size: number) => void;
@@ -141,15 +144,18 @@ export function Pagination({
   pages: number;
   onPage: (page: number) => void;
 }) {
+  const { d, t, n } = useI18n();
+  // a noun given by name: the count in common of that name (a name not there, as it is)
+  const counted: Plural = typeof noun === "string" ? ((d.common as Record<string, unknown>)[noun] as Plural | undefined) ?? { other: `{n} ${noun}` } : noun;
   return (
     <div className="w-full border-t border-rule py-4 flex items-center justify-between text-[12px]">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full text-[12px] text-muted">
         <div className="flex items-center justify-between w-full sm:w-auto sm:gap-6">
           <div className="text-muted">
-            {loading ? "Loading…" : total ? `${first + 1}–${first + count} of ${total} ${noun}` : `0 ${noun}`}
+            {loading ? d.rankings.loading : total ? t(d.rankings.pagination.range, { from: first + 1, to: first + count, count: n(counted, total) }) : n(counted, 0)}
           </div>
           <div className="flex items-center gap-2 text-[12px]">
-            <span className="text-muted">Show</span>
+            <span className="text-muted">{d.rankings.pagination.show}</span>
             {sizes.map((size) => (
               <button
                 key={size}

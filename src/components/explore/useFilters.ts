@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 
 // A list whose filters live in the URL (the server reads them and fetches the page):
 // setting one goes back to the first page.

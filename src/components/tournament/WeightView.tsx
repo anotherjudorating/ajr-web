@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Fragment, useState } from "react";
 
 import { useHash, useRowMark, useRowScroll } from "@/components/anchors";
@@ -14,21 +14,27 @@ import { CsvButton, SearchBox, Select, ToolbarRow } from "@/components/explore/C
 import { Pagination, saveCsv, SHORT_SIZES } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
+import { useI18n } from "@/i18n/client";
+import type { Dict } from "@/i18n/en";
+import type { Format } from "@/i18n/format";
+import { t } from "@/i18n/t";
 import type { CompetitionContest, CompetitionResult, MedalChance, Slot } from "@/lib/api";
-import { formatChance, ordinal, roundCode, roundTitle, shortName, signed } from "@/lib/format";
+import { ordinal, roundCode, shortName, signed } from "@/lib/format";
 import { athleteRow } from "@/lib/anchors";
 
 const MEDALS: string[] = ["gold", "silver", "bronze"];
-// the stages' group rows' titles (several contests each)
-const roundsTitle = (round: string) => {
-  const titles: Record<string, string> = { BR: "Bronze medal", "1/2": "Semi-finals", "1/4": "Quarter-finals" };
-  const title = roundTitle(round);
-  return titles[roundCode(round)] ?? (title.endsWith(" final") ? `${title}s` : title);
+// the stages' group rows' titles (several contests each); "" for contests whose stage
+// is not known
+const roundsTitle = (d: Dict, f: Format, round: string) => {
+  if (round === "") return d.tournament.contests.noRound;
+  const code = roundCode(round);
+  const titles: Record<string, string> = d.tournament.contests.rounds;
+  if (titles[code]) return titles[code];
+  return /^1\/\d+$/.test(code) ? t(d.tournament.contests.rounds.ofFinal, { code }) : f.roundTitle(round);
 };
 const CELL = "px-2 sm:px-3 py-2 align-middle";
 
 const gainOf = (r: CompetitionResult) => r.score_after - r.score_before;
-const shortRound = (round: string | null) => (roundCode(round) === "F" ? "Final" : roundCode(round));
 
 // One side of a contest: the athlete and what the contest gave them (a walkover: nothing).
 function sideOf(c: CompetitionContest, white: boolean) {
@@ -70,7 +76,7 @@ function roundsFromPlaces(places: Slot[], contests: CompetitionContest[]): { rou
   })).filter((r) => r.contests.length > 0);
 }
 
-const WALKOVER = <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-muted">Walkover</span>;
+const WALKOVER = (label: string) => <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-muted">{label}</span>;
 
 // One weight of a tournament, as in the prototype (weight.html): the podium, every
 // athlete's place with their contests a click away, and the contests by round.
@@ -85,9 +91,10 @@ export function WeightView({
   chances?: MedalChance[]; // of this weight, the likeliest medallists first
   bracket?: Slot[]; // the bracket's places with their chances (a weight under way or to come)
 }) {
+  const { d } = useI18n();
   const rounds: { round: string; contests: CompetitionContest[] }[] = [];
   for (const c of contests) {
-    const round = c.round ?? "Contests";
+    const round = c.round ?? "";
     if (rounds.at(-1)?.round !== round) rounds.push({ round, contests: [] });
     rounds.at(-1)!.contests.push(c);
   }
@@ -107,7 +114,7 @@ export function WeightView({
       {podium.length > 0 && (
         <section className="mt-10 lg:mt-12">
           <div className={HEAD}>
-            <h2 className={H2}>Podium</h2>
+            <h2 className={H2}>{d.tournament.podium.title}</h2>
           </div>
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6 md:gap-x-14">
             {podium.map((r) => (
@@ -124,7 +131,7 @@ export function WeightView({
                     <Flag ioc={r.country} />
                     <span className="font-medium">{r.country}</span>
                   </div>
-                  <div className="mt-1.5 flex items-baseline gap-2 text-[13px] leading-[18px] tabular-nums" title="Rating before → after the tournament">
+                  <div className="mt-1.5 flex items-baseline gap-2 text-[13px] leading-[18px] tabular-nums" title={d.tournament.podium.ratingBeforeAfter}>
                     <span className="text-muted">
                       {r.score_before}
                       <Arrow />
@@ -154,15 +161,16 @@ export function WeightView({
 // Before the weight is over: the likeliest podium, in grey (gold: the likeliest
 // champion; the others: the likeliest medallists after them).
 function LikelyPodium({ rows }: { rows: MedalChance[] }) {
+  const { d } = useI18n();
   const gold = [...rows].sort((a, b) => b.gold - a.gold)[0];
   const others = rows.filter((r) => r.athlete_id !== gold.athlete_id).sort((a, b) => b.medal - a.medal).slice(0, 3);
   const kinds: MedalKind[] = ["gold", "silver", "bronze", "bronze"];
   return (
     <section className="mt-10 lg:mt-12">
       <div className={HEAD}>
-        <h2 className={H2}>Podium prediction</h2>
+        <h2 className={H2}>{d.tournament.podium.prediction}</h2>
         <Link href="/methodology" className={LINK}>
-          How it works
+          {d.tournament.podium.howItWorks}
         </Link>
       </div>
       <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6 md:gap-x-14">
@@ -205,6 +213,8 @@ function Results({
   chances: MedalChance[];
   bracket?: Slot[];
 }) {
+  const { d, f } = useI18n();
+  const words = d.tournament.athletes;
   const placeOf = new Map(results.map((r, i) => [r.athlete_id, places[i]]));
   // under way, the place of an athlete out: by the round they lost their last contest in
   const OUT: Record<string, number> = { BR: 5, REP: 7, "1/8": 9, "1/16": 17, "1/32": 33, "1/64": 65 };
@@ -273,19 +283,19 @@ function Results({
   return (
     <section className="mt-14 lg:mt-16">
       {/* the toolbar's rule under the title, as the athlete's contests */}
-      <h2 className={`${H2} text-ink`}>Athletes</h2>
+      <h2 className={`${H2} text-ink`}>{words.title}</h2>
       <ToolbarRow inPage>
-        <SearchBox value={query} onChange={reset(setQuery)} placeholder="Search athlete" />
+        <SearchBox value={query} onChange={reset(setQuery)} placeholder={words.search} />
         <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
-          <Select value={nation} onChange={reset(setNation)} options={[{ value: "", label: "All nations" }, ...nations.map((n) => ({ value: n, label: n }))]} />
+          <Select value={nation} onChange={reset(setNation)} options={[{ value: "", label: words.allNations }, ...nations.map((n) => ({ value: n, label: n }))]} />
           {live && (
             <Select
               value={status}
               onChange={reset(setStatus)}
               options={[
-                { value: "", label: "All athletes" },
-                { value: "in", label: "Still in" },
-                { value: "out", label: "Placed" },
+                { value: "", label: words.allAthletes },
+                { value: "in", label: words.stillIn },
+                { value: "out", label: words.placed },
               ]}
             />
           )}
@@ -296,10 +306,10 @@ function Results({
               value={sort}
               onChange={reset(setSort)}
               options={[
-                { value: "place", label: "Sort: place" },
-                { value: "rating", label: "Sort: rating ↓" },
-                { value: "change", label: "Sort: +/− ↓" },
-                { value: "name", label: "Sort: name" },
+                { value: "place", label: words.sortPlace },
+                { value: "rating", label: words.sortRating },
+                { value: "change", label: words.sortChange },
+                { value: "name", label: words.sortName },
               ]}
             />
           </div>
@@ -309,12 +319,12 @@ function Results({
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-right w-12 sm:w-16`}>Place</th>
-            <th className={`${HEAD_CELL} text-left`}>Athlete</th>
-            <th className={`${HEAD_CELL} text-left w-24 hidden sm:table-cell`}>Nat</th>
-            <th className={`${HEAD_CELL} text-right w-16 hidden sm:table-cell`}>W–L</th>
-            <th className={`${HEAD_CELL} text-right w-20 hidden sm:table-cell`}>Before</th>
-            <th className={`${HEAD_CELL} text-right w-16 sm:w-20`}>Rating</th>
+            <th className={`${HEAD_CELL} text-right w-12 sm:w-16`}>{words.place}</th>
+            <th className={`${HEAD_CELL} text-left`}>{words.athlete}</th>
+            <th className={`${HEAD_CELL} text-left w-24 hidden sm:table-cell`}>{words.nation}</th>
+            <th className={`${HEAD_CELL} text-right w-16 hidden sm:table-cell`}>{words.winsLosses}</th>
+            <th className={`${HEAD_CELL} text-right w-20 hidden sm:table-cell`}>{words.before}</th>
+            <th className={`${HEAD_CELL} text-right w-16 sm:w-20`}>{words.rating}</th>
             <th className={`${HEAD_CELL} text-right w-12 sm:w-16`}>+/−</th>
             <th className="w-10 sm:w-12 h-9 py-0" />
           </tr>
@@ -331,10 +341,10 @@ function Results({
             const panel = (
               <div className="bg-panel border-t border-rule border-l-[3px] border-l-claret p-3 sm:p-4">
                 <div className="flex items-baseline gap-2 mb-2">
-                  <h3 className="font-serif text-[16px] leading-[20px] font-semibold text-ink">Contests</h3>
+                  <h3 className="font-serif text-[16px] leading-[20px] font-semibold text-ink">{words.contests}</h3>
                   {own.length > 0 && <span className={`text-[14px] font-bold tabular-nums ${gain >= 0 ? "text-gain" : "text-drop"}`}>{signed(gain)}</span>}
                 </div>
-                {own.length === 0 && <p className="text-[13px] text-muted">No contests yet.</p>}
+                {own.length === 0 && <p className="text-[13px] text-muted">{words.noContests}</p>}
                 <div className="flex flex-col text-[13px] w-full sm:max-w-[560px]">
                   {own.map((c) => {
                     const self = sideOf(c, c.white_id === r.athlete_id);
@@ -346,15 +356,15 @@ function Results({
                         href={`/contests/${c.contest_id}`}
                         className="group border-b border-rule/60 last:border-b-0 py-1.5 flex items-center justify-between gap-1.5 hover:bg-paper/50"
                       >
-                        <span className="w-10 shrink-0 text-muted">{shortRound(c.round)}</span>
+                        <span className="w-10 shrink-0 text-muted">{roundCode(c.round) === "F" ? d.common.rounds.F : roundCode(c.round)}</span>
                         <span className="inline-flex items-center gap-1.5 min-w-0 flex-1">
                           <Flag ioc={opponent.country} />
                           <span className="truncate font-medium text-ink">{shortName(opponent.family, opponent.given)}</span>
                         </span>
                         <span className="w-24 shrink-0 text-right tabular-nums text-ink">
-                          {c.real_fight && self.chance !== null ? formatChance(self.chance, 0) : WALKOVER}
+                          {c.real_fight && self.chance !== null ? f.formatChance(self.chance, 0) : WALKOVER(d.tournament.contests.walkover)}
                         </span>
-                        <span className={`w-6 shrink-0 text-center font-bold ${won ? "text-gain" : "text-drop"}`}>{won ? "W" : "L"}</span>
+                        <span className={`w-6 shrink-0 text-center font-bold ${won ? "text-gain" : "text-drop"}`}>{won ? d.tournament.contests.win : d.tournament.contests.loss}</span>
                         <span className={`w-10 shrink-0 text-right font-bold tabular-nums ${(self.change ?? 0) >= 0 ? "text-gain" : "text-drop"}`}>
                           {self.change === null ? "" : signed(self.change)}
                         </span>
@@ -373,7 +383,7 @@ function Results({
                   aria-expanded={expanded}
                   className={`border-b border-rule hover:bg-panel/40 cursor-pointer ${grey ? "text-muted" : ""} ${r.athlete_id === marked ? lit.row : ""}`}
                 >
-                  <td className={`${ROW_CELL} text-right font-medium`}>{r.place ? ordinal(r.place) : "—"}</td>
+                  <td className={`${ROW_CELL} text-right font-medium`}>{r.place ? f.ordinal(r.place) : "—"}</td>
                   <td className={ROW_CELL}>
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className="sm:hidden flex">
@@ -396,7 +406,7 @@ function Results({
                   <td className={`${ROW_CELL} text-right text-muted hidden sm:table-cell`}>{res?.score_before ?? (r.chance?.rating != null ? Math.round(r.chance.rating) : "—")}</td>
                   <td className={`${ROW_CELL} text-right ${grey ? "" : "font-bold"}`}>{res?.score_after ?? (r.chance?.rating != null ? Math.round(r.chance.rating) : "—")}</td>
                   <td className={`${ROW_CELL} text-right font-semibold ${res ? (gain >= 0 ? "text-gain" : "text-drop") : ""}`}>{res ? signed(gain) : ""}</td>
-                  <td className="w-10 sm:w-12 h-10 sm:h-11 py-0 align-middle text-center text-muted hover:bg-panel hover:text-ink" title="Show contests">
+                  <td className="w-10 sm:w-12 h-10 sm:h-11 py-0 align-middle text-center text-muted hover:bg-panel hover:text-ink" title={words.showContests}>
                     <Icon size={18} name="expand_more" className={`align-middle transition-transform ${expanded ? "rotate-180" : ""}`} />
                   </td>
                 </tr>
@@ -452,6 +462,8 @@ function downloadAthletes(rows: AthleteRow[]) {
 // The contests from the final back, 20 a page, under rows for their rounds; a
 // round's row folds its contests away.
 function Contests({ rounds, contests, places }: { rounds: { round: string; contests: Row[] }[]; contests: CompetitionContest[]; places: Slot[] }) {
+  const { d, f } = useI18n();
+  const words = d.tournament.contests;
   const [view, setView] = useState<"list" | "bracket">(places.length || hasBracket(contests) ? "bracket" : "list");
   const [folded, setFolded] = useState<Set<string>>(new Set());
   const [size, setSize] = useState(SHORT_SIZES[0]);
@@ -478,13 +490,13 @@ function Contests({ rounds, contests, places }: { rounds: { round: string; conte
   return (
     <section className="mt-14 lg:mt-16">
       <div className="flex flex-row items-center justify-between gap-3 border-b-2 border-ink pb-2">
-        <h2 className={H2}>Contests</h2>
+        <h2 className={H2}>{words.title}</h2>
         <div className="flex items-center gap-4">
-          <div className="inline-flex" role="group" aria-label="Show the contests as">
+          <div className="inline-flex" role="group" aria-label={words.showAs}>
             {(
               [
-                ["bracket", "Bracket"],
-                ["list", "List"],
+                ["bracket", words.bracket],
+                ["list", words.list],
               ] as const
             ).map(([v, label], i) => (
               <button
@@ -506,10 +518,10 @@ function Contests({ rounds, contests, places }: { rounds: { round: string; conte
         {/* as Explore's contests */}
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-left`}>Athletes</th>
+            <th className={`${HEAD_CELL} text-left`}>{words.athletes}</th>
             <th className={`${HEAD_CELL} w-20 hidden sm:table-cell`} />
-            <th className={`${HEAD_CELL} w-14 sm:w-16 text-right`}>Chance</th>
-            <th className={`${HEAD_CELL} w-8 sm:w-10 text-center`}>W/L</th>
+            <th className={`${HEAD_CELL} w-14 sm:w-16 text-right`}>{words.chance}</th>
+            <th className={`${HEAD_CELL} w-8 sm:w-10 text-center`}>{words.winLoss}</th>
             <th className={`${HEAD_CELL} w-12 sm:w-16 text-right`}>+/−</th>
             <th className="w-8 sm:w-10 h-9 py-0" />
           </tr>
@@ -520,7 +532,7 @@ function Contests({ rounds, contests, places }: { rounds: { round: string; conte
             const title = (
               <span className="inline-flex items-center gap-2">
                 <Icon size={18} name="expand_more" className={`text-muted transition-transform duration-150 ${open ? "" : "-rotate-90"}`} />
-                <span className="text-[12px] font-bold uppercase text-ink">{roundsTitle(round)}</span>
+                <span className="text-[12px] font-bold uppercase text-ink">{roundsTitle(d, f, round)}</span>
               </span>
             );
             return (
@@ -565,6 +577,7 @@ function Contests({ rounds, contests, places }: { rounds: { round: string; conte
 
 // A contest to come: grey, its chances (of winning it, or of being in it).
 function PendingRow({ row }: { row: Pending }) {
+  const { d, f } = useI18n();
   const id = row.places.find((p) => p.contest_id !== null)?.contest_id;
   const cells = [
     <td key="names" className={CELL}>
@@ -582,7 +595,7 @@ function PendingRow({ row }: { row: Pending }) {
     <td key="chances" className={`${CELL} whitespace-nowrap`}>
       {row.places.map((p) => (
         <div key={p.athlete_id} className="h-6 flex items-center justify-end text-muted">
-          {formatChance(p.wins, 0)}
+          {f.formatChance(p.wins, 0)}
         </div>
       ))}
     </td>,
@@ -607,13 +620,15 @@ function PendingRow({ row }: { row: Pending }) {
       {cells}
     </RowLink>
   ) : (
-    <tr className={`border-b border-rule ${row.likely ? "text-muted" : ""}`} title="Not decided yet: the likeliest of each side, and their chances against each other">
+    <tr className={`border-b border-rule ${row.likely ? "text-muted" : ""}`} title={d.tournament.contests.likelyTitle}>
       {cells}
     </tr>
   );
 }
 
 function ContestRow({ contest: c }: { contest: CompetitionContest }) {
+  const { d, f } = useI18n();
+  const words = d.tournament.contests;
   const sides = [
     { ...sideOf(c, true), judogi: "bg-paper" },
     { ...sideOf(c, false), judogi: "bg-oxford" },
@@ -637,7 +652,7 @@ function ContestRow({ contest: c }: { contest: CompetitionContest }) {
       </td>
       <td className={`${CELL} hidden sm:table-cell text-right`}>
         {upset && (
-          <span className="text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border border-gain text-gain">Upset</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border border-gain text-gain">{words.upset}</span>
         )}
       </td>
       <td className={`${CELL} whitespace-nowrap`}>
@@ -647,7 +662,7 @@ function ContestRow({ contest: c }: { contest: CompetitionContest }) {
           const color = upset ? (won ? "text-gain font-semibold" : "text-drop font-semibold") : "text-ink sm:text-muted";
           return (
             <div key={s.id} className="h-6 flex items-center justify-end">
-              {c.real_fight && s.chance !== null ? <span className={color}>{formatChance(s.chance, 0)}</span> : i === 0 && WALKOVER}
+              {c.real_fight && s.chance !== null ? <span className={color}>{f.formatChance(s.chance, 0)}</span> : i === 0 && WALKOVER(words.walkover)}
             </div>
           );
         })}
@@ -659,7 +674,7 @@ function ContestRow({ contest: c }: { contest: CompetitionContest }) {
             key={s.id}
             className={`h-6 flex items-center justify-center font-bold ${s.id === c.winner_id ? "text-gain" : c.real_fight ? "text-drop" : "text-[10px] text-muted"}`}
           >
-            {s.id === c.winner_id ? "W" : c.real_fight ? "L" : "WO"}
+            {s.id === c.winner_id ? words.win : c.real_fight ? words.loss : words.walkoverCode}
           </div>
         ))}
       </td>

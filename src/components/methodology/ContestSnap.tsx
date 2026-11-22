@@ -1,6 +1,9 @@
-import Link from "next/link";
+"use client";
+
+import Link from "@/components/Link";
 
 import { Flag } from "@/components/Flag";
+import { useI18n } from "@/i18n/client";
 
 export type SnapSide = {
   name: string;
@@ -27,6 +30,7 @@ export function ContestSnap({ left, right, leftWon, where, href, hideResult = fa
   hideResult?: boolean; // the result held back (a quiz, a reveal)
   compact?: boolean;
 }) {
+  const { d, t } = useI18n();
   const won = (isLeft: boolean) => !hideResult && leftWon === isLeft;
   const bar = (
     <div className="h-2 w-full flex border border-ink overflow-hidden" aria-hidden>
@@ -60,10 +64,10 @@ export function ContestSnap({ left, right, leftWon, where, href, hideResult = fa
       {s.note && <div className="text-[12px] leading-4 text-muted">{s.note}</div>}
       {!hideResult && (
         <div className="mt-1 text-[12px] font-semibold uppercase tracking-wider">
-          {won(isLeft) ? <span className="text-gain">Won</span> : <span className="text-muted">Lost</span>}
+          {won(isLeft) ? <span className="text-gain">{d.methodology.snap.won}</span> : <span className="text-muted">{d.methodology.snap.lost}</span>}
           {s.change !== undefined && (
             <span className={`ml-2 normal-case tracking-normal tabular-nums ${Math.round(s.change) > 0 ? "text-gain" : Math.round(s.change) < 0 ? "text-claret" : "text-muted"}`}>
-              rating {signed(s.change)}
+              {t(d.methodology.snap.ratingChange, { change: signed(s.change) })}
             </span>
           )}
         </div>

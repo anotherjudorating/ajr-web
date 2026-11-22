@@ -1,13 +1,19 @@
 import { signed } from "@/lib/format";
 
+// The words for an athlete not in the table back then (d.rankings.changes).
+export type EntryLabels = { new: string; returning: string };
+
 // Places moved: ↑2 teal, ↓1 red, – unchanged. Not in the table back then: NEW (first
-// time in this weight) or RE (back in it).
+// time in this weight) or RE (back in it), in the words given; a caller that never
+// meets a null `placesUp` leaves them out.
 export function placesText(
   placesUp: number | null,
   entry: "new" | "returning" | null = "new",
+  labels?: EntryLabels,
 ): { text: string; color: string } {
   if (placesUp === null) {
-    return { text: entry === "returning" ? "RE" : "NEW", color: "text-claret text-[11px] font-bold" };
+    const text = labels ? (entry === "returning" ? labels.returning : labels.new) : "";
+    return { text, color: "text-claret text-[11px] font-bold" };
   }
   if (placesUp > 0) return { text: `↑${placesUp}`, color: "text-gain" };
   if (placesUp < 0) return { text: `↓${-placesUp}`, color: "text-drop" };

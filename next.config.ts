@@ -49,6 +49,9 @@ const nextConfig: NextConfig = {
     },
   },
   experimental: {
+    // An address that matches no route gets app/global-not-found.tsx with a 404: the
+    // root layout is under [lang], so there is no layout for a root not-found.tsx.
+    globalNotFound: true,
     // "use cache" keys hold a hash of the cached function's code instead of the
     // build's id, so a deploy keeps the cached data (lib/api.ts) and does not send
     // every page to the database again; an entry is read anew when its function

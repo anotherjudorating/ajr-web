@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 
 import { WeightSwitcher } from "@/components/WeightSwitcher";
 import { splitDay } from "@/lib/day-path";

@@ -13,6 +13,7 @@ import { Medals } from "@/components/athlete/Medals";
 import { type Competition, RatingChart } from "@/components/athlete/RatingChart";
 import type { Places } from "@/lib/places";
 import { weightView } from "@/lib/weight-view";
+import { useI18n } from "@/i18n/client";
 import type { Athlete, AthleteChance, HistoryRow } from "@/lib/api";
 import { shortName } from "@/lib/format";
 import { lastRating } from "@/lib/inactive";
@@ -35,6 +36,7 @@ export function AthleteView({
   places: Places | null; // every Monday's, for the chart's tip (null without R2)
   today: string; // YYYY-MM-DD
 }) {
+  const { d, f, t, n } = useI18n();
   const [weight, setWeight] = useState(athlete.weight ?? athlete.weights[0] ?? null);
   // a point picked on the chart: its competitions' contests marked in the table
   const [marked, setMarked] = useState<{ ids: number[]; n: number } | null>(null);
@@ -53,7 +55,7 @@ export function AthleteView({
     if (week) {
       const [, day, age, of] = week;
       if (of && athlete.weights.includes(of)) setWeight(of);
-      setRun({ spans: [{ from: day, to: day }], label: `First #1, at ${age}` });
+      setRun({ spans: [{ from: day, to: day }], label: t(d.athlete.header.firstAtOne, { age }) });
     }
     const found = record?.match(/^(at-1|p4p-1|top-8)(-run)?(?:~(.+))?$/);
     if (found) {
@@ -62,12 +64,12 @@ export function AthleteView({
       setWeight(at);
       const standing = standingOf(places, at, history);
       const weeks = standing && { "at-1": standing.atOne, "p4p-1": standing.p4pAtOne, "top-8": standing.top8 }[kind];
-      const phrase = { "at-1": "at #1", "p4p-1": "at #1 pound for pound", "top-8": "in the top 8" }[kind];
-      if (weeks && weeks.weeks > 0)
+      const phrase = { "at-1": d.athlete.header.weeksAtOne, "p4p-1": d.athlete.header.weeksP4pAtOne, "top-8": d.athlete.header.weeksTop8 }[kind];
+      if (weeks && phrase && weeks.weeks > 0)
         setRun(
           longest
-            ? { spans: [{ from: weeks.from!, to: weeks.to! }], label: `${weeks.longest} ${weeks.longest === 1 ? "week" : "weeks"} ${phrase}` }
-            : { spans: weeks.spans, label: `${weeks.weeks} ${weeks.weeks === 1 ? "week" : "weeks"} ${phrase}` },
+            ? { spans: [{ from: weeks.from!, to: weeks.to! }], label: n(phrase, weeks.longest) }
+            : { spans: weeks.spans, label: n(phrase, weeks.weeks) },
         );
     }
   }
@@ -104,10 +106,8 @@ export function AthleteView({
       <Breadcrumbs
         className="mb-4 pt-2 sm:pt-0"
         trail={[
-          { href: "/rankings", label: "Rankings" },
-          ...(current
-            ? [{ href: `/rankings/${current.slug}`, label: `${current.gender === "men" ? "Men" : "Women"} ${current.label} kg` }]
-            : []),
+          { href: "/rankings", label: d.site.header.rankings },
+          ...(current ? [{ href: `/rankings/${current.slug}`, label: f.weightTitle(current) }] : []),
         ]}
         current={shortName(athlete.family_name, athlete.given_name)}
       />

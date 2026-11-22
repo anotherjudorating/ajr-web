@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useState } from "react";
 
 import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { RowLink } from "@/components/RowLink";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
+import { useI18n } from "@/i18n/client";
 import type { CountryLeader } from "@/lib/api";
 import { shortName } from "@/lib/format";
 import type { Weight } from "@/lib/weights";
@@ -14,6 +15,8 @@ import type { Weight } from "@/lib/weights";
 // weight, or, with a weight picked (as the home page's leaders), its best five there.
 // api.country_leaders gives the best five of every weight, best first.
 export function Leaders({ title, weights, leaders, href }: { title: string; weights: Weight[]; leaders: CountryLeader[]; href: string }) {
+  const { d, t } = useI18n();
+  const words = d.country.leaders;
   const [picked, setPicked] = useState("");
   const present = weights.filter((w) => leaders.some((l) => l.weight === w.api));
   if (present.length === 0) return null;
@@ -29,30 +32,30 @@ export function Leaders({ title, weights, leaders, href }: { title: string; weig
           <select
             value={picked}
             onChange={(e) => setPicked(e.target.value)}
-            aria-label={`${title}: weight`}
+            aria-label={t(words.weightPicker, { title })}
             className="w-28 sm:w-36 border border-rule bg-paper text-ink text-xs py-1 px-2 focus:outline-none focus:border-ink cursor-pointer"
           >
-            <option value="">All weights</option>
+            <option value="">{words.allWeights}</option>
             {present.map((w) => (
               <option key={w.slug} value={w.slug}>
-                {w.label} kg
+                {t(d.country.kg, { label: w.label })}
               </option>
             ))}
           </select>
         </div>
         <Link href={href} className={LINK}>
-          All athletes
+          {words.allAthletes}
         </Link>
       </div>
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-left w-14 sm:w-16`}>{weight ? "#" : "Weight"}</th>
-            <th className={`${HEAD_CELL} text-left`}>Athlete</th>
-            <th className={`${HEAD_CELL} text-right w-16`} title="World rank in the weight">
-              Rank
+            <th className={`${HEAD_CELL} text-left w-14 sm:w-16`}>{weight ? "#" : words.weight}</th>
+            <th className={`${HEAD_CELL} text-left`}>{words.athlete}</th>
+            <th className={`${HEAD_CELL} text-right w-16`} title={words.worldRank}>
+              {words.rank}
             </th>
-            <th className={`${HEAD_CELL} text-right w-16 sm:w-20`}>Rating</th>
+            <th className={`${HEAD_CELL} text-right w-16 sm:w-20`}>{words.rating}</th>
             <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>

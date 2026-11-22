@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { connection } from "next/server";
 
+import { DEFAULT_LANG, localePath, PUBLISHED } from "@/i18n/locales";
 import { lastUpdate, sitemapData } from "@/lib/api";
 import { indexableAthlete, SITE } from "@/lib/seo";
 import { WEIGHTS } from "@/lib/weights";
@@ -9,7 +10,9 @@ import { WEIGHTS } from "@/lib/weights";
 // so a revalidation that changed nothing writes the same file): the rankings, the
 // athletes with enough to show (lib/seo.ts), every tournament with rated contests,
 // every nation, the records and the lists. About 25 thousand URLs: one file (the
-// limit is 50 thousand).
+// limit is 50 thousand). Each page once a published language, with the same page in
+// the other languages as its alternates (hreflang); with four languages or more,
+// generateSitemaps should split the file.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // built on its first request, not with the site (one more heavy read while the
   // build renders every page at once); its data is cached until it changes
@@ -18,26 +21,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const today = (updated ?? "1970-01-01").slice(0, 10);
   // no date for the few pages of the 1960s judobase has: search engines reject
   // dates that old, and they say nothing about a page anyway
-  const page = (path: string, lastModified?: string | null) => ({
-    url: `${SITE}${path}`,
-    ...(lastModified && lastModified >= "2000-01-01" ? { lastModified } : {}),
-  });
+  const address = (lang: (typeof PUBLISHED)[number]["code"], path: string) => `${SITE}${localePath(lang, path)}`;
+  const page = (path: string, lastModified?: string | null) =>
+    PUBLISHED.map((locale) => ({
+      url: address(locale.code, path),
+      ...(lastModified && lastModified >= "2000-01-01" ? { lastModified } : {}),
+      ...(PUBLISHED.length > 1
+        ? {
+            alternates: {
+              languages: {
+                ...Object.fromEntries(PUBLISHED.map((l) => [l.htmlLang, address(l.code, path)])),
+                "x-default": address(DEFAULT_LANG, path),
+              },
+            },
+          }
+        : {}),
+    }));
   return [
-    page("/", today),
-    ...WEIGHTS.map((w) => page(`/rankings/${w.slug}`, today)),
-    page("/rankings/p4p/men", today),
-    page("/rankings/p4p/women", today),
-    ...["mixed", "men", "women"].map((kind) => page(`/rankings/teams/${kind}`, today)),
-    page("/records", today),
-    page("/data", today),
-    page("/methodology"),
-    page("/contact"),
-    page("/head-to-head"),
-    ...["athletes", "contests", "tournaments", "nations"].map((list) => page(`/explore/${list}`, today)),
-    ...data.nations.map((ioc) => page(`/countries/${ioc.toLowerCase()}`, today)),
-    ...data.tournaments.map(([id, lastDay]) => page(`/tournaments/${id}`, lastDay)),
+    ...page("/", today),
+    ...WEIGHTS.flatMap((w) => page(`/rankings/${w.slug}`, today)),
+    ...page("/rankings/p4p/men", today),
+    ...page("/rankings/p4p/women", today),
+    ...["mixed", "men", "women"].flatMap((kind) => page(`/rankings/teams/${kind}`, today)),
+    ...page("/records", today),
+    ...page("/data", today),
+    ...page("/methodology"),
+    ...page("/contact"),
+    ...page("/head-to-head"),
+    ...["athletes", "contests", "tournaments", "nations"].flatMap((list) => page(`/explore/${list}`, today)),
+    ...data.nations.flatMap((ioc) => page(`/countries/${ioc.toLowerCase()}`, today)),
+    ...data.tournaments.flatMap(([id, lastDay]) => page(`/tournaments/${id}`, lastDay)),
     ...data.athletes
       .filter(([, lastContest, contests]) => indexableAthlete(contests, lastContest, today))
-      .map(([id, lastContest]) => page(`/athletes/${id}`, lastContest)),
+      .flatMap(([id, lastContest]) => page(`/athletes/${id}`, lastContest)),
   ];
 }

@@ -1,15 +1,17 @@
-import Link from "next/link";
+"use client";
+
+import Link from "@/components/Link";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 
 import { Flag } from "@/components/Flag";
-import type { CompetitionContest, Slot as Place } from "@/lib/api";
 import { isUpset } from "@/components/rankings/Changes";
-import { formatChance, roundCode, shortName, signed } from "@/lib/format";
+import { useI18n } from "@/i18n/client";
+import type { CompetitionContest, Slot as Place } from "@/lib/api";
+import { roundCode, shortName, signed } from "@/lib/format";
 
-// The main rounds, the first to the final, and their columns' titles.
+// The main rounds, the first to the final; their columns' titles are the codes (as
+// everywhere on the site: the fractions of the final), the final written out.
 const MAIN = ["1/64", "1/32", "1/16", "1/8", "1/4", "1/2", "F"];
-// as everywhere on the site: the fractions of the final
-const TITLES: Record<string, string> = { "1/64": "1/64", "1/32": "1/32", "1/16": "1/16", "1/8": "1/8", "1/4": "1/4", "1/2": "1/2", F: "Final" };
 
 type Slot =
   | { kind: "contest"; contest: CompetitionContest }
@@ -100,10 +102,12 @@ function columns(contests: CompetitionContest[]): { code: string; slots: Slot[] 
 const pct = (p: number) => (p < 0.01 ? "<1%" : p > 0.99 ? ">99%" : `${Math.round(p * 100)}%`);
 
 function Box({ slot }: { slot: Slot }) {
+  const { d, f } = useI18n();
+  const words = d.tournament.contests;
   if (slot.kind === "next") {
     const id = slot.places.find((p) => p.contest_id !== null)?.contest_id;
     return (
-      <Link href={id ? `/contests/${id}` : "#"} className="block h-[58px] sm:h-[50px] border border-ink/40 bg-paper text-[13px] sm:text-[12px] hover:border-ink" title="Not fought yet: our chances; what each result would do">
+      <Link href={id ? `/contests/${id}` : "#"} className="block h-[58px] sm:h-[50px] border border-ink/40 bg-paper text-[13px] sm:text-[12px] hover:border-ink" title={words.nextTitle}>
         {slot.places.map((p) => (
           <div key={p.athlete_id} className="h-7 sm:h-6 px-2 flex items-center gap-1.5 text-ink">
             <Flag ioc={p.country} />
@@ -118,7 +122,7 @@ function Box({ slot }: { slot: Slot }) {
   }
   if (slot.kind === "likely")
     return (
-      <div className="h-[58px] sm:h-[50px] border border-dashed border-rule text-[13px] sm:text-[12px] text-muted overflow-hidden" title="Not decided yet: the likeliest of each side, and their chances against each other">
+      <div className="h-[58px] sm:h-[50px] border border-dashed border-rule text-[13px] sm:text-[12px] text-muted overflow-hidden" title={words.likelyTitle}>
         {slot.places.slice(0, 2).map((p) => (
           <div key={p.athlete_id} className="h-7 sm:h-6 px-2 flex items-center gap-1.5">
             <span className="opacity-60">
@@ -132,7 +136,7 @@ function Box({ slot }: { slot: Slot }) {
         ))}
       </div>
     );
-  if (slot.kind === "open") return <div className="h-[58px] sm:h-[50px] border border-dashed border-rule bg-paper/40" aria-label="To be fought" />;
+  if (slot.kind === "open") return <div className="h-[58px] sm:h-[50px] border border-dashed border-rule bg-paper/40" aria-label={words.toBeFought} />;
   if (slot.kind === "bye")
     return (
       // no contest to open: the athlete's page
@@ -141,7 +145,7 @@ function Box({ slot }: { slot: Slot }) {
           <Flag ioc={slot.country} />
           <span className="truncate">{slot.name}</span>
         </div>
-        <div className="h-7 sm:h-6 px-2 flex items-center text-muted" title="Bye">—</div>
+        <div className="h-7 sm:h-6 px-2 flex items-center text-muted" title={words.bye}>—</div>
       </Link>
     );
   const c = slot.contest;
@@ -159,13 +163,13 @@ function Box({ slot }: { slot: Slot }) {
           <div key={s.id} className={`h-7 sm:h-6 px-2 flex items-center gap-1.5 tabular-nums ${won ? "font-semibold text-ink" : "text-muted"}`}>
             <Flag ioc={s.country} />
             <span className="truncate flex-1">{s.name}</span>
-            {c.real_fight && s.chance !== null && <span className={`w-10 pr-1 text-right ${upset ? (won ? "text-gain" : "text-drop font-semibold") : ""}`} title={upset ? "An upset" : undefined}>{formatChance(s.chance, 0)}</span>}
+            {c.real_fight && s.chance !== null && <span className={`w-10 pr-1 text-right ${upset ? (won ? "text-gain" : "text-drop font-semibold") : ""}`} title={upset ? words.anUpset : undefined}>{f.formatChance(s.chance, 0)}</span>}
             {/* a walkover: the one who did not fight WO, no rating change */}
             {c.real_fight || won ? (
-              <span className={`w-4 text-center font-bold ${won ? "text-gain" : "text-drop"}`}>{won ? "W" : "L"}</span>
+              <span className={`w-4 text-center font-bold ${won ? "text-gain" : "text-drop"}`}>{won ? words.win : words.loss}</span>
             ) : (
-              <span className="w-4 text-center text-[10px] font-bold text-muted" title="Walkover: did not fight">
-                WO
+              <span className="w-4 text-center text-[10px] font-bold text-muted" title={words.walkoverTitle}>
+                {words.walkoverCode}
               </span>
             )}
             <span className={`w-9 text-right font-semibold ${change === null ? "text-muted font-normal" : change >= 0 ? "text-gain" : "text-drop"}`}>
@@ -186,6 +190,7 @@ function Box({ slot }: { slot: Slot }) {
 const ROW = "var(--row)";
 const POOLS = ["A", "B", "C", "D"];
 export function Bracket({ contests, places = [] }: { contests: CompetitionContest[]; places?: Place[] }) {
+  const { d, t } = useI18n();
   const built = places.length ? fromPlaces(places, contests) : null;
   const cols = built ? built.cols : columns(contests);
   const side = (code: string): Slot[] =>
@@ -235,7 +240,7 @@ export function Bracket({ contests, places = [] }: { contests: CompetitionContes
               <span />
               {cols.map((col) => (
                 <div key={col.code} className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                  {TITLES[col.code]}
+                  {col.code === "F" ? d.common.rounds.F : col.code}
                 </div>
               ))}
             </div>
@@ -299,7 +304,7 @@ export function Bracket({ contests, places = [] }: { contests: CompetitionContes
               <div
                 className="flex items-center justify-center text-[11px] font-bold text-muted"
                 style={{ gridColumn: 1, gridRow: `${(p * rows) / 4 + 1} / span ${rows / 4}` }}
-                title={`Pool ${pool}`}
+                title={t(d.tournament.contests.pool, { letter: pool })}
               >
                 {pool}
               </div>
@@ -332,10 +337,10 @@ export function Bracket({ contests, places = [] }: { contests: CompetitionContes
           style={{ gridTemplateColumns: template, gridTemplateRows: `24px repeat(${medalRows}, ${ROW})`, minWidth: width }}
         >
           <div className="text-[11px] font-semibold uppercase tracking-wider text-muted self-center" style={{ gridColumn: repColumn + 2, gridRow: 1 }}>
-            Repechage
+            {d.common.rounds.REP}
           </div>
           <div className="text-[11px] font-semibold uppercase tracking-wider text-muted self-center" style={{ gridColumn: brColumn + 2, gridRow: 1 }}>
-            Bronze
+            {d.common.results.bronze}
           </div>
           {Array.from({ length: medalRows }, (_, i) => (
             <Fragment key={i}>

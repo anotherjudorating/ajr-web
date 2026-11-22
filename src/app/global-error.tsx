@@ -3,7 +3,9 @@
 import "./globals.css";
 
 // The root layout itself failed: it replaces the whole document, so no header,
-// footer or fonts, only the message and a way to try again.
+// footer or fonts, only the message and a way to try again. It stands outside the
+// language provider too, so its three lines are English (eslint: jsx-no-literals).
+/* eslint-disable react/jsx-no-literals */
 export default function GlobalError({ retry }: { error: unknown; retry: () => void }) {
   return (
     <html lang="en">

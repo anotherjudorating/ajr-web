@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/components/Link";
+import { useRouter } from "@/i18n/navigation";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import { Flag } from "@/components/Flag";
@@ -11,23 +11,14 @@ import { changeText, ijfDifference, placesText } from "@/components/rankings/Cha
 import { PastTable } from "@/components/rankings/PastTable";
 import { Sparkline } from "@/components/rankings/Sparkline";
 import { CELL, Pagination, TH, Tip, Toolbar } from "@/components/rankings/TableParts";
+import { useI18n } from "@/i18n/client";
 import type { LeaderboardRow } from "@/lib/api";
 import { TABLE_START, useHash, useRowMark, useRowScroll } from "@/components/anchors";
 import { athleteRow } from "@/lib/anchors";
 import { fetchAthleteHistory } from "@/lib/browser-api";
-import { competitionCode, fullName, shortDate, shortName, signed } from "@/lib/format";
+import { competitionCode, fullName, shortName, signed } from "@/lib/format";
 
-const SORTS = {
-  "rating-desc": "Sort: rating ↓",
-  "rating-asc": "Sort: rating ↑",
-  "d90-desc": "Sort: +/− 90 days ↓",
-  "d90-asc": "Sort: +/− 90 days ↑",
-  "d6m-desc": "Sort: +/− 6 months ↓",
-  "d6m-asc": "Sort: +/− 6 months ↑",
-} as const;
-// a past day's table has no changes to sort by
-const PAST_SORTS = { "rating-desc": SORTS["rating-desc"], "rating-asc": SORTS["rating-asc"] };
-type Sort = keyof typeof SORTS;
+type Sort = "rating-desc" | "rating-asc" | "d90-desc" | "d90-asc" | "d6m-desc" | "d6m-asc";
 
 const COLUMNS = 15; // every column, the phones-only IJF one included
 
@@ -114,6 +105,7 @@ export function RankingsBrowser({
   countryNames?: Record<string, string>; // IOC code → name, for the table's countries (lib/api.ts countryNames)
   loading?: boolean; // the table is on its way: show the page around it, rows as placeholders
 }) {
+  const { d, f, t } = useI18n();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("");
@@ -122,6 +114,16 @@ export function RankingsBrowser({
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState<Set<number>>(new Set());
   const [headerRow, visibleColumns] = useVisibleColumns();
+  const sorts: Record<Sort, string> = {
+    "rating-desc": d.rankings.sorts.ratingDesc,
+    "rating-asc": d.rankings.sorts.ratingAsc,
+    "d90-desc": d.rankings.sorts.d90Desc,
+    "d90-asc": d.rankings.sorts.d90Asc,
+    "d6m-desc": d.rankings.sorts.d6mDesc,
+    "d6m-asc": d.rankings.sorts.d6mAsc,
+  };
+  // a past day's table has no changes to sort by
+  const pastSorts: Partial<Record<Sort, string>> = { "rating-desc": sorts["rating-desc"], "rating-asc": sorts["rating-asc"] };
 
   // The page comes with the first rows only; the whole table is fetched (once) when
   // the reader needs more than those: another page, a bigger page, a filter, another
@@ -162,9 +164,9 @@ export function RankingsBrowser({
   const countries = useMemo(() => {
     const codes = partial ? Object.keys(countryNames) : rows.map((r) => r.country).filter((c): c is string => !!c);
     return [...new Set(codes)]
-      .map((code) => ({ code, name: countryNames[code] ?? code }))
+      .map((code) => ({ code, name: f.country(code, countryNames[code]) }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [partial, rows, countryNames]);
+  }, [partial, rows, countryNames, f]);
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const filtered = rows.filter(
@@ -222,7 +224,7 @@ export function RankingsBrowser({
         id={TABLE_START}
         dayMark={lit.day}
         onDay={setDay}
-        sorts={past ? PAST_SORTS : SORTS}
+        sorts={past ? pastSorts : sorts}
         sort={sort}
         onSort={setSort}
         onCsv={() => {
@@ -241,44 +243,44 @@ export function RankingsBrowser({
               <tr ref={headerRow} className="bg-panel border-b border-rule">
                 <th className={`${TH} w-9 sm:w-12 px-1 text-right tabular-nums whitespace-nowrap`}>#</th>
                 <th className={`${TH} w-10 sm:w-14 px-1 text-center tabular-nums whitespace-nowrap relative group cursor-help`}>
-                  <span>90d</span>
-                  <Tip center>Rank change, last 90 days</Tip>
+                  <span>{d.rankings.columns.d90}</span>
+                  <Tip center>{d.rankings.tips.rank90}</Tip>
                 </th>
-                <th className={`${TH} text-left truncate`}>Athlete</th>
-                <th className={`${TH} hidden sm:table-cell text-left sm:w-28`}>NAT</th>
-                <th className={`${TH} w-14 sm:w-20 text-right tabular-nums`}>Rating</th>
+                <th className={`${TH} text-left truncate`}>{d.rankings.columns.athlete}</th>
+                <th className={`${TH} hidden sm:table-cell text-left sm:w-28`}>{d.rankings.columns.nat}</th>
+                <th className={`${TH} w-14 sm:w-20 text-right tabular-nums`}>{d.rankings.columns.rating}</th>
                 {/* phones: the IJF place only, next to ours in the first column (wider screens: place and difference, further right) */}
                 <th className={`${TH} sm:hidden w-9 px-1 text-right tabular-nums`}>IJF</th>
                 <th className={`${TH} w-12 sm:w-16 text-right relative group cursor-help hidden sm:table-cell`}>
                   <span>+/-</span>
-                  <Tip>Rating change, last 90 days</Tip>
+                  <Tip>{d.rankings.tips.rating90}</Tip>
                 </th>
                 <th className={`${TH} hidden sm:table-cell text-center sm:w-14 relative group cursor-help`}>
-                  <span>6m</span>
-                  <Tip center>Rank change, last 182 days</Tip>
+                  <span>{d.rankings.columns.m6}</span>
+                  <Tip center>{d.rankings.tips.rank6m}</Tip>
                 </th>
                 <th className={`${TH} hidden sm:table-cell text-right sm:w-16 relative group cursor-help`}>
-                  <span>+/- 6m</span>
-                  <Tip>Rating change, last 182 days</Tip>
+                  <span>{d.rankings.columns.change6m}</span>
+                  <Tip>{d.rankings.tips.rating6m}</Tip>
                 </th>
-                <th className={`${TH} hidden sm:table-cell sm:w-24 text-center`}>Trend</th>
+                <th className={`${TH} hidden sm:table-cell sm:w-24 text-center`}>{d.rankings.columns.trend}</th>
                 <th className="hidden sm:table-cell sm:w-12 h-9 py-0 align-middle text-right text-[11px] font-bold uppercase tracking-[0.08em] text-muted relative group cursor-help">
                   <span>IJF</span>
-                  <Tip>Place in the IJF World Ranking List</Tip>
+                  <Tip>{d.rankings.tips.ijf}</Tip>
                 </th>
                 <th className="hidden sm:table-cell sm:w-12 h-9 py-0 align-middle text-left pl-1 text-[11px] font-bold uppercase tracking-[0.08em] text-muted relative group cursor-help">
                   <span>±</span>
-                  <Tip center>IJF place compared with ours: ↓ lower in IJF, ↑ higher</Tip>
+                  <Tip center>{d.rankings.tips.ijfDifference}</Tip>
                 </th>
-                <th className={`${TH} hidden sm:table-cell sm:w-12 text-center`}>Age</th>
-                <th className={`${TH} hidden sm:table-cell text-left sm:w-28`}>Last</th>
+                <th className={`${TH} hidden sm:table-cell sm:w-12 text-center`}>{d.rankings.columns.age}</th>
+                <th className={`${TH} hidden sm:table-cell text-left sm:w-28`}>{d.rankings.columns.last}</th>
                 <th className="w-10 sm:w-12 px-1 py-2 sm:py-2.5 text-center font-semibold text-muted" />
               </tr>
             </thead>
             <tbody className="text-ink text-[14px] leading-[20px]">
               {pageRows.map((row) => {
-                const places90 = placesText(row.places_up_90d, row.entry);
-                const places6m = placesText(row.places_up_6m);
+                const places90 = placesText(row.places_up_90d, row.entry, d.rankings.changes);
+                const places6m = placesText(row.places_up_6m, "new", d.rankings.changes);
                 const change90 = changeText(row.score_change_90d);
                 const change6m = changeText(row.score_change_6m);
                 const isOpen = open.has(row.athlete_id);
@@ -309,18 +311,18 @@ export function RankingsBrowser({
                       <td className={`${CELL} hidden sm:table-cell text-[12px] leading-[16px] whitespace-nowrap`}>
                         <div className="inline-flex items-center gap-1.5">
                           <Flag ioc={row.country} />
-                          <span title={row.country ? countryNames[row.country] : undefined}>{row.country}</span>
+                          <span title={row.country ? f.country(row.country, countryNames[row.country]) : undefined}>{row.country}</span>
                         </div>
                       </td>
                       <td className={`${CELL} w-14 sm:w-20 text-right font-bold tabular-nums relative group cursor-pointer`}>
                         <span className="font-bold text-ink">{row.score}</span>
                         <div className="hidden group-hover:block absolute right-0 bottom-full mb-1 z-30 bg-ink text-paper p-2.5 text-left whitespace-nowrap pointer-events-none select-none text-[11px] leading-tight font-normal">
                           <div className="flex justify-between gap-4 py-0.5">
-                            <span>Glicko-2 rating</span>
+                            <span>{d.rankings.score.glicko}</span>
                             <span>{row.rating}</span>
                           </div>
                           <div className="flex justify-between gap-4 py-0.5 text-rule">
-                            <span>− RD ({row.rd})</span>
+                            <span>{t(d.rankings.score.minusRd, { rd: row.rd })}</span>
                             <span>{signed(row.score - row.rating)}</span>
                           </div>
                           <div className="flex justify-between gap-4 pt-1 mt-1 border-t border-muted font-bold text-white tabular-nums">
@@ -356,11 +358,11 @@ export function RankingsBrowser({
                           <span className="text-ink font-medium">
                             {competitionCode(row.last_competition_rank, row.last_competition_city)}
                           </span>
-                          <span className="text-muted">{shortDate(row.last_contest)}</span>
+                          <span className="text-muted">{f.shortDate(row.last_contest)}</span>
                         </span>
                       </td>
                       <td
-                        title="Show last 90 days"
+                        title={d.rankings.showLast90}
                         role="button"
                         tabIndex={0}
                         aria-expanded={isOpen}
@@ -405,7 +407,7 @@ export function RankingsBrowser({
               {!loading && !waiting && pageRows.length === 0 && (
                 <tr>
                   <td colSpan={visibleColumns} className="px-3 py-6 text-[14px] text-muted">
-                    No athletes match these filters.
+                    {d.rankings.noAthletes}
                   </td>
                 </tr>
               )}
@@ -419,7 +421,7 @@ export function RankingsBrowser({
         total={count}
         first={first}
         count={pageRows.length}
-        noun="athletes"
+        noun={d.common.athletes}
         pageSize={pageSize}
         onPageSize={(size) => {
           setPageSize(size);

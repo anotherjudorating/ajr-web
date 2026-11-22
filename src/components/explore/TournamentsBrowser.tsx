@@ -1,34 +1,30 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { Fragment, useMemo, useState } from "react";
 
 import { CsvButton, ExploreTitle, SearchBox, Select, ToolbarRow } from "@/components/explore/Controls";
 import { Flag } from "@/components/Flag";
 import { CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
 import { HEAD_CELL, PlaceholderRows, ROW_CELL, saveCsv } from "@/components/rankings/TableParts";
+import { useI18n } from "@/i18n/client";
 import type { CompetitionRow } from "@/lib/api";
-import { dateRange, shortCompetition } from "@/lib/format";
+import { shortCompetition } from "@/lib/format";
 
+// The levels: the value is the backend's rank name (or "continental" for the rest),
+// the key names it in the dictionary (d.explore.tournaments.levels).
 const LEVELS = [
-  { value: "", label: "All levels" },
-  { value: "Olympic Games", label: "Olympic Games" },
-  { value: "World Championships", label: "World Championships" },
-  { value: "Masters", label: "Masters" },
-  { value: "Grand Slam", label: "Grand Slam" },
-  { value: "Grand Prix", label: "Grand Prix" },
-  { value: "continental", label: "Continental" },
-];
+  { value: "", key: "all" },
+  { value: "Olympic Games", key: "olympics" },
+  { value: "World Championships", key: "worlds" },
+  { value: "Masters", key: "masters" },
+  { value: "Grand Slam", key: "grandSlam" },
+  { value: "Grand Prix", key: "grandPrix" },
+  { value: "continental", key: "continental" },
+] as const;
 const WORLD = ["Olympic Games", "World Championships", "Masters", "Grand Slam", "Grand Prix"];
-const SORTS = [
-  { value: "date-desc", label: "Sort: date ↓" },
-  { value: "date-asc", label: "Sort: date ↑" },
-  { value: "accuracy-desc", label: "Sort: rating accuracy ↓" },
-  { value: "accuracy-asc", label: "Sort: rating accuracy ↑" },
-  { value: "upsets-desc", label: "Sort: upsets ↓" },
-  { value: "upsets-asc", label: "Sort: upsets ↑" },
-];
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+// The sorts, named in the dictionary (d.explore.tournaments.sort).
+const SORTS = ["date-desc", "date-asc", "accuracy-desc", "accuracy-asc", "upsets-desc", "upsets-asc"] as const;
 
 // A year's tournaments, grouped by month while sorted by date.
 export function TournamentsBrowser({
@@ -46,7 +42,9 @@ export function TournamentsBrowser({
 }) {
   // not over: no accuracy nor upsets yet (those of a tournament under way change all day)
   const stateOf = (r: CompetitionRow) =>
-    r.date_from > today ? "Upcoming" : (r.date_to ?? r.date_from) >= today ? "Live" : null;
+    r.date_from > today ? "upcoming" : (r.date_to ?? r.date_from) >= today ? "live" : null;
+  const { d, f, t, n } = useI18n();
+  const x = d.explore.tournaments;
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("");
@@ -80,11 +78,11 @@ export function TournamentsBrowser({
 
   return (
     <>
-      <ExploreTitle title="Tournaments" lead="Every rated tournament and how often the favourite won." />
+      <ExploreTitle title={x.title} lead={x.lead} />
       <ToolbarRow>
-        <SearchBox value={query} onChange={setQuery} placeholder="Search tournament or city" />
+        <SearchBox value={query} onChange={setQuery} placeholder={x.search} />
         <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
-          <Select value={level} onChange={setLevel} options={LEVELS} />
+          <Select value={level} onChange={setLevel} options={LEVELS.map(({ value, key }) => ({ value, label: x.levels[key] }))} />
           <Select
             value={String(year)}
             onChange={(value) => router.push(`/explore/tournaments?year=${value}`)}
@@ -93,7 +91,7 @@ export function TournamentsBrowser({
         </div>
         <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto">
           <div className="min-w-0 grid md:block">
-            <Select value={sort} onChange={setSort} options={SORTS} />
+            <Select value={sort} onChange={setSort} options={SORTS.map((value) => ({ value, label: x.sort[value] }))} />
           </div>
           <CsvButton onClick={() => downloadCsv(shown, year)} />
         </div>
@@ -103,12 +101,12 @@ export function TournamentsBrowser({
       <table className="w-full border-collapse text-left">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} w-[72px] sm:w-32 text-left`}>Dates</th>
-            <th className={`${HEAD_CELL} text-left`}>Tournament</th>
-            <th className={`${HEAD_CELL} hidden sm:table-cell text-left`}>Location</th>
-            <th className={`${HEAD_CELL} hidden sm:table-cell w-40 text-right`}>Rating accuracy</th>
+            <th className={`${HEAD_CELL} w-[72px] sm:w-32 text-left`}>{x.columns.dates}</th>
+            <th className={`${HEAD_CELL} text-left`}>{x.columns.tournament}</th>
+            <th className={`${HEAD_CELL} hidden sm:table-cell text-left`}>{x.columns.location}</th>
+            <th className={`${HEAD_CELL} hidden sm:table-cell w-40 text-right`}>{x.columns.accuracy}</th>
             {/* on a phone the name takes the room: upsets on wider screens */}
-            <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-24 text-right`}>Upsets</th>
+            <th className={`${HEAD_CELL} hidden sm:table-cell sm:w-24 text-right`}>{x.columns.upsets}</th>
             <th className="w-8 sm:w-10 h-9 py-0" />
           </tr>
         </thead>
@@ -135,11 +133,11 @@ export function TournamentsBrowser({
                             className={`text-muted transition-transform duration-150 ${closed.has(month(row)) ? "-rotate-90" : ""}`}
                           />
                           <span className="text-[12px] font-bold uppercase tracking-wide text-ink">
-                            {MONTHS[Number(row.date_from.slice(5, 7)) - 1]} {row.date_from.slice(0, 4)}
+                            {t(x.monthHeading, { month: x.months[Number(row.date_from.slice(5, 7)) - 1], year: row.date_from.slice(0, 4) })}
                           </span>
                         </span>
                         <span className="text-[12px] text-muted font-normal">
-                          {count} {count === 1 ? "tournament" : "tournaments"}
+                          {n(d.common.tournaments, count)}
                         </span>
                       </div>
                     </td>
@@ -151,9 +149,9 @@ export function TournamentsBrowser({
                     className="group border-b border-rule hover:bg-panel/40 cursor-pointer"
                   >
                     <td className={`${ROW_CELL} text-muted tabular-nums whitespace-nowrap`}>
-                      {dateRange(row.date_from, row.date_to)}
+                      {f.dateRange(row.date_from, row.date_to)}
                     </td>
-                    <td className={`${ROW_CELL} ${stateOf(row) === "Upcoming" ? "max-sm:font-normal max-sm:text-muted sm:font-semibold sm:text-ink" : "font-semibold text-ink"}`}>
+                    <td className={`${ROW_CELL} ${stateOf(row) === "upcoming" ? "max-sm:font-normal max-sm:text-muted sm:font-semibold sm:text-ink" : "font-semibold text-ink"}`}>
                       <div className="flex items-center gap-1.5 sm:block">
                         <Flag ioc={row.country} className="sm:!hidden" />
                         <span className="min-w-0 hover:underline line-clamp-2 sm:hidden">
@@ -161,10 +159,10 @@ export function TournamentsBrowser({
                         </span>
                         {/* a phone has no room for the chips on the right: Live after the name,
                             a tournament to come in grey */}
-                        {stateOf(row) === "Live" && (
+                        {stateOf(row) === "live" && (
                           <span className="sm:hidden shrink-0 flex items-center gap-1 text-[11px] font-semibold text-claret">
                             <span className="w-1.5 h-1.5 rounded-full bg-claret" />
-                            Live
+                            {x.live}
                           </span>
                         )}
                         <span className="hover:underline hidden sm:inline">{row.name}</span>
@@ -179,17 +177,17 @@ export function TournamentsBrowser({
                     {stateOf(row) ? (
                       <td colSpan={2} className={`${ROW_CELL} hidden sm:table-cell text-right`}>
                         <span
-                          className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border ${stateOf(row) === "Live" ? "border-claret text-claret" : "border-muted text-muted"}`}
+                          className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border ${stateOf(row) === "live" ? "border-claret text-claret" : "border-muted text-muted"}`}
                         >
-                          {stateOf(row) === "Live" && <span className="w-1.5 h-1.5 rounded-full bg-claret" />}
-                          {stateOf(row)}
+                          {stateOf(row) === "live" && <span className="w-1.5 h-1.5 rounded-full bg-claret" />}
+                          {stateOf(row) === "live" ? x.live : x.upcoming}
                         </span>
                       </td>
                     ) : (
                       <>
                         <td
                           className={`${ROW_CELL} hidden sm:table-cell text-right text-ink tabular-nums`}
-                          title={`Contests won by the rating favourite, of ${row.contests}`}
+                          title={t(x.accuracyTip, { contests: row.contests ?? "" })}
                         >
                           {row.accuracy === null ? "–" : `${Math.round(row.accuracy * 100)}%`}
                         </td>
@@ -206,7 +204,7 @@ export function TournamentsBrowser({
           })}
         </tbody>
       </table>
-      {!loading && shown.length === 0 && <p className="py-6 text-[14px] text-muted">No tournaments match these filters.</p>}
+      {!loading && shown.length === 0 && <p className="py-6 text-[14px] text-muted">{x.empty}</p>}
     </>
   );
 }

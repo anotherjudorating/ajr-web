@@ -1,7 +1,7 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 
+import { i18n } from "@/i18n/server";
 import { lastUpdate } from "@/lib/api";
-import { formatDate } from "@/lib/format";
 
 const GITHUB = "https://github.com/anotherjudorating";
 
@@ -15,48 +15,48 @@ function GitHubMark() {
 }
 
 export async function Footer() {
-  const updated = await lastUpdate();
+  const [updated, { d, f, t }] = await Promise.all([lastUpdate(), i18n()]);
   return (
     <footer className="w-full bg-paper border-t border-rule mt-10 md:mt-12 lg:mt-16">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-4 sm:py-0 sm:h-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
         {/* mobile: Methodology and Data first; desktop: on the right */}
         <div className="sm:hidden flex gap-4 text-[13px] text-ink">
           <Link href="/methodology" className="hover:underline">
-            Methodology
+            {d.site.footer.methodology}
           </Link>
           <Link href="/data" className="hover:underline">
-            Export data
+            {d.site.footer.exportData}
           </Link>
           <Link href="/contact" className="hover:underline">
-            Contact
+            {d.site.footer.contact}
           </Link>
         </div>
         <div className="flex items-center text-[12px] text-muted whitespace-nowrap mt-2 sm:mt-0">
-          {updated && <span>Ratings updated {formatDate(updated)}</span>}
+          {updated && <span>{t(d.site.footer.updated, { date: f.formatDate(updated) })}</span>}
           {updated && <span className="inline-block w-px h-3 bg-rule mx-2 align-middle" />}
           <span>
-            Source:{" "}
+            {d.site.footer.source}{" "}
             <a
               href="https://judobase.ijf.org/#/dashboard"
               target="_blank"
               rel="noopener"
               className="hover:text-ink hover:underline"
             >
-              IJF Judobase
+              {d.site.footer.judobase}
             </a>
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-4 text-[12px] text-muted">
           <Link href="/methodology" className="hover:text-ink hover:underline">
-            Methodology
+            {d.site.footer.methodology}
           </Link>
           <Link href="/data" className="hover:text-ink hover:underline">
-            Export data
+            {d.site.footer.exportData}
           </Link>
           <Link href="/contact" className="hover:text-ink hover:underline">
-            Contact
+            {d.site.footer.contact}
           </Link>
-          <a href={GITHUB} target="_blank" rel="noopener" aria-label="GitHub" title="GitHub" className="text-muted hover:text-ink">
+          <a href={GITHUB} target="_blank" rel="noopener" aria-label={d.site.footer.github} title={d.site.footer.github} className="text-muted hover:text-ink">
             <GitHubMark />
           </a>
         </div>

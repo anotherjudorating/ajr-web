@@ -2,15 +2,20 @@ import type { ReactNode } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Medal } from "@/components/Medal";
+import type { Dict } from "@/i18n/en";
+import type { Format } from "@/i18n/format";
+import { t } from "@/i18n/t";
 import { anchor, athleteRow, SECTION } from "@/lib/anchors";
 import type { RecordRow } from "@/lib/api";
-import { monthYear, shortCompetition, shortName, signed } from "@/lib/format";
+import { shortCompetition, shortName, signed } from "@/lib/format";
 import type { RecordInfo } from "@/lib/records";
 import { WEIGHTS } from "@/lib/weights";
 
 // The columns of a record's table, between the place and the chevron. The same
 // columns serve the top 5 on /records and the full list (`full`), which adds the
-// nation and always shows the weight, as in the prototypes.
+// nation and always shows the weight, as in the prototypes. The headers come from
+// the dictionary (`d.records.columns`), the dates and numbers from the formats `f`,
+// both passed in by the component (a plain function has no hooks).
 export type Column = {
   label: string; // the header text, also in the CSV
   header?: ReactNode; // when the header is not just the label
@@ -26,19 +31,9 @@ export const TH = "h-9 py-0 align-middle px-2 sm:px-3 text-[10px] sm:text-[11px]
 export const TD = "h-10 sm:h-11 py-0 align-middle px-2 sm:px-3";
 
 const int = (value: number) => Math.round(value);
-const percent = (share: number, digits = 0) => `${(share * 100).toFixed(digits)}%`;
 const mmss = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, "0")}`;
 const detail = (r: RecordRow, key: string) => Number(r.detail?.[key] ?? 0);
 const year = (day: string | null | undefined) => (day ? new Date(day).getUTCFullYear() : "");
-const month = (day: string | null) => (day ? monthYear(day) : "");
-
-function weightName(row: RecordRow, short = false): string {
-  const weight = WEIGHTS.find(
-    (w) => w.api === row.weight && w.gender === (row.gender === "female" ? "women" : "men"),
-  );
-  if (!weight) return row.weight ?? "";
-  return short ? weight.label : `${weight.gender === "men" ? "Men" : "Women"} ${weight.label}`;
-}
 
 function period(row: RecordRow): string {
   const from = year(row.detail?.from as string | undefined);
@@ -63,216 +58,236 @@ function Name({ ioc, name, muted = false, flag = "", place }: { ioc: string | nu
 
 const athleteName = (r: RecordRow) => shortName(r.family_name, r.given_name);
 const opponentName = (r: RecordRow) => shortName(r.opponent_family_name, r.opponent_given_name);
-
-// --- building blocks ---
-
-function athlete(full: boolean): Column[] {
-  const name: Column = {
-    label: "Athlete",
-    th: "text-left",
-    td: "",
-    // the full list shows the flag in its own column from sm
-    cell: (r) => <Name ioc={r.country} name={athleteName(r)} flag={full ? "sm:hidden" : ""} />,
-    csv: (r) => `${r.family_name ?? ""} ${r.given_name ?? ""}`.trim(),
-  };
-  if (!full) return [name];
-  return [name, nat()];
-}
-
-function nat(): Column {
-  return {
-    label: "Nat",
-    th: "text-left w-24 hidden sm:table-cell",
-    td: "hidden sm:table-cell",
-    cell: (r) => (
-      <div className="flex items-center gap-1.5">
-        <Flag ioc={r.country} />
-        <span className="text-[13px]">{r.country}</span>
-      </div>
-    ),
-    csv: (r) => r.country ?? "",
-  };
-}
-
-function weight(full: boolean): Column {
-  return full
-    ? {
-        label: "Weight",
-        th: "text-left w-20 sm:w-32",
-        td: "text-muted whitespace-nowrap",
-        cell: (r) => (
-          <>
-            <span className="sm:hidden">{weightName(r, true)}</span>
-            <span className="hidden sm:inline">{weightName(r)}</span>
-          </>
-        ),
-        csv: (r) => weightName(r),
-      }
-    : {
-        label: "Weight",
-        th: "text-left hidden sm:table-cell w-32",
-        td: "text-muted whitespace-nowrap hidden sm:table-cell",
-        cell: (r) => weightName(r),
-        csv: (r) => weightName(r),
-      };
-}
-
-// The record's own number, in bold.
-function value(label: string, width: string, show: (r: RecordRow) => ReactNode, td = ""): Column {
-  return {
-    label,
-    th: `text-right ${width}`,
-    td: `text-right font-bold ${td}`,
-    cell: show,
-    csv: (r) => String(show(r)),
-  };
-}
-
-// A muted text column on the right, hidden on phones (dates, periods).
-function side(label: string, width: string, show: (r: RecordRow) => string, left = false): Column {
-  return {
-    label,
-    th: `${left ? "text-left" : "text-right"} hidden sm:table-cell ${width}`,
-    td: `${left ? "" : "text-right"} text-muted whitespace-nowrap hidden sm:table-cell`,
-    cell: (r) => <div className="truncate">{show(r)}</div>,
-    csv: show,
-  };
-}
-
 const competition = (r: RecordRow) => (r.competition ? shortCompetition(r.competition) : "");
 
-function tournament(): Column {
-  return {
-    label: "Tournament",
-    th: "text-left",
-    td: "",
-    cell: (r) => (
-      <div className="flex items-center gap-1.5 min-w-0">
-        <span className="font-medium truncate" title={r.competition ?? undefined}>
-          {competition(r)}
-        </span>
-      </div>
-    ),
-    csv: (r) => r.competition ?? "",
-  };
-}
+type I18n = { d: Dict; f: Format };
 
-function nation(width = ""): Column {
-  return {
-    label: "Nation",
-    th: `text-left ${width}`,
-    td: "",
-    cell: (r) => <Name ioc={r.country} name={r.country ?? "—"} />,
-    csv: (r) => r.country ?? "",
-  };
-}
+// --- building blocks, in the page's language ---
 
-function medals(nations: boolean): Column[] {
-  // athletes: silver and bronze from sm; nations: all three always (narrower)
-  return (["gold", "silver", "bronze"] as const).map((kind) => {
-    const hide = !nations && kind !== "gold" ? " hidden sm:table-cell" : "";
-    return {
-      label: kind[0].toUpperCase() + kind.slice(1),
-      header: (
-        <span className="inline-flex justify-center w-full">
-          <Medal kind={kind} />
-        </span>
-      ),
-      title: kind[0].toUpperCase() + kind.slice(1),
-      th: `text-center ${nations ? "w-9 sm:w-11" : "w-10 sm:w-12"}${hide}`,
-      td: `text-center${hide}`,
-      cell: (r) => medal(r, kind),
-      csv: (r) => medal(r, kind),
+function blocks({ d, f }: I18n) {
+  const c = d.records.columns;
+  const month = (day: string | null) => (day ? f.monthYear(day) : "");
+  const percent = (share: number, digits = 0) => f.formatChance(share, digits);
+
+  function weightName(row: RecordRow, short = false): string {
+    const weight = WEIGHTS.find(
+      (w) => w.api === row.weight && w.gender === (row.gender === "female" ? "women" : "men"),
+    );
+    if (!weight) return row.weight ?? "";
+    return short ? weight.label : t(c.weightName, { gender: d.common.gender[weight.gender], label: weight.label });
+  }
+
+  function athlete(full: boolean): Column[] {
+    const name: Column = {
+      label: c.athlete,
+      th: "text-left",
+      td: "",
+      // the full list shows the flag in its own column from sm
+      cell: (r) => <Name ioc={r.country} name={athleteName(r)} flag={full ? "sm:hidden" : ""} />,
+      csv: (r) => `${r.family_name ?? ""} ${r.given_name ?? ""}`.trim(),
     };
-  });
-}
+    if (!full) return [name];
+    return [name, nat()];
+  }
 
-function upsets(): Column[] {
-  const lost = (r: RecordRow) => Math.round(Number(r.detail?.contests ?? 0) * (1 - Number(r.detail?.favourites_won ?? 0)));
-  return [
-    {
-      label: "Upsets",
-      title: "Contests the rating favourite lost",
-      th: "text-right hidden sm:table-cell w-20",
-      td: "text-right text-muted hidden sm:table-cell",
-      cell: lost,
-      csv: lost,
-    },
-    {
-      ...value("Fav. won", "w-20 sm:w-24 whitespace-nowrap", (r) => percent(Number(r.detail?.favourites_won ?? 0), 1)),
-      title: "Contests won by the rating favourite",
-    },
-  ];
-}
+  function nat(): Column {
+    return {
+      label: c.nat,
+      th: "text-left w-24 hidden sm:table-cell",
+      td: "hidden sm:table-cell",
+      cell: (r) => (
+        <div className="flex items-center gap-1.5">
+          <Flag ioc={r.country} />
+          <span className="text-[13px]">{r.country}</span>
+        </div>
+      ),
+      csv: (r) => r.country ?? "",
+    };
+  }
 
-// Two athletes in one cell (winner and loser, a rivalry's pair, nemesis and victim).
-function pair(label: string, mutedSecond: boolean): Column {
-  return {
-    label,
-    th: "text-left",
-    td: "",
-    tall: true,
-    cell: (r) => (
-      <div className="flex flex-col gap-1">
-        <Name ioc={r.country} name={athleteName(r)} />
-        <Name ioc={r.opponent_country} name={opponentName(r)} muted={mutedSecond} />
-      </div>
-    ),
-    csv: (r) => `${athleteName(r)} / ${opponentName(r)}`,
-  };
-}
+  function weight(full: boolean): Column {
+    return full
+      ? {
+          label: c.weight,
+          th: "text-left w-20 sm:w-32",
+          td: "text-muted whitespace-nowrap",
+          cell: (r) => (
+            <>
+              <span className="sm:hidden">{weightName(r, true)}</span>
+              <span className="hidden sm:inline">{weightName(r)}</span>
+            </>
+          ),
+          csv: (r) => weightName(r),
+        }
+      : {
+          label: c.weight,
+          th: "text-left hidden sm:table-cell w-32",
+          td: "text-muted whitespace-nowrap hidden sm:table-cell",
+          cell: (r) => weightName(r),
+          csv: (r) => weightName(r),
+        };
+  }
 
-// A pair's head-to-head: the first one's wins over the second one's.
-function score(): Column {
-  return {
-    label: "Wins",
-    th: "text-right w-14 sm:w-16",
-    td: "text-right",
-    tall: true,
-    cell: (r) => (
-      <div className="flex flex-col gap-1 font-semibold">
-        <span>{detail(r, "wins")}</span>
-        <span>{detail(r, "losses")}</span>
-      </div>
-    ),
-    csv: (r) => `${detail(r, "wins")}-${detail(r, "losses")}`,
-  };
+  // The record's own number, in bold.
+  function value(label: string, width: string, show: (r: RecordRow) => ReactNode, td = ""): Column {
+    return {
+      label,
+      th: `text-right ${width}`,
+      td: `text-right font-bold ${td}`,
+      cell: show,
+      csv: (r) => String(show(r)),
+    };
+  }
+
+  // A muted text column on the right, hidden on phones (dates, periods).
+  function side(label: string, width: string, show: (r: RecordRow) => string, left = false): Column {
+    return {
+      label,
+      th: `${left ? "text-left" : "text-right"} hidden sm:table-cell ${width}`,
+      td: `${left ? "" : "text-right"} text-muted whitespace-nowrap hidden sm:table-cell`,
+      cell: (r) => <div className="truncate">{show(r)}</div>,
+      csv: show,
+    };
+  }
+
+  function tournament(): Column {
+    return {
+      label: c.tournament,
+      th: "text-left",
+      td: "",
+      cell: (r) => (
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="font-medium truncate" title={r.competition ?? undefined}>
+            {competition(r)}
+          </span>
+        </div>
+      ),
+      csv: (r) => r.competition ?? "",
+    };
+  }
+
+  function nation(width = ""): Column {
+    return {
+      label: c.nation,
+      th: `text-left ${width}`,
+      td: "",
+      cell: (r) => <Name ioc={r.country} name={r.country ?? "—"} />,
+      csv: (r) => r.country ?? "",
+    };
+  }
+
+  function medals(nations: boolean): Column[] {
+    // athletes: silver and bronze from sm; nations: all three always (narrower)
+    return (["gold", "silver", "bronze"] as const).map((kind) => {
+      const hide = !nations && kind !== "gold" ? " hidden sm:table-cell" : "";
+      return {
+        label: d.common.results[kind],
+        header: (
+          <span className="inline-flex justify-center w-full">
+            <Medal kind={kind} />
+          </span>
+        ),
+        title: d.common.results[kind],
+        th: `text-center ${nations ? "w-9 sm:w-11" : "w-10 sm:w-12"}${hide}`,
+        td: `text-center${hide}`,
+        cell: (r) => medal(r, kind),
+        csv: (r) => medal(r, kind),
+      };
+    });
+  }
+
+  function upsets(): Column[] {
+    const lost = (r: RecordRow) => Math.round(Number(r.detail?.contests ?? 0) * (1 - Number(r.detail?.favourites_won ?? 0)));
+    return [
+      {
+        label: c.upsets,
+        title: c.upsetsTip,
+        th: "text-right hidden sm:table-cell w-20",
+        td: "text-right text-muted hidden sm:table-cell",
+        cell: lost,
+        csv: lost,
+      },
+      {
+        ...value(c.favWon, "w-20 sm:w-24 whitespace-nowrap", (r) => percent(Number(r.detail?.favourites_won ?? 0), 1)),
+        title: c.favWonTip,
+      },
+    ];
+  }
+
+  // Two athletes in one cell (winner and loser, a rivalry's pair, nemesis and victim).
+  function pair(label: string, mutedSecond: boolean): Column {
+    return {
+      label,
+      th: "text-left",
+      td: "",
+      tall: true,
+      cell: (r) => (
+        <div className="flex flex-col gap-1">
+          <Name ioc={r.country} name={athleteName(r)} />
+          <Name ioc={r.opponent_country} name={opponentName(r)} muted={mutedSecond} />
+        </div>
+      ),
+      csv: (r) => `${athleteName(r)} / ${opponentName(r)}`,
+    };
+  }
+
+  // A pair's head-to-head: the first one's wins over the second one's.
+  function score(): Column {
+    return {
+      label: c.wins,
+      th: "text-right w-14 sm:w-16",
+      td: "text-right",
+      tall: true,
+      cell: (r) => (
+        <div className="flex flex-col gap-1 font-semibold">
+          <span>{detail(r, "wins")}</span>
+          <span>{detail(r, "losses")}</span>
+        </div>
+      ),
+      csv: (r) => `${detail(r, "wins")}-${detail(r, "losses")}`,
+    };
+  }
+
+  return { month, percent, weightName, athlete, nat, weight, value, side, tournament, nation, medals, upsets, pair, score };
 }
 
 // --- the columns of each record ---
 
 // `name`: the record of the view shown (Total / In a row, …), the record itself by default.
-export function recordColumns(info: RecordInfo, full: boolean, name: string = info.name): Column[] {
+export function recordColumns(i18n: I18n, info: RecordInfo, full: boolean, name: string = info.name): Column[] {
+  const c = i18n.d.records.columns;
+  const { f } = i18n;
+  const { month, percent, athlete, weight, value, side, tournament, nation, medals, upsets, pair, score } = blocks(i18n);
   switch (name) {
     case "highest_rating":
-      return [...athlete(full), weight(full), value("Peak", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value)), side("Date", full ? "w-24" : "w-28", (r) => month(r.day))];
+      return [...athlete(full), weight(full), value(c.peak, full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value)), side(c.date, full ? "w-24" : "w-28", (r) => month(r.day))];
     case "longest_p4p_1":
-      return [...athlete(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Until", full ? "w-24" : "w-28", (r) => month(r.day))];
+      return [...athlete(full), value(c.weeks, full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => f.number(int(r.value))), side(c.until, full ? "w-24" : "w-28", (r) => month(r.day))];
     case "biggest_p4p_lead":
-      return [...athlete(full), weight(full), value("Lead", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => signed(int(r.value))), side("Date", full ? "w-24" : "w-28", (r) => month(r.day))];
+      return [...athlete(full), weight(full), value(c.lead, full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => signed(int(r.value))), side(c.date, full ? "w-24" : "w-28", (r) => month(r.day))];
     case "longest_at_1":
-      return [...athlete(full), weight(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Until", full ? "w-24" : "w-28", (r) => month(r.day))];
+      return [...athlete(full), weight(full), value(c.weeks, full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => f.number(int(r.value))), side(c.until, full ? "w-24" : "w-28", (r) => month(r.day))];
     case "youngest_1":
-      return [...athlete(full), weight(full), value("Age", "w-24 sm:w-28", (r) => <span className="font-semibold">{int(r.value)}</span>), side("Date", full ? "w-24" : "w-28", (r) => month(r.day))];
+      return [...athlete(full), weight(full), value(c.age, "w-24 sm:w-28", (r) => <span className="font-semibold">{int(r.value)}</span>), side(c.date, full ? "w-24" : "w-28", (r) => month(r.day))];
     case "most_world_tour_medals":
-      return [...athlete(full), ...medals(false), value("Total", "w-14 sm:w-16", (r) => int(r.value))];
+      return [...athlete(full), ...medals(false), value(c.total, "w-14 sm:w-16", (r) => int(r.value))];
     case "most_medals_in_row":
-      return [...athlete(full), value("In a row", "w-20 sm:w-24", (r) => int(r.value)), side("Period", "w-28", period)];
+      return [...athlete(full), value(c.inARow, "w-20 sm:w-24", (r) => int(r.value)), side(c.period, "w-28", period)];
     case "youngest_grand_slam_medal":
-      return [...athlete(full), weight(full), value("Age", "w-24 sm:w-28", (r) => <span className="font-semibold">{int(r.value)}</span>), side("Tournament", "w-36", competition)];
+      return [...athlete(full), weight(full), value(c.age, "w-24 sm:w-28", (r) => <span className="font-semibold">{int(r.value)}</span>), side(c.tournament, "w-36", competition)];
     case "longest_winning_streak":
-      return [...athlete(full), value("Wins", "w-20 sm:w-24", (r) => int(r.value)), side("Period", "w-28", period)];
+      return [...athlete(full), value(c.wins, "w-20 sm:w-24", (r) => int(r.value)), side(c.period, "w-28", period)];
     case "giant_killer":
       return [
         ...athlete(full),
-        side("Avg chance", "w-24", (r) => percent(detail(r, "avg_chance"), 1)),
-        side("Over #1", "w-20", (r) => String(detail(r, "over_no1"))),
-        value("Upset wins", "w-24 sm:w-28", (r) => int(r.value)),
+        side(c.avgChance, "w-24", (r) => percent(detail(r, "avg_chance"), 1)),
+        side(c.overNo1, "w-20", (r) => String(detail(r, "over_no1"))),
+        value(c.upsetWins, "w-24 sm:w-28", (r) => int(r.value)),
       ];
     case "biggest_upsets":
       return [
         {
-          label: "Winner / loser",
+          label: c.winnerLoser,
           th: "text-left",
           td: "",
           tall: true,
@@ -286,7 +301,7 @@ export function recordColumns(info: RecordInfo, full: boolean, name: string = in
         },
         ...(full ? [weight(full)] : []),
         {
-          label: "Tournament",
+          label: c.tournament,
           th: "text-left hidden sm:table-cell w-40",
           td: "text-muted hidden sm:table-cell",
           cell: (r) => (
@@ -297,65 +312,65 @@ export function recordColumns(info: RecordInfo, full: boolean, name: string = in
           ),
           csv: (r) => r.competition ?? "",
         },
-        value("Chance", "w-16 sm:w-20", (r) => percent(r.value, 3), "text-gain"),
+        value(c.chance, "w-16 sm:w-20", (r) => percent(r.value, 3), "text-gain"),
       ];
     case "strongest_tournament":
       return [
         tournament(),
-        side("Date", "w-24", (r) => month(r.day), true),
+        side(c.date, "w-24", (r) => month(r.day), true),
         {
-          ...value("Avg rating", "w-20 sm:w-28", (r) => int(r.value)),
+          ...value(c.avgRating, "w-20 sm:w-28", (r) => int(r.value)),
           header: (
             <>
-              <span className="hidden sm:inline">Avg rating</span>
-              <span className="sm:hidden">Avg</span>
+              <span className="hidden sm:inline">{c.avgRating}</span>
+              <span className="sm:hidden">{c.avg}</span>
             </>
           ),
-          title: "Average rating of the entrants",
+          title: c.avgRatingTip,
         },
       ];
     case "most_nations_on_podium":
       return [
         tournament(),
-        ...(full ? [side("Date", "w-24", (r) => month(r.day))] : []),
-        { ...value("Nations", "w-20 sm:w-24", (r) => int(r.value)), title: "Nations with at least one medal" },
+        ...(full ? [side(c.date, "w-24", (r) => month(r.day))] : []),
+        { ...value(c.nations, "w-20 sm:w-24", (r) => int(r.value)), title: c.nationsTip },
       ];
     case "most_unpredictable_tournament":
-      return [tournament(), ...(full ? [side("Date", "w-24", (r) => month(r.day))] : []), ...upsets()];
+      return [tournament(), ...(full ? [side(c.date, "w-24", (r) => month(r.day))] : []), ...upsets()];
     case "highest_team_rating":
       return [
         nation("w-20 sm:w-24"),
-        { label: "Date", th: "text-left", td: "text-muted whitespace-nowrap", cell: (r) => <div className="truncate">{month(r.day)}</div>, csv: (r) => month(r.day) },
-        value("Rating", "w-20 sm:w-24", (r) => int(r.value)),
+        { label: c.date, th: "text-left", td: "text-muted whitespace-nowrap", cell: (r) => <div className="truncate">{month(r.day)}</div>, csv: (r) => month(r.day) },
+        value(c.rating, "w-20 sm:w-24", (r) => int(r.value)),
       ];
     case "most_medals_nation":
-      return [nation(), ...medals(true), value("Total", "w-14 sm:w-16", (r) => int(r.value))];
+      return [nation(), ...medals(true), value(c.total, "w-14 sm:w-16", (r) => int(r.value))];
     case "longest_at_1_run":
     case "longest_p4p_1_run":
     case "most_weeks_in_top_8_run":
-      return [...athlete(full), weight(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Period", "w-28", period)];
+      return [...athlete(full), weight(full), value(c.weeks, full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => f.number(int(r.value))), side(c.period, "w-28", period)];
     case "most_weeks_in_top_8":
-      return [...athlete(full), weight(full), value("Weeks", full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => int(r.value).toLocaleString("en-US")), side("Until", full ? "w-24" : "w-28", (r) => month(r.day))];
+      return [...athlete(full), weight(full), value(c.weeks, full ? "w-16 sm:w-24" : "w-20 sm:w-24", (r) => f.number(int(r.value))), side(c.until, full ? "w-24" : "w-28", (r) => month(r.day))];
     case "most_world_tour_golds":
-      return [...athlete(full), ...medals(false), value("Golds", "w-14 sm:w-16", (r) => int(r.value))];
+      return [...athlete(full), ...medals(false), value(c.golds, "w-14 sm:w-16", (r) => int(r.value))];
     case "most_golds_in_row":
-      return [...athlete(full), value("In a row", "w-20 sm:w-24", (r) => int(r.value)), side("Period", "w-28", period)];
+      return [...athlete(full), value(c.inARow, "w-20 sm:w-24", (r) => int(r.value)), side(c.period, "w-28", period)];
     case "youngest_grand_slam_gold":
-      return [...athlete(full), weight(full), value("Age", "w-24 sm:w-28", (r) => <span className="font-semibold">{int(r.value)}</span>), side("Tournament", "w-36", competition)];
+      return [...athlete(full), weight(full), value(c.age, "w-24 sm:w-28", (r) => <span className="font-semibold">{int(r.value)}</span>), side(c.tournament, "w-36", competition)];
     case "longest_medal_span":
-      return [...athlete(full), side("Medals", "w-20", (r) => String(detail(r, "medals"))), side("Period", "w-28", period), value("Years", "w-16 sm:w-20", (r) => r.value.toFixed(1))];
+      return [...athlete(full), side(c.medals, "w-20", (r) => String(detail(r, "medals"))), side(c.period, "w-28", period), value(c.years, "w-16 sm:w-20", (r) => r.value.toFixed(1))];
     case "best_finals_record":
-      return [...athlete(full), side("Finals", "w-16", (r) => String(detail(r, "finals"))), side("Won", "w-16", (r) => String(detail(r, "golds"))), value("Won %", "w-16 sm:w-20", (r) => percent(r.value, 1))];
+      return [...athlete(full), side(c.finals, "w-16", (r) => String(detail(r, "finals"))), side(c.won, "w-16", (r) => String(detail(r, "golds"))), value(c.wonShare, "w-16 sm:w-20", (r) => percent(r.value, 1))];
     case "least_likely_champion":
-      return [...athlete(full), ...(full ? [weight(full)] : []), side("Tournament", "w-40", competition, true), value("Chance", "w-16 sm:w-20", (r) => percent(r.value, 3), "text-gain")];
+      return [...athlete(full), ...(full ? [weight(full)] : []), side(c.tournament, "w-40", competition, true), value(c.chance, "w-16 sm:w-20", (r) => percent(r.value, 3), "text-gain")];
     case "golden_score_king":
-      return [...athlete(full), side("Contests", "w-20", (r) => String(detail(r, "contests"))), side("Won %", "w-16", (r) => percent(detail(r, "share"), 1)), value("Wins", "w-16 sm:w-20", (r) => int(r.value))];
+      return [...athlete(full), side(c.contests, "w-20", (r) => String(detail(r, "contests"))), side(c.wonShare, "w-16", (r) => percent(detail(r, "share"), 1)), value(c.wins, "w-16 sm:w-20", (r) => int(r.value))];
     case "longest_contest":
       return [
-        pair("Winner / loser", true),
+        pair(c.winnerLoser, true),
         ...(full ? [weight(full)] : []),
         {
-          label: "Tournament",
+          label: c.tournament,
           th: "text-left hidden sm:table-cell w-40",
           td: "text-muted hidden sm:table-cell",
           cell: (r) => (
@@ -366,20 +381,20 @@ export function recordColumns(info: RecordInfo, full: boolean, name: string = in
           ),
           csv: (r) => r.competition ?? "",
         },
-        value("Time", "w-16 sm:w-20", (r) => mmss(r.value)),
+        value(c.time, "w-16 sm:w-20", (r) => mmss(r.value)),
       ];
     case "greatest_rivalry":
-      return [pair("Athletes", false), score(), side("Meetings", "w-20", (r) => String(detail(r, "contests"))), side("Period", "w-28", period), value("Score", "w-16 sm:w-20", (r) => r.value.toFixed(2))];
+      return [pair(c.athletes, false), score(), side(c.meetings, "w-20", (r) => String(detail(r, "contests"))), side(c.period, "w-28", period), value(c.score, "w-16 sm:w-20", (r) => r.value.toFixed(2))];
     case "longest_rivalry":
-      return [pair("Athletes", false), score(), side("Meetings", "w-20", (r) => String(detail(r, "contests"))), side("Period", "w-28", period), value("Years", "w-16 sm:w-20", (r) => detail(r, "years").toFixed(1))];
+      return [pair(c.athletes, false), score(), side(c.meetings, "w-20", (r) => String(detail(r, "contests"))), side(c.period, "w-28", period), value(c.years, "w-16 sm:w-20", (r) => detail(r, "years").toFixed(1))];
     case "nemesis":
-      return [pair("Nemesis / opponent", true), score(), side("Avg chance", "w-24", (r) => percent(detail(r, "chance"), 1)), value("Score", "w-16 sm:w-20", (r) => `+${r.value.toFixed(2)}`, "text-gain")];
+      return [pair(c.nemesisOpponent, true), score(), side(c.avgChance, "w-24", (r) => percent(detail(r, "chance"), 1)), value(c.score, "w-16 sm:w-20", (r) => `+${r.value.toFixed(2)}`, "text-gain")];
     case "deepest_team":
       return [
         nation("w-20 sm:w-24"),
-        { label: "Date", th: "text-left", td: "text-muted whitespace-nowrap", cell: (r) => <div className="truncate">{month(r.day)}</div>, csv: (r) => month(r.day) },
-        side("Weights", "w-20", (r) => String(detail(r, "weights"))),
-        value("In top 10", "w-20 sm:w-24", (r) => int(r.value)),
+        { label: c.date, th: "text-left", td: "text-muted whitespace-nowrap", cell: (r) => <div className="truncate">{month(r.day)}</div>, csv: (r) => month(r.day) },
+        side(c.weights, "w-20", (r) => String(detail(r, "weights"))),
+        value(c.inTop10, "w-20 sm:w-24", (r) => int(r.value)),
       ];
     default:
       return [];

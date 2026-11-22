@@ -3,14 +3,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { useHashTarget } from "@/components/anchors";
-import { careerLine, ChartSkeleton, ChartTip, TipEvents, tipPlaces, useChartPointer, type Competition, type LinePoint, type Range, dotsFit, LABEL_ROOM, monthTicks, nearest, PeakLabel, PERIOD, peakShift as shiftOf, pointerX, scale, TipBody } from "@/components/chart";
+import { careerLine, ChartSkeleton, ChartTip, TipEvents, tipPlaces, useChartPointer, type Competition, type LinePoint, type Range, dotsFit, LABEL_ROOM, monthTicks, nearest, PeakLabel, PERIOD, peakShift as shiftOf, pointerX, scale, TipBody, usePeriodNames } from "@/components/chart";
 import { Icon } from "@/components/Icon";
 import { RankChart } from "@/components/athlete/RankChart";
 
 import type { Athlete, HistoryRow } from "@/lib/api";
 import type { LastRating } from "@/lib/inactive";
 import { peakTableLink, SECTION } from "@/lib/anchors";
-import { formatDate, monthYear } from "@/lib/format";
+import { useI18n } from "@/i18n/client";
 import { tournamentPath } from "@/lib/weights";
 import { type Places } from "@/lib/places";
 import { type Highlight, SINCE } from "@/lib/standing";
@@ -104,7 +104,8 @@ export function RatingChart({
   inactive: LastRating | null; // over a year without a contest: the line ends at the last one
   onPeriod: (competitions: Competition[]) => void; // a point's: its contests marked in the table
 }) {
-
+  const { d, f, t } = useI18n();
+  const names = usePeriodNames(); // the points' names in the page's language
   const now = new Date(today).getTime();
   const lastContest = history.length ? new Date(history[0].fought_on).getTime() : now;
   // the last year; idle over a year: four (the last results in it); idle over two: the
@@ -167,9 +168,9 @@ export function RatingChart({
   // day, which can fall inside a competition of several days
   const peakRow = athlete.peak_on ? history.find((contest) => contest.fought_on === athlete.peak_on) : undefined;
   const split = peakRow
-    ? { day: new Date(peakRow.fought_on).getTime(), rating: peakRow.rating_after, score: peakRow.score_after, period: `Peak, ${formatDate(peakRow.fought_on)}` }
+    ? { day: new Date(peakRow.fought_on).getTime(), rating: peakRow.rating_after, score: peakRow.score_after, period: t(d.athlete.chart.peakPeriod, { date: f.formatDate(peakRow.fought_on) }) }
     : undefined;
-  const points: Point[] = careerLine(history, inactive ? null : { day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 }, period, split);
+  const points: Point[] = careerLine(history, inactive ? null : { day: now, rating: athlete.rating ?? 0, score: athlete.score ?? 0 }, period, split, names);
   const years = RANGES[range];
   // All: from SINCE (as the records), unless the whole career was before it
   const from = years === null ? (points.at(-1)!.day >= SINCE ? Math.max(points[0].day, SINCE) : points[0].day) : now - years * YEAR;
@@ -233,15 +234,15 @@ export function RatingChart({
     <section id={SECTION.rating} ref={anchorRef} className="mb-0 mt-14 lg:mt-16">
       <div className="flex justify-between items-end mb-3 border-b-2 border-ink pb-2">
         <div className="min-w-0">
-          <h2 className="font-serif font-bold text-[20px] sm:text-[24px] text-ink">{rank ? "Rank" : "Rating"}</h2>
+          <h2 className="font-serif font-bold text-[20px] sm:text-[24px] text-ink">{rank ? d.athlete.chart.rank : d.athlete.chart.rating}</h2>
         </div>
         <div className="flex items-center gap-4 text-sm shrink-0">
           {ranked && (
-            <div className="flex items-center gap-3 pr-4 border-r border-rule" role="group" aria-label="Rating or rank">
+            <div className="flex items-center gap-3 pr-4 border-r border-rule" role="group" aria-label={d.athlete.chart.ratingOrRank}>
               {(
                 [
-                  ["rating", "Rating"],
-                  ["rank", "Rank"],
+                  ["rating", d.athlete.chart.rating],
+                  ["rank", d.athlete.chart.rank],
                 ] as const
               ).map(([v, label]) => (
                 <button
@@ -266,7 +267,7 @@ export function RatingChart({
                   : "text-muted hover:text-ink cursor-pointer"
               }
             >
-              {r}
+              {d.athlete.chart.ranges[r]}
             </button>
           ))}
         </div>
@@ -320,14 +321,11 @@ export function RatingChart({
           {zones.map((zone) => (
             <g key={zone.from}>
               <rect x={zone.x1} y={TOP} width={Math.max(zone.x2 - zone.x1, 0)} height={BOTTOM - TOP} fill="url(#inactive)">
-                <title>
-                  No contest for over a year: out of the tables until the next one. The rating holds; its uncertainty
-                  grows, so the score drifts down.
-                </title>
+                <title>{d.athlete.chart.inactiveZone}</title>
               </rect>
               {zone.x2 - zone.x1 > 70 && (
                 <text x={(zone.x1 + zone.x2) / 2} y={BOTTOM - 8} textAnchor="middle" fill="#66605C" fontFamily={FONT} fontSize="11">
-                  Inactive
+                  {d.athlete.chart.inactive}
                 </text>
               )}
             </g>
@@ -381,7 +379,7 @@ export function RatingChart({
               score={athlete.peak_score ?? peak.score}
               shift={peakShift}
               href={peakLink}
-              title={peakLink ? "The table of that week" : undefined}
+              title={peakLink ? d.athlete.header.tableOfWeek : undefined}
               font={FONT}
             />
           )}
@@ -389,7 +387,7 @@ export function RatingChart({
           {desktop && (
             <g fontFamily={FONT} fontSize="12" stroke="#F3EEE3" strokeWidth={inactive ? 4 : 0} paintOrder="stroke" strokeLinejoin="round">
               <text fill="#66605C" x={labelX} y={y(last.rating) + 4}>
-                Skill {last.rating}
+                {t(d.athlete.chart.skillLabel, { n: last.rating })}
               </text>
               <line
                 stroke="#D6CFC2"
@@ -400,22 +398,22 @@ export function RatingChart({
                 y2={y(last.score) - 11}
               />
               <text fill="#66605C" x={labelX + 12} y={(y(last.rating) + y(last.score)) / 2 + 4}>
-                −{last.rating - last.score}{desktop ? " uncertainty" : ""}
+                {t(d.athlete.chart.uncertaintyLabel, { n: last.rating - last.score })}
               </text>
               <text fill="#33302E" fontWeight="700" x={labelX} y={y(last.score) + 4}>
-                Rating {last.score}
+                {t(d.athlete.chart.ratingLabel, { n: last.score })}
               </text>
             </g>
           )}
           <g fill="#66605C" fontFamily={FONT} fontSize={at.font} textAnchor="middle">
             {ticks.map((tick) => (
               <text key={tick} x={x(tick)} y={at.datesY}>
-                {monthYear(new Date(tick).toISOString())}
+                {f.monthYear(new Date(tick).toISOString())}
               </text>
             ))}
             {/* at the plot's right edge: when it is the canvas's (inactive), ends there */}
             <text x={RIGHT} y={at.datesY} textAnchor={inactive || !desktop ? "end" : "middle"}>
-              {monthYear(new Date(now).toISOString())}
+              {f.monthYear(new Date(now).toISOString())}
             </text>
           </g>
         </svg>
@@ -428,10 +426,10 @@ export function RatingChart({
             onClick={() => setRange("All")}
             className="absolute top-3 inline-flex items-center h-4 pr-1.5 border border-claret bg-[#F3EEE3] hover:bg-[#EBD5D6] active:bg-[#E0BFC2] transition-colors text-[11px] leading-none font-semibold text-ink cursor-pointer"
             style={{ left: `${(LEFT / at.width) * 100}%`, fontFamily: FONT }}
-            title={`Peak in ${monthYear(athlete.peak_on)}: show the whole career`}
+            title={t(d.athlete.chart.peakBefore, { month: f.monthYear(athlete.peak_on) })}
           >
             <Icon size={14} name="chevron_left" className="text-claret" />
-            Peak {athlete.peak_score}
+            {t(d.athlete.chart.peakLabel, { score: athlete.peak_score })}
           </button>
         )}
         {!rank && hovered && (
@@ -443,7 +441,7 @@ export function RatingChart({
               action={
                 touched && hovered.events.length > 0
                   ? {
-                      label: "Show contests",
+                      label: d.athlete.chart.showContests,
                       onClick: () => {
                         onPeriod(hovered.events);
                         close();
@@ -463,14 +461,14 @@ export function RatingChart({
         {rank && run && (
           <div className="absolute top-full left-0 mt-2">
             <div className="inline-flex items-center gap-1.5 pl-1.5 border border-claret bg-paper text-[11px] leading-4 font-semibold text-ink">
-              {run.label}
-              {/* one run: its months */}
-              {run.spans.length === 1 &&
-                (monthYear(run.spans[0].from) === monthYear(run.spans[0].to)
-                  ? `, ${monthYear(run.spans[0].from)}`
-                  : `, ${monthYear(run.spans[0].from)} – ${monthYear(run.spans[0].to)}`)}
+              {/* one run: with its months */}
+              {run.spans.length !== 1
+                ? run.label
+                : f.monthYear(run.spans[0].from) === f.monthYear(run.spans[0].to)
+                  ? t(d.athlete.chart.runInMonth, { label: run.label, month: f.monthYear(run.spans[0].from) })
+                  : t(d.athlete.chart.runOverMonths, { label: run.label, from: f.monthYear(run.spans[0].from), to: f.monthYear(run.spans[0].to) })}
               {onRun && (
-                <button type="button" onClick={() => onRun(null)} aria-label="Take the mark off" title="Take the mark off (Esc)" className="px-1.5 text-claret hover:bg-claret/10 cursor-pointer">
+                <button type="button" onClick={() => onRun(null)} aria-label={d.athlete.chart.takeMarkOff} title={d.athlete.chart.takeMarkOffEsc} className="px-1.5 text-claret hover:bg-claret/10 cursor-pointer">
                   ×
                 </button>
               )}
@@ -483,7 +481,7 @@ export function RatingChart({
               <svg width="16" height="4" aria-hidden>
                 <line x1="0" y1="2" x2="16" y2="2" stroke="#33302E" strokeWidth="2.5" />
               </svg>
-              {weight!.replace("-", "−")} kg
+              {t(d.athlete.weightKg, { weight: weight!.replace("-", "−") })}
             </span>
             <span className="inline-flex items-center gap-1.5">
               <svg width="16" height="4" aria-hidden>
@@ -493,9 +491,9 @@ export function RatingChart({
             </span>
             <span className="inline-flex items-center gap-1.5">
               <span className="w-3 h-2.5 bg-ink/[0.05] border border-rule inline-block" />
-              Top 8
+              {d.athlete.chart.top8}
             </span>
-            <span className="inline-flex items-center gap-1.5" title="No contest for over a year: out of the tables">
+            <span className="inline-flex items-center gap-1.5" title={d.athlete.chart.inactiveLegend}>
               <svg width="12" height="10" aria-hidden className="border border-rule">
                 <rect width="12" height="10" fill="url(#inactive-legend)" />
                 <defs>
@@ -504,7 +502,7 @@ export function RatingChart({
                   </pattern>
                 </defs>
               </svg>
-              Inactive
+              {d.athlete.chart.inactive}
             </span>
           </div>
         ) : (
@@ -513,19 +511,19 @@ export function RatingChart({
             <svg width="16" height="4" aria-hidden>
               <line x1="0" y1="2" x2="16" y2="2" stroke="#66605C" strokeWidth="1.2" strokeDasharray="4,3" />
             </svg>
-            Skill
+            {d.athlete.chart.skill}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <svg width="16" height="4" aria-hidden>
               <line x1="0" y1="2" x2="16" y2="2" stroke="#33302E" strokeWidth="2.5" />
             </svg>
-            Rating
+            {d.athlete.chart.rating}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="w-3 h-2.5 bg-ink/[0.08] border border-rule inline-block" />
-            Uncertainty
+            {d.athlete.chart.uncertainty}
           </span>
-          <span className="inline-flex items-center gap-1.5" title="No contest for over a year: out of the tables">
+          <span className="inline-flex items-center gap-1.5" title={d.athlete.chart.inactiveLegend}>
             <svg width="12" height="10" aria-hidden className="border border-rule">
               <rect width="12" height="10" fill="url(#inactive-legend)" />
               <defs>
@@ -534,7 +532,7 @@ export function RatingChart({
                 </pattern>
               </defs>
             </svg>
-            Inactive
+            {d.athlete.chart.inactive}
           </span>
         </div>
         )}

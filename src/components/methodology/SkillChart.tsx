@@ -7,7 +7,7 @@ import { Figure } from "@/components/methodology/Figure";
 import { MAX_RD, RD_GROWTH } from "@/components/methodology/glicko";
 import { Medal, type MedalKind } from "@/components/Medal";
 import data from "@/data/methodology.json";
-import { formatDate, monthYear } from "@/lib/format";
+import { useI18n } from "@/i18n/client";
 
 // The athlete page's chart, in miniature and honest between tournaments: the skill
 // (dashed) holds, the RD grows every day without a contest (RD² by 5² a day, 350 at
@@ -71,6 +71,7 @@ export function SkillChart({
   notes?: { day: string; label: string; short?: string; wideOnly?: boolean }[];
   height?: number;
 }) {
+  const { d, f } = useI18n();
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState<number | null>(null);
   useEffect(() => {
@@ -134,7 +135,7 @@ export function SkillChart({
           onPointerDown={(e) => read(e.clientX)}
           onPointerLeave={() => read(null)}
           role="img"
-          aria-label="Skill and rating over time"
+          aria-label={d.methodology.chart.label}
         >
           <defs>
             <pattern id="meth-idle" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -182,7 +183,7 @@ export function SkillChart({
               <rect x={r(x(Math.max(z.from, start)))} width={r(x(Math.min(z.to, end)) - x(Math.max(z.from, start)))} y={TOP} height={BOTTOM - TOP} fill="url(#meth-idle)" />
               {x(Math.min(z.to, end)) - x(Math.max(z.from, start)) > 70 && (
                 <text x={r((x(Math.max(z.from, start)) + x(Math.min(z.to, end))) / 2)} y={BOTTOM - 8} textAnchor="middle" fill="#66605C" fontFamily={FONT} fontSize="11">
-                  Inactive
+                  {d.methodology.chart.inactive}
                 </text>
               )}
             </g>
@@ -213,7 +214,7 @@ export function SkillChart({
           <g fill="#66605C" fontFamily={FONT} fontSize={phone ? 11 : 12} textAnchor="middle">
             {ticks.map((tick) => (
               <text key={tick} x={r(x(tick))} y={height - 8}>
-                {monthYear(new Date(tick).toISOString())}
+                {f.monthYear(new Date(tick).toISOString())}
               </text>
             ))}
           </g>
@@ -225,23 +226,25 @@ export function SkillChart({
 
 // The legend the athlete page's chart has, and the reading of one point.
 function Legend() {
+  const { d } = useI18n();
+  const s = d.methodology.chart.legend;
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
       <span className="inline-flex items-center gap-1.5">
         <svg width="16" height="4" aria-hidden>
           <line x1="0" y1="2" x2="16" y2="2" stroke="#66605C" strokeWidth="1.2" strokeDasharray="4,3" />
         </svg>
-        Skill
+        {s.skill}
       </span>
       <span className="inline-flex items-center gap-1.5">
         <svg width="16" height="4" aria-hidden>
           <line x1="0" y1="2" x2="16" y2="2" stroke="#33302E" strokeWidth="2.5" />
         </svg>
-        Rating
+        {s.rating}
       </span>
       <span className="inline-flex items-center gap-1.5">
         <span className="w-3 h-2.5 bg-ink/[0.08] border border-rule inline-block" />
-        Uncertainty (RD)
+        {s.uncertainty}
       </span>
     </div>
   );
@@ -262,12 +265,14 @@ function StopTitle({ stop }: { stop: Stop }) {
 }
 
 function Readout({ title, skill, rd, note, tall = false }: { title: ReactNode; skill: number; rd: number; note?: ReactNode; tall?: boolean }) {
+  const { d } = useI18n();
+  const s = d.methodology.chart.readout;
   // tall: room for a note of two lines kept, so the chart does not move when one appears
   return (
     <div className={`${tall ? "min-h-[84px]" : "min-h-[44px]"} text-[13px] tabular-nums`}>
       <div className="text-ink">{title}</div>
       <div className="text-muted whitespace-nowrap">
-        skill <b className="text-ink">{Math.round(skill)}</b> − RD <b className="text-ink">{Math.round(rd)}</b> = rating{" "}
+        {s.skill} <b className="text-ink">{Math.round(skill)}</b> − {s.rd} <b className="text-ink">{Math.round(rd)}</b> = {s.rating}{" "}
         <b className="text-claret">{Math.round(skill - rd)}</b>
       </div>
       {note && <div className="text-[12px] text-muted">{note}</div>}
@@ -278,42 +283,45 @@ function Readout({ title, skill, rd, note, tall = false }: { title: ReactNode; s
 // Riner's career as the site draws one, with his moments and a zoom on the years
 // when the gap between the lines changed most: after the loss to Kageura, a year
 // away, Tokyo.
-const NOTES = [
-  { day: "2012-07-28", label: "London 2012", short: "London" },
-  { day: "2016-08-06", label: "Rio 2016", short: "Rio" },
-  { day: "2020-02-09", label: "Lost to Kageura", wideOnly: true },
-  { day: "2021-07-30", label: "Lost to Bashaev", wideOnly: true },
-  { day: "2024-08-02", label: "Paris 2024", short: "Paris" },
-];
-const LOSSES: Record<string, string> = { "2020-02-09": "lost to Kageura", "2021-07-30": "lost to Bashaev" };
 type CareerPoint = { day: string; skill: number; rd: number; name: string; result: string | null };
-const RINER: Stop[] = (data.stories.career.points as CareerPoint[]).map((p) => ({
-  day: p.day,
-  skillAfter: p.skill,
-  rdAfter: p.rd,
-  label: p.name,
-  result: p.result,
-  aside: LOSSES[p.day],
-}));
+const CAREER = data.stories.career.points as CareerPoint[];
 
 export function RinerCareer() {
+  const { d, f } = useI18n();
+  const s = d.methodology.riner;
+  const notes = [
+    { day: "2012-07-28", label: s.notes.london, short: s.notes.londonShort },
+    { day: "2016-08-06", label: s.notes.rio, short: s.notes.rioShort },
+    { day: "2020-02-09", label: s.notes.kageura, wideOnly: true },
+    { day: "2021-07-30", label: s.notes.bashaev, wideOnly: true },
+    { day: "2024-08-02", label: s.notes.paris, short: s.notes.parisShort },
+  ];
+  const losses: Record<string, string> = { "2020-02-09": s.asides.kageura, "2021-07-30": s.asides.bashaev };
+  const riner: Stop[] = CAREER.map((p) => ({
+    day: p.day,
+    skillAfter: p.skill,
+    rdAfter: p.rd,
+    label: p.name,
+    result: p.result,
+    aside: losses[p.day],
+  }));
   const [reading, setReading] = useState<Reading | null>(null);
-  const last = RINER[RINER.length - 1];
+  const last = riner[riner.length - 1];
   const shown = reading ?? { stop: last, skill: last.skillAfter, rd: last.rdAfter, before: false };
   return (
     <Figure
-      title="Teddy Riner, 2009 to 2024"
-      caption="Between tournaments the RD grows, so the rating goes down."
+      title={s.title}
+      caption={s.caption}
     >
       <div className="mb-3">
         <Legend />
       </div>
       <Readout
-        title={shown.stop ? <StopTitle stop={shown.stop} /> : formatDate(new Date(shown.day).toISOString())}
+        title={shown.stop ? <StopTitle stop={shown.stop} /> : f.formatDate(new Date(shown.day).toISOString())}
         skill={shown.skill}
         rd={shown.rd}
       />
-      <SkillChart stops={RINER} to="2024-10-01" onRead={setReading} notes={NOTES} height={270} />
+      <SkillChart stops={riner} to="2024-10-01" onRead={setReading} notes={notes} height={270} />
     </Figure>
   );
 }
@@ -322,10 +330,12 @@ export function RinerCareer() {
 // the step the skill takes at each change: × 0.95 going up, × 1.05 coming back.
 type Trip = { day: string; weight: string; name: string; rank: string; skillBefore: number; rdBefore: number; skillAfter: number; rdAfter: number; result: string | null };
 const TATO = data.stories.weights as { name: string; athlete_id: number; home: string; tournaments: Trip[] };
-const WEIGHT = (w: string) => `${w.replace("-", "−")} kg`;
 
 export function WeightMoves() {
-  const stops: Stop[] = TATO.tournaments.map((x) => ({ day: x.day, skillBefore: x.skillBefore, rdBefore: x.rdBefore, skillAfter: x.skillAfter, rdAfter: x.rdAfter, label: x.name, weight: x.weight, result: x.result, aside: WEIGHT(x.weight) }));
+  const { d, f, t: fill } = useI18n();
+  const s = d.methodology.weightMoves;
+  const kg = (w: string) => fill(d.methodology.weightKg, { weight: w.replace("-", "−") });
+  const stops: Stop[] = TATO.tournaments.map((x) => ({ day: x.day, skillBefore: x.skillBefore, rdBefore: x.rdBefore, skillAfter: x.skillAfter, rdAfter: x.rdAfter, label: x.name, weight: x.weight, result: x.result, aside: kg(x.weight) }));
   // a stay at another weight: from its first tournament to a fortnight after its last
   const after = (day: string, days: number) => new Date(t(day) + days * DAY).toISOString().slice(0, 10);
   const zones = TATO.tournaments.reduce<{ from: string; to: string; label: string }[]>((acc, x, i) => {
@@ -333,7 +343,7 @@ export function WeightMoves() {
     const last = acc[acc.length - 1];
     const previous = TATO.tournaments[i - 1];
     if (last && previous && previous.weight === x.weight) last.to = after(x.day, 14);
-    else acc.push({ from: after(x.day, -14), to: after(x.day, 14), label: WEIGHT(x.weight) });
+    else acc.push({ from: after(x.day, -14), to: after(x.day, 14), label: kg(x.weight) });
     return acc;
   }, []);
   const [reading, setReading] = useState<Reading | null>(null);
@@ -343,18 +353,25 @@ export function WeightMoves() {
   const previous = trip ? TATO.tournaments[TATO.tournaments.indexOf(trip) - 1] : undefined;
   const moved = trip && previous && previous.weight !== trip.weight;
   return (
-    <Figure title={`${TATO.name}, 2023 to 2026`} caption="Shaded: at −90 kg. At each change of weight the skill steps once: × 0.95 going up, × 1.05 coming back down.">
+    <Figure title={fill(s.title, { name: TATO.name })} caption={s.caption}>
       <div className="mb-3">
         <Legend />
       </div>
       <Readout
         tall
-        title={shown.stop ? <StopTitle stop={shown.stop} /> : formatDate(new Date((shown as { day: number }).day).toISOString())}
+        title={shown.stop ? <StopTitle stop={shown.stop} /> : f.formatDate(new Date((shown as { day: number }).day).toISOString())}
         skill={shown.skill}
         rd={shown.rd}
         note={
           trip && moved
-            ? `Moved ${trip.weight < previous.weight ? "down" : "up"} from ${WEIGHT(previous.weight)}: skill ${previous.skillAfter} × ${trip.weight < previous.weight ? "1.05" : "0.95"} = ${trip.skillBefore} before the first contest, ${trip.skillAfter} after.`
+            ? fill(s.moved, {
+                direction: trip.weight < previous.weight ? s.down : s.up,
+                weight: kg(previous.weight),
+                skill: previous.skillAfter,
+                factor: trip.weight < previous.weight ? "1.05" : "0.95",
+                before: trip.skillBefore,
+                after: trip.skillAfter,
+              })
             : undefined
         }
       />

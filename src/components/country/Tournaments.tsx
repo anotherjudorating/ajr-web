@@ -12,17 +12,13 @@ import { CsvButton, SearchBox, Select, ToolbarRow } from "@/components/explore/C
 import { Pagination, saveCsv, SHORT_SIZES } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import { H2, HEAD_CELL, ROW_CELL } from "@/components/tournament/styles";
+import { useI18n } from "@/i18n/client";
 import type { CountryTournament } from "@/lib/api";
-import { formatDate, shortCompetition } from "@/lib/format";
+import { shortCompetition } from "@/lib/format";
 import { nationRow } from "@/lib/anchors";
 import { LEVELS, levelOf } from "@/lib/levels";
 
 const KINDS: MedalKind[] = ["gold", "silver", "bronze"];
-const SORTS = [
-  { value: "date-desc", label: "Sort: date ↓" },
-  { value: "date-asc", label: "Sort: date ↑" },
-  { value: "medals-desc", label: "Sort: medals ↓" },
-];
 type Sort = "date-desc" | "date-asc" | "medals-desc";
 
 // Every tournament the nation's athletes fought at, newest first, with their medals,
@@ -31,6 +27,13 @@ type Sort = "date-desc" | "date-asc" | "medals-desc";
 //
 // A click on the rating chart's point marks its period's tournaments.
 export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc: string }) {
+  const { d, f } = useI18n();
+  const words = d.country.tournaments;
+  const sorts = [
+    { value: "date-desc", label: words.sortDateDesc },
+    { value: "date-asc", label: words.sortDateAsc },
+    { value: "medals-desc", label: words.sortMedals },
+  ];
   const [size, setSize] = useState(10);
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
@@ -66,7 +69,7 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
   };
   const medals = (t: CountryTournament) => t.gold * 1e6 + t.silver * 1e3 + t.bronze;
   const years = [...new Set(all.map((t) => t.date_from.slice(0, 4)))];
-  const levels = LEVELS.map((l) => l.title).filter((title) => all.some((t) => levelOf(t.rank_name) === title));
+  const levels = LEVELS.map((l) => l.id).filter((id) => all.some((t) => levelOf(t.rank_name) === id));
   const needle = query.trim().toLowerCase();
   const rows = all
     .filter(
@@ -80,24 +83,24 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
   const shown = rows.slice((page - 1) * size, page * size);
   return (
     <section id="tournaments">
-      <h2 className={H2}>Tournaments</h2>
+      <h2 className={H2}>{words.title}</h2>
       <ToolbarRow inPage>
-        <SearchBox value={query} onChange={reset(setQuery)} placeholder="Search tournament" />
+        <SearchBox value={query} onChange={reset(setQuery)} placeholder={words.search} />
         <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
           <Select
             value={year}
             onChange={reset(setYear)}
-            options={[{ value: "", label: "All years" }, ...years.map((y) => ({ value: y, label: y }))]}
+            options={[{ value: "", label: words.allYears }, ...years.map((y) => ({ value: y, label: y }))]}
           />
           <Select
             value={level}
             onChange={reset(setLevel)}
-            options={[{ value: "", label: "All levels" }, ...levels.map((l) => ({ value: l, label: l }))]}
+            options={[{ value: "", label: words.allLevels }, ...levels.map((l) => ({ value: l, label: d.common.levels[l] }))]}
           />
         </div>
         <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto">
           <div className="min-w-0 grid md:block">
-            <Select value={sort} onChange={(value) => reset(setSort)(value as Sort)} options={SORTS} />
+            <Select value={sort} onChange={(value) => reset(setSort)(value as Sort)} options={sorts} />
           </div>
           <CsvButton onClick={() => downloadCsv(rows, ioc)} />
         </div>
@@ -105,16 +108,16 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-left`}>Tournament</th>
-            <th className={`${HEAD_CELL} text-left w-28 hidden sm:table-cell`}>Date</th>
+            <th className={`${HEAD_CELL} text-left`}>{words.tournament}</th>
+            <th className={`${HEAD_CELL} text-left w-28 hidden sm:table-cell`}>{words.date}</th>
             {KINDS.map((kind) => (
-              <th key={kind} className={`${HEAD_CELL} text-center w-11 sm:w-14`} title={kind}>
+              <th key={kind} className={`${HEAD_CELL} text-center w-11 sm:w-14`} title={d.country.medal[kind]}>
                 <span className="inline-flex justify-center w-full">
                   <Medal kind={kind} />
                 </span>
               </th>
             ))}
-            <th className={`${HEAD_CELL} text-right w-16 hidden sm:table-cell`}>Total</th>
+            <th className={`${HEAD_CELL} text-right w-16 hidden sm:table-cell`}>{words.total}</th>
             <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
@@ -130,7 +133,7 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
                 <span className="font-medium truncate block sm:hidden">{shortCompetition(t.name)}</span>
                 <span className="font-medium truncate hidden sm:block">{t.name.replace(/\s+Individuals?$/i, "")}</span>
               </td>
-              <td className={`${ROW_CELL} text-muted whitespace-nowrap hidden sm:table-cell`}>{formatDate(t.date_from)}</td>
+              <td className={`${ROW_CELL} text-muted whitespace-nowrap hidden sm:table-cell`}>{f.formatDate(t.date_from)}</td>
               {KINDS.map((kind) => (
                 <td key={kind} className={`${ROW_CELL} text-center`}>
                   {t[kind]}
@@ -144,7 +147,7 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
           ))}
         </tbody>
       </table>
-      {rows.length === 0 && <p className="py-6 text-[14px] text-muted">No tournaments match these filters.</p>}
+      {rows.length === 0 && <p className="py-6 text-[14px] text-muted">{words.noMatches}</p>}
       {rows.length > SHORT_SIZES[0] && (
         <Pagination
           total={rows.length}

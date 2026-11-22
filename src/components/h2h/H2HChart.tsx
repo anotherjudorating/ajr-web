@@ -1,11 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { careerLine, ChartSkeleton, ChartTip, TipEvents, TipPlaces, tipPlaces, useChartPointer, dotsFit, INK, nearest, PERIOD, pointerX, scale, TipBody } from "@/components/chart";
+import { careerLine, ChartSkeleton, ChartTip, TipEvents, TipPlaces, tipPlaces, useChartPointer, dotsFit, INK, nearest, PERIOD, pointerX, scale, TipBody, usePeriodNames } from "@/components/chart";
 import type { HistoryRow } from "@/lib/api";
-import { monthYear, shortName } from "@/lib/format";
+import { useI18n } from "@/i18n/client";
+import { shortName } from "@/lib/format";
 import { COLORS } from "@/lib/h2h";
 import { tournamentPath } from "@/lib/weights";
 import type { Places } from "@/lib/places";
@@ -80,6 +81,8 @@ export type ChartAthlete = {
 
 
 export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today: string }) {
+  const { d, f, t } = useI18n();
+  const periods = usePeriodNames(); // the points' names in the page's language
   const now = new Date(today).getTime();
   const lastContest = Math.max(...athletes.map((a) => (a.history[0] ? new Date(a.history[0].fought_on).getTime() : 0)));
   const [range, setRange] = useState<Range>(now - lastContest > 3.5 * YEAR ? "All" : "4Y");
@@ -99,7 +102,7 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
   // a period, today's last
   const period = PERIOD[range];
   const all = athletes.map((athlete) =>
-    careerLine(athlete.history, { day: now, rating: athlete.history[0]?.rating_after ?? 0, score: athlete.score }, period),
+    careerLine(athlete.history, { day: now, rating: athlete.history[0]?.rating_after ?? 0, score: athlete.score }, period, undefined, periods),
   );
 
   const years = RANGES[range];
@@ -126,7 +129,7 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
   );
   const ticks = yearTicks(start, now, at.phone ? 4 : 5);
   const date = (day: number) => {
-    const text = monthYear(new Date(day).toISOString());
+    const text = f.monthYear(new Date(day).toISOString());
     return at.phone ? `${text.slice(0, 4)}${text.slice(-2)}` : text; // "Nov 22"
   };
   // the nearest period's end under the pointer (both lines have the same), with each
@@ -153,7 +156,7 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
       <div className="flex justify-between items-end gap-3 border-b-2 border-ink pb-2">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <h2 className="font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight">
-            Rating
+            {d.h2h.chart.rating}
           </h2>
           <Legend athletes={athletes} names={names} className="hidden sm:flex items-center gap-3" />
         </div>
@@ -169,7 +172,7 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
                   : "text-muted hover:text-ink cursor-pointer"
               }
             >
-              {r}
+              {d.athlete.chart.ranges[r]}
             </button>
           ))}
         </div>
@@ -186,7 +189,7 @@ export function H2HChart({ athletes, today }: { athletes: ChartAthlete[]; today:
           style={{ touchAction: "pan-y" }}
           viewBox={`0 0 ${at.width} ${at.height}`}
           role="img"
-          aria-label={`Rating of ${names.join(" and ")}, ${date(start)} to ${date(now)}`}
+          aria-label={t(d.h2h.chart.label, { a: names[0], b: names[1], from: date(start), to: date(now) })}
         >
           <g stroke="#D6CFC2" strokeWidth="0.8">
             {[0, 1, 2, 3, 4, 5].map((i) => (

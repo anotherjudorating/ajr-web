@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { localePath, PUBLISHED } from "@/i18n/locales";
 import { SITE } from "@/lib/seo";
 
 // What crawlers may fetch. Every page a crawler opens for the first time after a
@@ -13,8 +14,10 @@ import { SITE } from "@/lib/seo";
 // traffic on 2026-11-10 and still ~150 MB a day each at a page every 10 s, no visitors.
 // Amazon's search bot and the answer bots are left be.
 export default function robots(): MetadataRoute.Robots {
-  const closed = ["/api/", "/contests/", "/rankings/*/20", "/explore/*?"];
-  const core = [...closed, "/athletes/", "/tournaments/", "/explore/", "/head-to-head"]; // training bots: the core only
+  // each closed path once a published language ("/contests/", "/ru/contests/")
+  const inEveryLanguage = (paths: string[]) => PUBLISHED.flatMap((locale) => paths.map((path) => localePath(locale.code, path)));
+  const closed = ["/api/", ...inEveryLanguage(["/contests/", "/rankings/*/20", "/explore/*?"])];
+  const core = [...closed, ...inEveryLanguage(["/athletes/", "/tournaments/", "/explore/", "/head-to-head"])]; // training bots: the core only
   return {
     rules: [
       { userAgent: "*", allow: "/", disallow: closed },

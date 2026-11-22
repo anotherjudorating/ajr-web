@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Fragment, useLayoutEffect, useMemo, useState } from "react";
 
 import { useHashTarget, useRowMark, useRowScroll } from "@/components/anchors";
@@ -12,29 +12,18 @@ import { SHORT_SIZES } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
 import { SECTION } from "@/lib/anchors";
 import type { HistoryRow } from "@/lib/api";
-import { formatChance, roundCode, shortDate, shortName, signed } from "@/lib/format";
+import { useI18n } from "@/i18n/client";
+import { roundCode, shortName, signed } from "@/lib/format";
 import { LEVELS, levelOf } from "@/lib/levels";
 import { tournamentPath, WEIGHTS } from "@/lib/weights";
 import { pageNumbers } from "@/lib/pages";
 
-const SORTS = {
-  "date-desc": "Sort: date ↓",
-  "date-asc": "Sort: date ↑",
-  "chance-asc": "Sort: chance ↑",
-  "chance-desc": "Sort: chance ↓",
-  "gain-desc": "Sort: rating change ↓",
-  "gain-asc": "Sort: rating change ↑",
-} as const;
-type Sort = keyof typeof SORTS;
+// The sorts and the result filters, in the order of their menus (the labels: the dictionary's).
+const SORTS = ["date-desc", "date-asc", "chance-asc", "chance-desc", "gain-desc", "gain-asc"] as const;
+type Sort = (typeof SORTS)[number];
 
-const RESULTS = {
-  "": "All contests",
-  w: "Wins",
-  l: "Losses",
-  uw: "Upset wins",
-  ul: "Upset losses",
-} as const;
-type Result = keyof typeof RESULTS;
+const RESULTS = ["", "w", "l", "uw", "ul"] as const;
+type Result = (typeof RESULTS)[number];
 // Filters another part of the page can open the list with (Best wins, Toughest losses).
 export type ContestsPreset = { result: Result; sort: Sort };
 
@@ -66,12 +55,13 @@ export function Contests({
   mark: { ids: number[]; n: number } | null;
   fileName: string;
 }) {
+  const { d, t, n } = useI18n();
   const [query, setQuery] = useState("");
   const [year, setYear] = useState("");
   const [weight, setWeight] = useState(picked ?? "");
   const [level, setLevel] = useState("");
   const contests = useMemo(() => all.filter((c) => !weight || c.weight === weight), [all, weight]);
-  const levels = LEVELS.map((l) => l.title).filter((title) => all.some((c) => levelOf(c.competition_rank) === title));
+  const levels = LEVELS.map((l) => l.id).filter((id) => all.some((c) => levelOf(c.competition_rank) === id));
   const [result, setResult] = useState<Result>(preset?.result ?? "");
   const [sort, setSort] = useState<Sort>(preset?.sort ?? "date-desc");
   const [pageSize, setPageSize] = useState(SHORT_SIZES[0]);
@@ -143,7 +133,7 @@ export function Contests({
   return (
     <section id={SECTION.contests} ref={anchorRef} className="mt-14 md:mt-16">
       <h2 className="font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight text-ink">
-        Contests
+        {d.athlete.contests.title}
       </h2>
       <div className="mt-3 border-b-2 border-ink pb-2 flex flex-col lg:flex-row lg:items-center gap-2">
         <div className="relative w-full md:w-72 lg:w-56 shrink-0">
@@ -152,39 +142,39 @@ export function Contests({
             type="text"
             value={query}
             onChange={(e) => reset(setQuery)(e.target.value)}
-            placeholder="Search opponent or tournament"
+            placeholder={d.athlete.contests.search}
             className="w-full h-8 pl-8 pr-2.5 bg-paper border border-rule text-[12px] placeholder:text-muted focus:outline-none focus:border-ink"
           />
         </div>
         <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
           <select value={year} onChange={(e) => reset(setYear)(e.target.value)} className={CONTROL}>
-            <option value="">All years</option>
+            <option value="">{d.athlete.contests.allYears}</option>
             {years.map((y) => (
               <option key={y} value={y}>
                 {y}
               </option>
             ))}
           </select>
-          <select value={weight} onChange={(e) => reset(setWeight)(e.target.value)} className={CONTROL} aria-label="Weight">
-            <option value="">All weights</option>
+          <select value={weight} onChange={(e) => reset(setWeight)(e.target.value)} className={CONTROL} aria-label={d.athlete.contests.weight}>
+            <option value="">{d.athlete.contests.allWeights}</option>
             {weights.map((w) => (
               <option key={w} value={w}>
-                {WEIGHTS.find((x) => x.api === w)?.label ?? w} kg
+                {t(d.athlete.weightKg, { weight: WEIGHTS.find((x) => x.api === w)?.label ?? w })}
               </option>
             ))}
           </select>
-          <select value={level} onChange={(e) => reset(setLevel)(e.target.value)} className={CONTROL} aria-label="Tournament level">
-            <option value="">All levels</option>
+          <select value={level} onChange={(e) => reset(setLevel)(e.target.value)} className={CONTROL} aria-label={d.athlete.contests.level}>
+            <option value="">{d.athlete.contests.allLevels}</option>
             {levels.map((l) => (
               <option key={l} value={l}>
-                {l}
+                {d.common.levels[l]}
               </option>
             ))}
           </select>
           <select value={result} onChange={(e) => reset(setResult)(e.target.value as Result)} className={CONTROL}>
-            {Object.entries(RESULTS).map(([value, label]) => (
+            {RESULTS.map((value) => (
               <option key={value} value={value}>
-                {label}
+                {d.athlete.contests.results[value]}
               </option>
             ))}
           </select>
@@ -192,9 +182,9 @@ export function Contests({
         <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto">
           <div className="min-w-0 grid md:block">
             <select value={sort} onChange={(e) => reset(setSort)(e.target.value as Sort)} className={CONTROL}>
-              {Object.entries(SORTS).map(([value, label]) => (
+              {SORTS.map((value) => (
                 <option key={value} value={value}>
-                  {label}
+                  {d.athlete.contests.sorts[value]}
                 </option>
               ))}
             </select>
@@ -205,7 +195,7 @@ export function Contests({
             className="w-full md:w-auto shrink-0 h-8 px-3 inline-flex items-center justify-center gap-1.5 border border-rule text-[12px] text-ink hover:border-ink"
           >
             <Icon size={16} name="download" className="text-muted" />
-            Export CSV
+            {d.athlete.contests.exportCsv}
           </button>
         </div>
       </div>
@@ -214,12 +204,12 @@ export function Contests({
         <table className="w-full border-collapse text-left">
           <thead>
             <tr className="h-9 bg-panel border-b border-rule text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted">
-              <th className={`${TH} w-14 sm:w-16`}>Round</th>
-              <th className={TH}>Opponent</th>
-              {!grouped && <th className={`${TH} w-28 hidden sm:table-cell`}>Date</th>}
-              <th className={`${TH} w-20 text-right hidden sm:table-cell`}>Opp.</th>
-              <th className={`${TH} w-28 text-right hidden sm:table-cell`}>Chance</th>
-              <th className={`${TH} w-10 text-center`}>Result</th>
+              <th className={`${TH} w-14 sm:w-16`}>{d.athlete.contests.round}</th>
+              <th className={TH}>{d.athlete.contests.opponent}</th>
+              {!grouped && <th className={`${TH} w-28 hidden sm:table-cell`}>{d.athlete.contests.date}</th>}
+              <th className={`${TH} w-20 text-right hidden sm:table-cell`}>{d.athlete.contests.opponentRating}</th>
+              <th className={`${TH} w-28 text-right hidden sm:table-cell`}>{d.athlete.contests.chance}</th>
+              <th className={`${TH} w-10 text-center`}>{d.athlete.contests.result}</th>
               <th className={`${TH} w-14 text-right`}>+/−</th>
               <th className="w-8 sm:w-10 px-1 text-right align-middle h-9 py-0" />
             </tr>
@@ -238,7 +228,7 @@ export function Contests({
             {pageRows.length === 0 && (
               <tr>
                 <td colSpan={grouped ? 7 : 8} className="px-3 py-6 text-[14px] text-muted">
-                  No contests match these filters.
+                  {d.athlete.contests.noMatch}
                 </td>
               </tr>
             )}
@@ -249,11 +239,13 @@ export function Contests({
       <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[12px] text-muted">
         <div className="flex items-center gap-3">
           <span>
-            {shown.length ? `${first + 1}–${first + pageRows.length} of ${shown.length} contests` : "0 contests"}
+            {shown.length
+              ? t(d.athlete.contests.range, { from: first + 1, to: first + pageRows.length, total: n(d.common.contests, shown.length) })
+              : n(d.common.contests, 0)}
           </span>
           <span className="inline-block w-px h-3 bg-rule" />
           <div className="flex items-center gap-1.5">
-            <span>Show</span>
+            <span>{d.athlete.contests.show}</span>
             {SHORT_SIZES.map((size) => (
               <button
                 key={size}
@@ -312,6 +304,7 @@ export function Contests({
 const MEDALS: MedalKind[] = ["gold", "silver", "bronze"];
 
 function CompetitionRow({ contest, total, mark }: { contest: HistoryRow; total: number; mark: string }) {
+  const { f } = useI18n();
   const medal = MEDALS.find((kind) => kind === contest.result);
   return (
     // marked: the mark's colour for the panel's (fading back to it)
@@ -323,7 +316,7 @@ function CompetitionRow({ contest, total, mark }: { contest: HistoryRow; total: 
             <Link href={tournamentPath(contest.competition_id, contest.weight)} className="text-[12px] font-bold uppercase text-ink truncate hover:underline">
               {contest.competition}
             </Link>
-            <span className="text-[11px] text-muted shrink-0">{shortDate(contest.fought_on)}</span>
+            <span className="text-[11px] text-muted shrink-0">{f.shortDate(contest.fought_on)}</span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {medal ? (
@@ -347,7 +340,8 @@ function CompetitionRow({ contest, total, mark }: { contest: HistoryRow; total: 
 // dated: not grouped by tournament (sorted by chance or change), so the row says
 // when and where, on wider screens
 function ContestRow({ contest, dated, mark }: { contest: HistoryRow; dated: boolean; mark: string }) {
-  const chance = formatChance(contest.win_probability);
+  const { d, f } = useI18n();
+  const chance = f.formatChance(contest.win_probability);
   const upset = isUpset(contest.won, contest.win_probability);
   const color = contest.won ? "text-gain" : "text-drop";
   return (
@@ -363,7 +357,7 @@ function ContestRow({ contest, dated, mark }: { contest: HistoryRow; dated: bool
       </td>
       {dated && (
         <td className={`${CELL} text-muted whitespace-nowrap hidden sm:table-cell`} title={contest.competition}>
-          {shortDate(contest.fought_on)} {contest.fought_on.slice(0, 4)}
+          {f.shortDate(contest.fought_on)} {contest.fought_on.slice(0, 4)}
         </td>
       )}
       <td className={`${CELL} text-right tabular-nums hidden sm:table-cell text-ink`}>{contest.opponent_score}</td>
@@ -373,16 +367,16 @@ function ContestRow({ contest, dated, mark }: { contest: HistoryRow; dated: bool
             <span
               className={`text-[10px] font-bold uppercase tracking-[0.05em] px-1 py-0.5 border leading-none ${contest.won ? "text-gain border-gain" : "text-drop border-drop"}`}
             >
-              Upset
+              {d.athlete.contests.upset}
             </span>
           )}
           <span className="text-muted">{chance}</span>
         </span>
       </td>
-      <td className={`${CELL} text-center font-bold ${color}`}>{contest.won ? "W" : "L"}</td>
+      <td className={`${CELL} text-center font-bold ${color}`}>{contest.won ? d.athlete.contests.win : d.athlete.contests.loss}</td>
       <td className={`${CELL} text-right font-bold ${color}`}>{signed(gain(contest))}</td>
       <td className={`${CHEVRON_CELL}`}>
-        <Link href={`/contests/${contest.contest_id}`} aria-label="The contest">
+        <Link href={`/contests/${contest.contest_id}`} aria-label={d.athlete.contests.theContest}>
           <RowChevron />
         </Link>
       </td>

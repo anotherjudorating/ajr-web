@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 
 import { Flag } from "@/components/Flag";
 import { changeText, ijfDifference, placesText } from "@/components/rankings/Changes";
 import type { Athlete } from "@/lib/api";
 import type { LastRating } from "@/lib/inactive";
 import { peakTableLink } from "@/lib/anchors";
-import { fullName, ijfProfile, monthYear } from "@/lib/format";
+import { useI18n } from "@/i18n/client";
+import { fullName, ijfProfile } from "@/lib/format";
 import type { Highlight, Standing } from "@/lib/standing";
 import { WEIGHTS } from "@/lib/weights";
 
@@ -35,6 +36,7 @@ export function AthleteHeader({
   run: Highlight | null; // the longest run shown on the chart
   onRun: (run: Highlight | null) => void;
 }) {
+  const { d, f, t, n } = useI18n();
   // a run of the table on the chart (its longest one alone)
   // weeks of the table on the chart: the same label and spans
   const shown = (weeks: Highlight) => run?.label === weeks.label && run.spans.length === weeks.spans.length;
@@ -42,7 +44,7 @@ export function AthleteHeader({
   const marker = (weeks: Highlight, value: number, bold: boolean) => (
     <button
       type="button"
-      title="Show it on the chart"
+      title={d.athlete.header.showOnChart}
       data-run
       onClick={() => onRun(shown(weeks) ? null : weeks)}
       className={`${bold ? "font-bold" : "font-medium"} text-sm cursor-pointer ${LINKED} ${shown(weeks) ? "text-claret" : "text-ink"}`}
@@ -50,7 +52,6 @@ export function AthleteHeader({
       {value}
     </button>
   );
-  const plural = (n: number) => `${n} ${n === 1 ? "week" : "weeks"}`;
   // the best place's table: the Monday it was first reached, at the athlete's row
   const slug = WEIGHTS.find((w) => w.api === weight)?.slug;
   const bestLink =
@@ -68,7 +69,7 @@ export function AthleteHeader({
       <header className="flex flex-col md:flex-row justify-between items-start gap-8 md:gap-6">
         <div className="flex flex-col">
           <div className="flex items-center gap-5 uppercase text-[11px] font-semibold text-muted mb-3 tracking-wider">
-            <span>{athlete.gender === "female" ? "Women" : "Men"}</span>
+            <span>{athlete.gender === "female" ? d.common.gender.women : d.common.gender.men}</span>
             <div className="flex items-center gap-5">
               {athlete.weights.map((w) => (
                 <button
@@ -81,7 +82,7 @@ export function AthleteHeader({
                       : "text-muted hover:text-ink pb-0.5 border-b-2 border-transparent uppercase cursor-pointer"
                   }
                 >
-                  {w.replace("-", "−")} kg
+                  {t(d.athlete.weightKg, { weight: w.replace("-", "−") })}
                 </button>
               ))}
             </div>
@@ -94,15 +95,15 @@ export function AthleteHeader({
             {athlete.country ? (
               <Link href={`/countries/${athlete.country.toLowerCase()}`} className="group inline-flex items-center hover:text-ink">
                 <Flag ioc={athlete.country} className="mr-2" />
-                <span className="group-hover:underline">{athlete.country_name ?? athlete.country}</span>
+                <span className="group-hover:underline">{f.country(athlete.country, athlete.country_name)}</span>
               </Link>
             ) : (
-              <span>{athlete.country_name}</span>
+              <span>{f.country(athlete.country, athlete.country_name)}</span>
             )}
             {age !== null && (
               <>
                 <span className="inline-block w-px h-3 bg-rule mx-3 align-middle" />
-                <span>{age} y.o.</span>
+                <span>{n(d.athlete.header.age, age)}</span>
               </>
             )}
 
@@ -112,14 +113,14 @@ export function AthleteHeader({
         <div className="w-full md:w-[460px] max-w-[460px] md:ml-auto self-start">
           <div className="flex justify-between items-start gap-2 sm:gap-4">
             <div className="flex flex-col">
-              <span className={LABEL}>Rank</span>
+              <span className={LABEL}>{d.athlete.header.rank}</span>
               {inactive ? (
                 // why there is no rank: no contest in any weight for a year
                 <span
                   className="font-serif text-[22px] leading-[38px] font-bold text-ink mt-1"
-                  title="No contest for over a year: out of the tables until the next one"
+                  title={d.athlete.header.inactiveTitle}
                 >
-                  Inactive
+                  {d.athlete.header.inactive}
                 </span>
               ) : (
                 <span className={`${BIG} mt-1`}>{athlete.place ? `#${athlete.place}` : "–"}</span>
@@ -127,25 +128,25 @@ export function AthleteHeader({
             </div>
             {standing ? (
               <div className="flex flex-col items-start">
-                <span className={LABEL}>Best</span>
+                <span className={LABEL}>{d.athlete.header.best}</span>
                 <div className="flex items-center gap-2 mt-1">
                   {bestLink ? (
-                    <Link href={bestLink} className={`${BIG} ${LINKED}`} title="The table of that week">
+                    <Link href={bestLink} className={`${BIG} ${LINKED}`} title={d.athlete.header.tableOfWeek}>
                       #{standing.best}
                     </Link>
                   ) : (
                     <span className={BIG}>#{standing.best}</span>
                   )}
-                  <span className="text-xs text-muted leading-tight">{monthYear(standing.bestOn)}</span>
+                  <span className="text-xs text-muted leading-tight">{f.monthYear(standing.bestOn)}</span>
                 </div>
               </div>
             ) : (
             <div className="flex flex-col items-start">
-              <span className={LABEL}>Peak</span>
+              <span className={LABEL}>{d.athlete.header.peak}</span>
               <div className="flex items-center gap-2 mt-1">
                 {peakLink && athlete.peak_place ? (
                   // the table of that day, at the athlete's row
-                  <Link href={peakLink} className={`${BIG} ${LINKED}`} title="The table of that week">
+                  <Link href={peakLink} className={`${BIG} ${LINKED}`} title={d.athlete.header.tableOfWeek}>
                     #{athlete.peak_place}
                   </Link>
                 ) : (
@@ -154,7 +155,7 @@ export function AthleteHeader({
                 {athlete.peak_score !== null && athlete.peak_on && (
                   <div className="leading-tight flex flex-col">
                     <span className="text-xs font-semibold text-ink tabular-nums">{athlete.peak_score}</span>
-                    <span className="text-xs text-muted">{monthYear(athlete.peak_on)}</span>
+                    <span className="text-xs text-muted">{f.monthYear(athlete.peak_on)}</span>
                   </div>
                 )}
               </div>
@@ -162,7 +163,7 @@ export function AthleteHeader({
             )}
             <div
               className="flex flex-col items-start"
-              title="Position in the IJF World Ranking List. ↑ higher in IJF than in AJR, ↓ lower. Opens the athlete's IJF profile."
+              title={d.athlete.header.ijfTitle}
             >
               <span className={LABEL}>IJF</span>
               <div className="flex items-baseline gap-1.5 mt-1">
@@ -182,14 +183,14 @@ export function AthleteHeader({
             // week), each with its longest run
             <div className="mt-4 tabular-nums text-xs">
               <div className="grid grid-cols-3 gap-4 pb-1 text-[11px] uppercase tracking-wider text-muted font-semibold text-right">
-                <span className="text-left">Weeks</span>
-                <span>Total</span>
-                <span>Longest run</span>
+                <span className="text-left">{d.athlete.header.weeks}</span>
+                <span>{d.athlete.header.total}</span>
+                <span>{d.athlete.header.longestRun}</span>
               </div>
               {(
                 [
-                  ["At #1", "at #1", standing.atOne],
-                  ["P4P #1", "at #1 pound for pound", standing.p4pAtOne],
+                  [d.athlete.header.atOne, d.athlete.header.weeksAtOne, standing.atOne],
+                  [d.athlete.header.p4pAtOne, d.athlete.header.weeksP4pAtOne, standing.p4pAtOne],
                 ] as const
               )
                 .filter(([, , streak]) => streak.weeks > 0)
@@ -197,8 +198,8 @@ export function AthleteHeader({
                   <div key={label} className="grid grid-cols-3 gap-4 py-0.5 items-start text-right">
                     <span className="text-muted text-left">{label}</span>
                     {/* all its weeks, and its longest run */}
-                    <span>{marker({ spans: streak.spans, label: `${plural(streak.weeks)} ${phrase}` }, streak.weeks, true)}</span>
-                    <span>{marker({ spans: [{ from: streak.from!, to: streak.to! }], label: `${plural(streak.longest)} ${phrase}` }, streak.longest, false)}</span>
+                    <span>{marker({ spans: streak.spans, label: n(phrase, streak.weeks) }, streak.weeks, true)}</span>
+                    <span>{marker({ spans: [{ from: streak.from!, to: streak.to! }], label: n(phrase, streak.longest) }, streak.longest, false)}</span>
                   </div>
                 ))}
             </div>
@@ -207,33 +208,33 @@ export function AthleteHeader({
             <div className="flex flex-col">
               <div className="font-serif text-[56px] leading-none font-bold text-ink tabular-nums">{score}</div>
               <span className={`${LABEL} mt-2`}>
-                {inactive ? `Last rating, ${monthYear(inactive.day)}` : "Current rating"}
+                {inactive ? t(d.athlete.header.lastRating, { month: f.monthYear(inactive.day) }) : d.athlete.header.currentRating}
               </span>
             </div>
             <div className="tabular-nums text-xs pb-1">
               <div className="grid grid-cols-3 gap-4 pb-1 text-[11px] uppercase tracking-wider text-muted font-semibold text-right">
-                <span className="text-left">Change</span>
-                <span>Rating</span>
-                <span>Rank</span>
+                <span className="text-left">{d.athlete.header.change}</span>
+                <span>{d.athlete.header.rating}</span>
+                <span>{d.athlete.header.rank}</span>
               </div>
               {/* no changes for an inactive athlete: only the uncertainty moved */}
-              <ChangeRow label="90 days" score={inactive ? null : athlete.score_change_90d} places={inactive ? null : athlete.places_up_90d} />
-              <ChangeRow label="6 months" score={inactive ? null : athlete.score_change_6m} places={inactive ? null : athlete.places_up_6m} />
+              <ChangeRow label={d.athlete.header.days90} score={inactive ? null : athlete.score_change_90d} places={inactive ? null : athlete.places_up_90d} />
+              <ChangeRow label={d.athlete.header.months6} score={inactive ? null : athlete.score_change_6m} places={inactive ? null : athlete.places_up_6m} />
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-rule flex flex-wrap justify-between items-center text-xs gap-2">
             <div className="inline-flex items-center gap-1.5 text-xs text-muted">
               <span className="tabular-nums font-semibold text-ink">{rating}</span>
-              <span>skill</span>
+              <span>{d.athlete.header.skill}</span>
               <span className="text-[15px] leading-4 font-medium mx-1">−</span>
               <span className="tabular-nums font-semibold text-ink">{uncertainty}</span>
-              <span>uncertainty</span>
+              <span>{d.athlete.header.uncertainty}</span>
               <span className="text-[15px] leading-4 font-medium mx-1">=</span>
               <span className="tabular-nums font-bold text-ink">{score}</span>
             </div>
             <Link href="/methodology" className="font-serif text-[14px] leading-4 font-semibold text-claret hover:underline">
-              How it works
+              {d.athlete.header.howItWorks}
             </Link>
           </div>
         </div>

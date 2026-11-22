@@ -1,7 +1,8 @@
 import { Flag } from "@/components/Flag";
-import type { Competition } from "@/lib/api";
-import { dateRange, shortCompetition } from "@/lib/format";
 import { TournamentCrumbs, WeightTabs } from "@/components/tournament/TournamentNav";
+import { i18n } from "@/i18n/server";
+import type { Competition } from "@/lib/api";
+import { shortCompetition } from "@/lib/format";
 
 const DIVIDER = <span className="inline-block w-px h-3 bg-rule mx-3 align-middle" />;
 
@@ -21,7 +22,7 @@ export function stateOf(c: Competition, today: string): TournamentState {
 // The way back to Explore, the name, the place (and while it is not over, the days
 // and Upcoming or Live) and the weights: in the tournament's layout, it stays while
 // its weights change (the weight shown is read from the address: TournamentNav).
-export function TournamentHeader({
+export async function TournamentHeader({
   competition: c,
   state = "over",
   live = new Set(),
@@ -30,6 +31,7 @@ export function TournamentHeader({
   state?: TournamentState;
   live?: Set<string>;
 }) {
+  const { d, f, t } = await i18n();
   return (
     <>
       <TournamentCrumbs id={c.id} short={shortCompetition(c.name)} />
@@ -44,18 +46,16 @@ export function TournamentHeader({
         {state !== "over" && (
           <>
             {DIVIDER}
-            <span>
-              {dateRange(c.date_from, c.date_to)} {c.date_from.slice(0, 4)}
-            </span>
+            <span>{t(d.tournament.header.dates, { range: f.dateRange(c.date_from, c.date_to), year: c.date_from.slice(0, 4) })}</span>
             {DIVIDER}
             {state === "live" ? (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border border-claret text-claret">
                 <span className="w-1.5 h-1.5 rounded-full bg-claret" />
-                Live
+                {d.tournament.header.live}
               </span>
             ) : (
               <span className="text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border border-muted text-muted">
-                Upcoming
+                {d.tournament.header.upcoming}
               </span>
             )}
           </>
@@ -68,10 +68,11 @@ export function TournamentHeader({
 
 // While a weight's or the overview's data loads, under the header that stays: the
 // shapes of a podium and of a table, so that the page does not jump.
-export function TournamentSkeleton() {
+export async function TournamentSkeleton() {
+  const { d } = await i18n();
   const bar = "bg-rule/50 animate-pulse";
   return (
-    <div aria-busy="true" aria-label="Loading">
+    <div aria-busy="true" aria-label={d.tournament.header.loading}>
       <div className="mt-10 lg:mt-12 border-b-2 border-ink pb-2">
         <div className={`h-6 w-32 ${bar}`} />
       </div>
