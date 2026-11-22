@@ -283,6 +283,9 @@ resource "cloudflare_ruleset" "waf_custom" {
     # (cf.client.bot: Google, Bing, Yandex...); the site's pages are also limited per IP
     # (src/proxy.ts). Bot Fight Mode would challenge the site's own reads of
     # data.<domain> too, with no exceptions on the free plan.
+    # The same pages in another language live under a prefix ("/ru/athletes/...",
+    # src/i18n/locales.ts): the "/*/" lines cover any prefix (the wildcard operator
+    # knows only "*"), so a new language needs no change here.
     description = "www: a managed challenge on the heavy pages (scrapers)"
     action      = "managed_challenge"
     enabled     = true
@@ -294,7 +297,14 @@ resource "cloudflare_ruleset" "waf_custom" {
         http.request.uri.path eq "/head-to-head" or
         http.request.uri.path wildcard "/rankings/*/20*" or
         http.request.uri.path wildcard "/rankings/*/*/20*" or
-        (starts_with(http.request.uri.path, "/explore") and http.request.uri.query ne "")
+        (starts_with(http.request.uri.path, "/explore") and http.request.uri.query ne "") or
+        http.request.uri.path wildcard "/*/athletes/*" or
+        http.request.uri.path wildcard "/*/tournaments/*" or
+        http.request.uri.path wildcard "/*/contests/*" or
+        http.request.uri.path wildcard "/*/head-to-head" or
+        http.request.uri.path wildcard "/*/rankings/*/20*" or
+        http.request.uri.path wildcard "/*/rankings/*/*/20*" or
+        (http.request.uri.path wildcard "/*/explore*" and http.request.uri.query ne "")
       ))
     EOT
   }]
