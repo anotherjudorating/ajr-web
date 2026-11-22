@@ -27,6 +27,16 @@ const WORDS = arg(
   ].join(","),
 ).split(",");
 const WORD_RE = new RegExp(`(^|[^\\p{L}])(${WORDS.join("|")})(?=$|[^\\p{L}])`, "u");
+// Not words of the interface: the site's name, a file's name, a tournament's name
+// (its level in English: "Taipei Asian Open 2026") outside a link, a judobase level.
+const NOT_WORDS = [
+  /Another Judo Rating(, rating history)?/g,
+  /\S+\.(?:csv|gz|md|json)\b/g,
+  /\b(?:[A-Z][\w'.-]+ )+(?:Grand Slam|Grand Prix|Open|Cup|Masters|Championships|Games|Mixed Teams)\b(?: Mixed Teams)?( \d{4})?/g,
+  /(?<=\p{Script=Cyrillic} )Open\b/gu, // a level's name kept in Latin ("континентальные Open")
+  /rating deviation/g, // RD spelled out
+];
+const ALL = process.argv.includes("--all");
 
 const prefix = LANG === "en" ? "" : `/${LANG}`;
 const text = async (path) => {
@@ -86,10 +96,10 @@ const list = await pages();
 let failures = 0;
 for (const path of list) {
   try {
-    const hits = strings(await text(path)).filter((s) => WORD_RE.test(s));
+    const hits = strings(await text(path)).filter((s) => WORD_RE.test(NOT_WORDS.reduce((rest, re) => rest.replace(re, " "), s)));
     if (hits.length) {
       failures++;
-      console.log(`${path}: ${hits.length} English strings, e.g. ${JSON.stringify(hits.slice(0, 3))}`);
+      console.log(`${path}: ${hits.length} English strings, e.g. ${JSON.stringify(ALL ? hits : hits.slice(0, 3))}`);
     } else {
       console.log(`${path}: clean`);
     }

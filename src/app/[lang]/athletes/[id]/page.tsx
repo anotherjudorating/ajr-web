@@ -42,7 +42,7 @@ type I18n = Awaited<ReturnType<typeof i18n>>;
 // The athlete in a sentence or two, from the data: for search results and previews.
 function athleteSummary(a: Athlete, words: Dict["athlete"]["meta"], f: I18n["f"], t: I18n["t"]): string {
   const name = fullName(a.family_name, a.given_name);
-  const who = [a.country_name, a.birth_year ? t(words.born, { year: a.birth_year }) : null].filter(Boolean).join(", ");
+  const who = [a.country ? f.country(a.country, a.country_name) : a.country_name, a.birth_year ? t(words.born, { year: a.birth_year }) : null].filter(Boolean).join(", ");
   const weight = WEIGHTS.find((w) => w.api === a.weight);
   const where = weight ? f.weightTitle(weight).toLowerCase() : words.judo;
   const standing =

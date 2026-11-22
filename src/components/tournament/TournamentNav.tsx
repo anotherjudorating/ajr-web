@@ -40,8 +40,8 @@ export function WeightTabs({ id, weights, live, all }: { id: number; weights: st
   const weight = useWeight();
   const { d } = useI18n();
   const rows = [
-    { label: d.common.gender.men, weights: MEN },
-    { label: d.common.gender.women, weights: WOMEN },
+    { label: d.rankings.switcher.men, weights: MEN },
+    { label: d.rankings.switcher.women, weights: WOMEN },
   ]
     .map((row) => ({ ...row, weights: all ? row.weights : row.weights.filter((w) => weights.includes(w.api)) }))
     .filter((row) => row.weights.length > 0);
@@ -49,7 +49,7 @@ export function WeightTabs({ id, weights, live, all }: { id: number; weights: st
     <nav className="mt-6 flex flex-col gap-1 sm:max-w-[560px]" aria-label={d.tournament.nav.weightCategories}>
       {rows.map((row) => (
         <div key={row.label} className="flex items-center">
-          <span className="w-14 shrink-0 text-[11px] font-bold uppercase tracking-wider text-muted">{row.label}</span>
+          <span className="min-w-14 shrink-0 text-[11px] font-bold uppercase tracking-wider text-muted">{row.label}</span>
           <div className="flex flex-1 items-center justify-between sm:justify-start sm:gap-2 text-[13px] sm:text-[15px]">
             <Link href={`/tournaments/${id}`} className={weight ? IDLE : ACTIVE}>
               {d.tournament.nav.all}

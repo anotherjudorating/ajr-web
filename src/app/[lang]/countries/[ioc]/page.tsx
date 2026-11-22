@@ -24,12 +24,11 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/countries/
   const code = codeOf(ioc);
   const found = code ? await country(code) : null;
   if (!found) notFound(); // a crawler is sent the head first: only here does a 404 get its status
-  const { d, t } = await i18n();
+  const { d, f, t } = await i18n();
+  const name = f.country(found.country, found.name);
   return {
-    title: t(d.country.meta.title, { name: found.name }),
-    description: found.place
-      ? t(d.country.meta.descriptionPlaced, { name: found.name, place: found.place })
-      : t(d.country.meta.description, { name: found.name }),
+    title: t(d.country.meta.title, { name }),
+    description: found.place ? t(d.country.meta.descriptionPlaced, { name, place: found.place }) : t(d.country.meta.description, { name }),
     alternates: alternatesFor(await currentLang(), `/countries/${ioc}`),
   };
 }

@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/rankings/t
   const { lang, d, f, t } = await i18n();
   const title = t(d.rankings.nations.title, { who: d.rankings.nations.who[kind] });
   const { past } = await tableDay(day);
-  const top = (await teams(kind, past)).slice(0, 3).map((r) => `${r.place}. ${r.country_name ?? r.country}`).join(", ");
+  const top = (await teams(kind, past)).slice(0, 3).map((r) => `${r.place}. ${f.country(r.country, r.country_name)}`).join(", ");
   const description = top ? t(d.rankings.nations.descriptionTop, { description: d.rankings.nations.description, top }) : d.rankings.nations.description;
   return past
     ? { title: t(d.rankings.pastTitle, { title, date: f.formatDate(past) }), description, alternates: alternatesFor(lang, `/rankings/teams/${kind}/${(day ?? []).join("/")}`, { indexed: false }), robots: NOINDEX } // a past day

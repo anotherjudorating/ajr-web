@@ -34,7 +34,7 @@ export function P4PBrowser({
   countryNames?: Record<string, string>; // IOC code → name, for the table's countries (lib/api.ts countryNames)
   loading?: boolean;
 }) {
-  const { d, t } = useI18n();
+  const { d, f, t } = useI18n();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("");
@@ -51,9 +51,9 @@ export function P4PBrowser({
   const countries = useMemo(
     () =>
       [...new Set(rows.map((r) => r.country).filter((c): c is string => !!c))]
-        .map((code) => ({ code, name: countryNames[code] ?? code }))
+        .map((code) => ({ code, name: f.country(code, countryNames[code]) }))
         .sort((a, b) => a.name.localeCompare(b.name)),
-    [rows, countryNames],
+    [rows, countryNames, f],
   );
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();

@@ -7,7 +7,7 @@ import { Flag } from "@/components/Flag";
 import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HEAD_CELL, Pagination, PlaceholderRows, ROW_CELL, saveCsv } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
-import { useDict } from "@/i18n/client";
+import { useI18n } from "@/i18n/client";
 import type { NationRow } from "@/lib/api";
 
 // The sorts, named in the dictionary (d.explore.nations.sort).
@@ -15,21 +15,23 @@ const SORTS = ["name-asc", "name-desc", "athletes-desc", "athletes-asc"] as cons
 
 // Every nation with rated athletes; a row opens the nation's page.
 export function NationsBrowser({ rows, loading = false }: { rows: NationRow[]; loading?: boolean }) {
-  const x = useDict().explore.nations;
+  const { d, f } = useI18n();
+  const x = d.explore.nations;
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("name-asc");
   const [size, setSize] = useState(50);
   const [page, setPage] = useState(1);
 
   const shown = useMemo(() => {
+    const nameOf = (r: NationRow) => f.country(r.country, r.name);
     const needle = query.trim().toLowerCase();
-    const filtered = rows.filter((r) => !needle || `${r.name} ${r.country}`.toLowerCase().includes(needle));
+    const filtered = rows.filter((r) => !needle || `${nameOf(r)} ${r.name} ${r.country}`.toLowerCase().includes(needle));
     const [key, direction] = sort.split("-");
     const sign = direction === "asc" ? 1 : -1;
     return [...filtered].sort((a, b) =>
-      key === "name" ? sign * a.name.localeCompare(b.name) : sign * (a.athletes - b.athletes) || a.name.localeCompare(b.name),
+      key === "name" ? sign * nameOf(a).localeCompare(nameOf(b), f.lang) : sign * (a.athletes - b.athletes) || nameOf(a).localeCompare(nameOf(b), f.lang),
     );
-  }, [rows, query, sort]);
+  }, [rows, query, sort, f]);
   const pages = Math.max(1, Math.ceil(shown.length / size));
   const current = Math.min(page, pages);
   const first = (current - 1) * size;
@@ -75,7 +77,7 @@ export function NationsBrowser({ rows, loading = false }: { rows: NationRow[]; l
               <td className={ROW_CELL}>
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Flag ioc={row.country} />
-                  <span className="font-medium truncate">{row.name}</span>
+                  <span className="font-medium truncate">{f.country(row.country, row.name)}</span>
                 </div>
               </td>
               <td className={`${ROW_CELL} text-right tabular-nums`}>

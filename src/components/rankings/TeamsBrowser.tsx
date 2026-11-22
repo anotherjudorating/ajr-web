@@ -33,7 +33,7 @@ export function TeamsBrowser({
   csvName: string;
   loading?: boolean;
 }) {
-  const { d, t } = useI18n();
+  const { d, f, t } = useI18n();
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("");
@@ -51,16 +51,16 @@ export function TeamsBrowser({
     () =>
       rows
         .filter((r) => r.country)
-        .map((r) => ({ code: r.country!, name: r.country_name ?? r.country! }))
+        .map((r) => ({ code: r.country!, name: f.country(r.country, r.country_name) }))
         .sort((a, b) => a.name.localeCompare(b.name)),
-    [rows],
+    [rows, f],
   );
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const filtered = rows.filter(
       (r) =>
         (!country || r.country === country) &&
-        (!needle || `${r.country_name ?? ""} ${r.country ?? ""}`.toLowerCase().includes(needle)),
+        (!needle || `${r.country_name ?? ""} ${f.country(r.country, r.country_name)} ${r.country ?? ""}`.toLowerCase().includes(needle)),
     );
     const value: Record<Sort, (r: TeamRow) => number> = {
       "rating-desc": (r) => -r.rating,
@@ -69,7 +69,7 @@ export function TeamsBrowser({
       "top8-desc": (r) => -r.weights_top8 * 10000 - r.rating / 10,
     };
     return [...filtered].sort((a, b) => value[sort](a) - value[sort](b));
-  }, [rows, query, country, sort]);
+  }, [rows, query, country, sort, f]);
 
   // #nation-<ioc> (a country page's peak): that nation's row, opened at its page,
   // marked and scrolled to, as an athlete's in the weights' tables
@@ -140,7 +140,7 @@ export function TeamsBrowser({
               <RowLink
                 key={row.country ?? index}
                 href={row.country ? `/countries/${row.country.toLowerCase()}` : "/rankings/teams/mixed"}
-                label={row.country_name ?? row.country ?? undefined}
+                label={f.country(row.country, row.country_name) || undefined}
                 id={row.country ? nationRow(row.country) : undefined}
                 className={`border-b border-rule hover:bg-panel/60 ${row.country === marked ? lit.row : ""}`}
               >
@@ -150,7 +150,7 @@ export function TeamsBrowser({
                 <td className={`${ROW_CELL} font-medium`}>
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Flag ioc={row.country} />
-                    <span className="truncate">{row.country_name ?? row.country}</span>
+                    <span className="truncate">{f.country(row.country, row.country_name)}</span>
                   </div>
                 </td>
                 <td className={`${ROW_CELL} hidden sm:table-cell text-right tabular-nums`}>{row.weights_led}</td>

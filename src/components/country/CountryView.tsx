@@ -30,7 +30,7 @@ export async function CountryView({
   tournaments: CountryTournament[];
   today: string;
 }) {
-  const { d, n } = await i18n();
+  const { d, f, n } = await i18n();
   const words = d.country.header;
   const changes = [
     { label: words.days90, rating: c.rating_90d, place: c.place_90d },
@@ -46,13 +46,13 @@ export async function CountryView({
           { href: "/explore/tournaments", label: d.country.explore },
           { href: "/explore/nations", label: d.country.nations },
         ]}
-        current={c.name}
+        current={f.country(c.country, c.name)}
       />
       <header className="mt-3 flex flex-col md:flex-row justify-between items-start gap-8 md:gap-6">
         <div className="flex flex-col">
           <h1 className="font-serif text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold tracking-[-0.015em] flex items-center gap-3">
             <Flag ioc={c.country} className="!w-8 !h-6" />
-            {c.name}
+            {f.country(c.country, c.name)}
           </h1>
           <div className="mt-1.5 flex items-center text-[14px] text-muted">
             {continent && (

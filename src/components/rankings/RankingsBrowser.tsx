@@ -164,9 +164,9 @@ export function RankingsBrowser({
   const countries = useMemo(() => {
     const codes = partial ? Object.keys(countryNames) : rows.map((r) => r.country).filter((c): c is string => !!c);
     return [...new Set(codes)]
-      .map((code) => ({ code, name: countryNames[code] ?? code }))
+      .map((code) => ({ code, name: f.country(code, countryNames[code]) }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [partial, rows, countryNames]);
+  }, [partial, rows, countryNames, f]);
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const filtered = rows.filter(
@@ -311,7 +311,7 @@ export function RankingsBrowser({
                       <td className={`${CELL} hidden sm:table-cell text-[12px] leading-[16px] whitespace-nowrap`}>
                         <div className="inline-flex items-center gap-1.5">
                           <Flag ioc={row.country} />
-                          <span title={row.country ? countryNames[row.country] : undefined}>{row.country}</span>
+                          <span title={row.country ? f.country(row.country, countryNames[row.country]) : undefined}>{row.country}</span>
                         </div>
                       </td>
                       <td className={`${CELL} w-14 sm:w-20 text-right font-bold tabular-nums relative group cursor-pointer`}>
