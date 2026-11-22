@@ -5,7 +5,7 @@ import { Suspense } from "react";
 
 import { Footer } from "@/components/Footer";
 import { CurrentHeader, Header } from "@/components/Header";
-import { LanguageHint } from "@/components/LanguageHint";
+import { LanguageRedirect } from "@/components/LanguageRedirect";
 import "../globals.css";
 import { type Lang, LANGS, localeOf, PUBLISHED } from "@/i18n/locales";
 import { LocaleGate } from "@/i18n/LocaleGate";
@@ -92,7 +92,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
             {/* below md the sections are a second fixed row (36px) under the header;
                 the paddings are the prototype's (its script sets them) */}
             <div className="md:hidden h-9" />
-            <LanguageHint />
+            <LanguageRedirect />
             {children}
           </main>
           <Suspense fallback={null}>

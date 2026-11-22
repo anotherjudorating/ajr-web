@@ -37,7 +37,7 @@ export function proxy(request: NextRequest) {
   }
   // Nothing here reads Accept-Language or the language cookie: a page's HTML is cached
   // at the edge for hours for everyone, so the language can only be chosen in the
-  // browser (src/components/LanguageHint.tsx).
+  // browser (src/components/LanguageRedirect.tsx).
   const { rewrite, redirect } = language(request.nextUrl.pathname);
   if (redirect) {
     const url = request.nextUrl.clone();

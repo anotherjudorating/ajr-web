@@ -11,11 +11,8 @@ export type Locale = {
   short: string; // the switcher's label next to the icon
   htmlLang: string;
   ogLocale: string;
-  // The first-visit hint, in this language (the reader's, not the page's: the page's
-  // dictionary is the only one the browser has): the text, "open", "do not suggest".
-  hint: { text: string; open: string; dismiss: string };
   // A language is published when all its strings are proofread: only then is it in
-  // the hreflang alternates, the sitemap, the switcher and the first-visit hint.
+  // the hreflang alternates, the sitemap, the switcher and the first-visit redirect.
   // An unpublished language's pages still render (for checking), with noindex.
   published: boolean;
 };
@@ -27,7 +24,6 @@ export const LOCALES: readonly Locale[] = [
     short: "EN",
     htmlLang: "en",
     ogLocale: "en_GB",
-    hint: { text: "This site is available in English", open: "Open", dismiss: "Don't suggest again" },
     published: true,
   },
   {
@@ -36,7 +32,6 @@ export const LOCALES: readonly Locale[] = [
     short: "RU",
     htmlLang: "ru",
     ogLocale: "ru_RU",
-    hint: { text: "Этот сайт есть на русском", open: "Открыть", dismiss: "Не предлагать" },
     published: false,
   },
 ];

@@ -11,13 +11,15 @@ export function rememberLang(lang: Lang) {
   document.cookie = `${LANG_COOKIE}=${lang}; Max-Age=${LANG_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
 }
 
-// The header's language menu: the "language" icon (a globe; not "translate", which
-// says machine translation) and, from md, the language's code. The menu lists the
+// The header's language menu, drawn as the search's dropdown (the same panel, rows of
+// 32px, ink text, the panel colour on hover): the "language" icon (a globe; not
+// "translate", which says machine translation) and, from md, the language's code and a
+// chevron. The current language is marked with a claret check. The menu lists the
 // published languages by their own names, the current one marked and not a link.
 // Each item is a real link to the same page (path, query and hash) in that language,
 // for the keyboard and for crawlers; a click also remembers the choice. Shown only
 // when there is a language to switch to.
-export function LanguageSwitch({ pathname, label = true, className = "" }: { pathname: string; label?: boolean; className?: string }) {
+export function LanguageSwitch({ pathname, label = true, chevron = true, className = "" }: { pathname: string; label?: boolean; chevron?: boolean; className?: string }) {
   const d = useDict();
   const lang = useLang();
   const box = useRef<HTMLDivElement>(null);
@@ -56,16 +58,18 @@ export function LanguageSwitch({ pathname, label = true, className = "" }: { pat
       >
         <Icon size={22} name="language" />
         {label && <span className="text-[13px] font-medium tracking-wide">{localeOf(lang).short}</span>}
+        {label && chevron && <Icon size={16} name="expand_more" className={`transition-transform ${open ? "rotate-180" : ""}`} />}
       </button>
       {open && (
         <ul
           role="menu"
-          className="absolute right-0 top-full mt-1 z-[60] min-w-[160px] py-1 bg-paper border border-ink shadow-[0_8px_24px_rgba(51,48,46,0.12)]"
+          className="absolute right-0 top-full mt-1 z-[60] w-[200px] py-1 bg-paper border border-ink shadow-[0_8px_24px_rgba(51,48,46,0.12)]"
         >
           {PUBLISHED.map((locale) =>
             locale.code === lang ? (
-              <li key={locale.code} role="menuitem" aria-current="true" className="px-3 h-9 flex items-center text-[13px] font-medium text-ink">
+              <li key={locale.code} role="menuitem" aria-current="true" className="px-3 h-8 flex items-center justify-between text-[13px] font-semibold text-ink">
                 {locale.name}
+                <Icon size={16} name="check" className="text-claret" />
               </li>
             ) : (
               <li key={locale.code} role="none">
@@ -78,7 +82,7 @@ export function LanguageSwitch({ pathname, label = true, className = "" }: { pat
                     rememberLang(locale.code);
                     setOpen(false);
                   }}
-                  className="px-3 h-9 flex items-center text-[13px] text-muted hover:text-ink hover:bg-panel"
+                  className="px-3 h-8 flex items-center text-[13px] text-ink hover:bg-panel"
                 >
                   {locale.name}
                 </a>

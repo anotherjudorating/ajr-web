@@ -101,7 +101,7 @@ export function Header({ pathname }: { pathname: string }) {
                 {d.site.name}
               </Link>
               {/* ml-auto: with the switcher hidden the row is as before (two ends) */}
-              <LanguageSwitch pathname={pathname} label={false} className="ml-auto" />
+              <LanguageSwitch pathname={pathname} chevron={false} className="ml-auto" />
               <button
                 type="button"
                 aria-label={d.site.header.searchAthletes}
