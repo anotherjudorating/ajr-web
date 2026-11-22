@@ -1,15 +1,14 @@
 import "flag-icons/css/flag-icons.min.css";
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
-import { Suspense } from "react";
+import { type ComponentType, type ReactNode, Suspense } from "react";
 
 import { Footer } from "@/components/Footer";
 import { CurrentHeader, Header } from "@/components/Header";
 import { LanguageHint } from "@/components/LanguageHint";
 import "../globals.css";
 import { type Lang, LANGS, localeOf, PUBLISHED } from "@/i18n/locales";
-import EnProvider from "@/i18n/providers/en";
-import RuProvider from "@/i18n/providers/ru";
 import { currentLang, dict } from "@/i18n/server";
 import { NOINDEX, SITE } from "@/lib/seo";
 
@@ -41,8 +40,12 @@ const FONTS: Record<Lang, string> = {
 };
 
 // The dictionary each language's pages hand the browser: one client chunk a language
-// (src/i18n/providers), the page loads only its own.
-const PROVIDERS: Record<Lang, typeof EnProvider> = { en: EnProvider, ru: RuProvider };
+// (src/i18n/providers), and the page loads only its own. Imported on demand: imported
+// statically, Turbopack put both in the chunk every page loads.
+const PROVIDERS: Record<Lang, ComponentType<{ children: ReactNode }>> = {
+  en: dynamic(() => import("@/i18n/providers/en")),
+  ru: dynamic(() => import("@/i18n/providers/ru")),
+};
 
 // The language is the root parameter (/ru/...; English has no prefix: src/proxy.ts
 // rewrites its paths to /en/... inside). Every page is prerendered once a language.
