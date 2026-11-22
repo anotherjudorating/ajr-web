@@ -6,16 +6,14 @@ import { athletesPage, lastUpdate, nations } from "@/lib/api";
 import { plain } from "@/lib/params";
 import { WEIGHTS } from "@/lib/weights";
 import { alternatesFor, hasParams, NOINDEX } from "@/lib/seo";
-import { currentLang } from "@/i18n/server";
+import { i18n } from "@/i18n/server";
 
 // The list is indexed; a filtered or sorted state of it is not.
 export async function generateMetadata({ searchParams }: PageProps<"/[lang]/explore/athletes">): Promise<Metadata> {
-  const metadata: Metadata = {
-    title: "Every rated judoka, search by name, nation and weight",
-    description: "Every judoka with a rating since 2009: search by name, filter by nation and weight, sort by rating, name or age.",
-  };
+  const { lang, d } = await i18n();
+  const metadata: Metadata = { title: d.explore.athletes.meta.title, description: d.explore.athletes.meta.description };
   const filtered = hasParams(await searchParams);
-  metadata.alternates = alternatesFor(await currentLang(), "/explore/athletes", { indexed: !filtered });
+  metadata.alternates = alternatesFor(lang, "/explore/athletes", { indexed: !filtered });
   return filtered ? { ...metadata, robots: NOINDEX } : metadata;
 }
 

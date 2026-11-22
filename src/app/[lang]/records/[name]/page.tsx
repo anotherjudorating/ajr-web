@@ -6,11 +6,12 @@ import { Suspense } from "react";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { RecordBrowser } from "@/components/records/RecordBrowser";
+import { recordText, viewText } from "@/components/records/text";
+import { i18n } from "@/i18n/server";
 import { record } from "@/lib/api";
-import { GROUPS, MOVED, recordBySlug, RECORDS, recordView } from "@/lib/records";
+import { MOVED, recordBySlug, RECORDS, recordView } from "@/lib/records";
 import { weightBySlug } from "@/lib/weights";
 import { alternatesFor, hasParams, NOINDEX } from "@/lib/seo";
-import { currentLang } from "@/i18n/server";
 
 export function generateStaticParams() {
   return RECORDS.map((r) => ({ name: r.slug }));
@@ -22,10 +23,12 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/[la
   const info = recordBySlug(slug);
   if (!info) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const filtered = hasParams(await searchParams); // a gender or weight picked
+  const { lang, d, t } = await i18n();
+  const text = recordText(d, info);
   const metadata = {
-    title: `${info.title}, judo record`,
-    description: info.description,
-    alternates: alternatesFor(await currentLang(), `/records/${slug}`, { indexed: !filtered }),
+    title: t(d.records.pageTitle, { title: text.title }),
+    description: text.description,
+    alternates: alternatesFor(lang, `/records/${slug}`, { indexed: !filtered }),
   };
   return filtered ? { ...metadata, robots: NOINDEX } : metadata;
 }
@@ -47,27 +50,28 @@ async function Record({ params, searchParams }: PageProps<"/[lang]/records/[name
   if (!info) notFound();
   const query = await searchParams;
   const view = recordView(info, typeof query.view === "string" ? query.view : undefined);
-  const group = GROUPS.find((g) => g.key === info.group)!;
+  const { d } = await i18n();
+  const text = recordText(d, info);
 
   return (
     <>
       <Breadcrumbs
         trail={[
-          { href: "/records", label: "Records" },
-          { href: `/records#${group.key}`, label: group.title },
+          { href: "/records", label: d.records.title },
+          { href: `/records#${info.group}`, label: d.records.groups[info.group] },
         ]}
-        current={info.title}
+        current={text.title}
       />
       <h1 className="font-serif mt-3 text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold tracking-[-0.015em]">
-        {info.title}
+        {text.title}
       </h1>
       <p className="mt-1.5 text-[14px] text-muted max-w-3xl">
-        {view.description}
+        {viewText(d, info, view).description}
         {info.methodology && (
           <>
             {" "}
             <Link href="/methodology" className="font-serif font-semibold text-claret hover:underline whitespace-nowrap">
-              How ratings work
+              {d.records.howRatingsWork}
             </Link>
           </>
         )}

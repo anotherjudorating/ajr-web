@@ -10,15 +10,13 @@ import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { isUpset } from "@/components/rankings/Changes";
 import { HEAD_CELL, Pagination, PlaceholderRows, saveCsv } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
+import { useI18n } from "@/i18n/client";
 import type { ContestListRow } from "@/lib/api";
-import { competitionCode, formatChance, roundCode, shortCompetition, shortDate, shortName, signed } from "@/lib/format";
-import { WEIGHTS, weightTitle } from "@/lib/weights";
+import { competitionCode, roundCode, shortCompetition, shortName, signed } from "@/lib/format";
+import { WEIGHTS } from "@/lib/weights";
 
-const SORTS = [
-  { value: "date-desc", label: "Sort: date ↓" },
-  { value: "date-asc", label: "Sort: date ↑" },
-  { value: "chance-asc", label: "Sort: winner's chance ↑" },
-];
+// The sorts, named in the dictionary (d.explore.contests.sort).
+const SORTS = ["date-desc", "date-asc", "chance-asc"] as const;
 const PATH = "/explore/contests";
 const CELL = "px-2 sm:px-3 py-2 align-middle";
 
@@ -37,6 +35,8 @@ export function ContestsBrowser({
   years: number[];
   loading?: boolean;
 }) {
+  const { d, f } = useI18n();
+  const x = d.explore.contests;
   const set = useFilters(PATH, filters);
   const [query, setQuery] = useState(filters.q ?? "");
   // the search goes to the URL once typing pauses
@@ -53,14 +53,14 @@ export function ContestsBrowser({
 
   return (
     <>
-      <ExploreTitle title="Contests" lead="Every rated contest with win chances and rating changes." />
+      <ExploreTitle title={x.title} lead={x.lead} />
       <ToolbarRow>
-        <SearchBox value={query} onChange={setQuery} placeholder="Search athlete" />
+        <SearchBox value={query} onChange={setQuery} placeholder={d.explore.filters.searchAthlete} />
         <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
           <Select
             value={filters.tournament ?? ""}
             onChange={(value) => set({ tournament: value })}
-            options={[{ value: "", label: "All tournaments" }, ...tournamentOptions(tournaments)]}
+            options={[{ value: "", label: d.explore.filters.allTournaments }, ...tournamentOptions(tournaments)]}
             className="md:max-w-[180px]"
           />
           <Select
@@ -71,20 +71,20 @@ export function ContestsBrowser({
           <Select
             value={filters.weight ?? ""}
             onChange={(value) => set({ weight: value })}
-            options={[{ value: "", label: "All weights" }, ...WEIGHTS.map((w) => ({ value: w.slug, label: weightTitle(w) }))]}
+            options={[{ value: "", label: d.explore.filters.allWeights }, ...WEIGHTS.map((w) => ({ value: w.slug, label: f.weightTitle(w) }))]}
           />
           <Select
             value={filters.result ?? ""}
             onChange={(value) => set({ result: value })}
             options={[
-              { value: "", label: "All contests" },
-              { value: "upsets", label: "Upsets" },
+              { value: "", label: x.allContests },
+              { value: "upsets", label: x.upsets },
             ]}
           />
         </div>
         <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto">
           <div className="min-w-0 grid md:block">
-            <Select value={filters.sort ?? "date-desc"} onChange={(value) => set({ sort: value })} options={SORTS} />
+            <Select value={filters.sort ?? "date-desc"} onChange={(value) => set({ sort: value })} options={SORTS.map((value) => ({ value, label: x.sort[value] }))} />
           </div>
           <CsvButton onClick={() => downloadCsv(rows, filters.year ?? "")} />
         </div>
@@ -93,15 +93,15 @@ export function ContestsBrowser({
       <table className="w-full table-fixed border-collapse text-left">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-left`}>Athletes</th>
-            <th className={`${HEAD_CELL} hidden md:table-cell w-36 text-left`}>Tournament</th>
-            <th className={`${HEAD_CELL} hidden sm:table-cell w-16 text-left`}>Weight</th>
-            <th className={`${HEAD_CELL} hidden sm:table-cell w-16 text-left`}>Round</th>
-            <th className={`${HEAD_CELL} sm:hidden w-16 text-left`}>Round</th>
+            <th className={`${HEAD_CELL} text-left`}>{x.columns.athletes}</th>
+            <th className={`${HEAD_CELL} hidden md:table-cell w-36 text-left`}>{x.columns.tournament}</th>
+            <th className={`${HEAD_CELL} hidden sm:table-cell w-16 text-left`}>{x.columns.weight}</th>
+            <th className={`${HEAD_CELL} hidden sm:table-cell w-16 text-left`}>{x.columns.round}</th>
+            <th className={`${HEAD_CELL} sm:hidden w-16 text-left`}>{x.columns.round}</th>
             <th className={`${HEAD_CELL} hidden lg:table-cell w-20`} />
-            <th className={`${HEAD_CELL} w-14 sm:w-20 text-right`}>Chance</th>
-            <th className={`${HEAD_CELL} w-10 text-center`}>W/L</th>
-            <th className={`${HEAD_CELL} w-12 sm:w-16 text-right`}>+/−</th>
+            <th className={`${HEAD_CELL} w-14 sm:w-20 text-right`}>{x.columns.chance}</th>
+            <th className={`${HEAD_CELL} w-10 text-center`}>{x.columns.result}</th>
+            <th className={`${HEAD_CELL} w-12 sm:w-16 text-right`}>{x.columns.change}</th>
             <th className="w-8 sm:w-10 h-9 py-0" />
           </tr>
         </thead>
@@ -131,7 +131,7 @@ export function ContestsBrowser({
                 </td>
                 <td className={`${CELL} hidden md:table-cell`}>
                   <div className="truncate text-ink">{shortCompetition(row.competition)}</div>
-                  <div className="text-[12px] text-muted">{shortDate(row.day)} {row.day.slice(0, 4)}</div>
+                  <div className="text-[12px] text-muted">{f.shortDate(row.day)} {row.day.slice(0, 4)}</div>
                 </td>
                 <td className={`${CELL} hidden sm:table-cell text-muted`}>{row.weight?.replace("-", "−")}</td>
                 <td className={`${CELL} hidden sm:table-cell text-muted`}>{roundCode(row.round)}</td>
@@ -146,7 +146,7 @@ export function ContestsBrowser({
                 <td className={`${CELL} hidden lg:table-cell text-right`}>
                   {upset && (
                     <span className="text-[10px] font-bold uppercase tracking-[0.05em] px-1.5 py-0.5 border border-gain text-gain">
-                      Upset
+                      {x.upset}
                     </span>
                   )}
                 </td>
@@ -156,7 +156,7 @@ export function ContestsBrowser({
                     const surprise = upset && (won ? "text-gain font-semibold" : "text-drop font-semibold");
                     return (
                       <div key={s.id} className={`h-6 leading-6 ${surprise || "text-muted"}`}>
-                        {formatChance(s.chance)}
+                        {f.formatChance(s.chance)}
                       </div>
                     );
                   })}
@@ -164,7 +164,7 @@ export function ContestsBrowser({
                 <td className={`${CELL} text-center font-bold`}>
                   {sides.map((s) => (
                     <div key={s.id} className={`h-6 leading-6 ${s.id === row.winner_id ? "text-gain" : "text-drop"}`}>
-                      {s.id === row.winner_id ? "W" : "L"}
+                      {s.id === row.winner_id ? x.won : x.lost}
                     </div>
                   ))}
                 </td>
@@ -183,13 +183,13 @@ export function ContestsBrowser({
           })}
         </tbody>
       </table>
-      {!loading && rows.length === 0 && <p className="py-6 text-[14px] text-muted">No contests match these filters.</p>}
+      {!loading && rows.length === 0 && <p className="py-6 text-[14px] text-muted">{x.empty}</p>}
       <Pagination
         loading={loading}
         total={total}
         first={(page - 1) * size}
         count={rows.length}
-        noun="contests"
+        noun={x.noun}
         pageSize={size}
         onPageSize={(value) => set({ size: String(value) })}
         page={page}

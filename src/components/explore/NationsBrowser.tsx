@@ -7,17 +7,15 @@ import { Flag } from "@/components/Flag";
 import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HEAD_CELL, Pagination, PlaceholderRows, ROW_CELL, saveCsv } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
+import { useDict } from "@/i18n/client";
 import type { NationRow } from "@/lib/api";
 
-const SORTS = [
-  { value: "name-asc", label: "Sort: name ↑" },
-  { value: "name-desc", label: "Sort: name ↓" },
-  { value: "athletes-desc", label: "Sort: athletes ↓" },
-  { value: "athletes-asc", label: "Sort: athletes ↑" },
-];
+// The sorts, named in the dictionary (d.explore.nations.sort).
+const SORTS = ["name-asc", "name-desc", "athletes-desc", "athletes-asc"] as const;
 
 // Every nation with rated athletes; a row opens the nation's page.
 export function NationsBrowser({ rows, loading = false }: { rows: NationRow[]; loading?: boolean }) {
+  const x = useDict().explore.nations;
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("name-asc");
   const [size, setSize] = useState(50);
@@ -39,7 +37,7 @@ export function NationsBrowser({ rows, loading = false }: { rows: NationRow[]; l
 
   return (
     <>
-      <ExploreTitle title="Nations" lead="Every nation with rated athletes." />
+      <ExploreTitle title={x.title} lead={x.lead} />
       <ToolbarRow>
         <SearchBox
           value={query}
@@ -47,11 +45,11 @@ export function NationsBrowser({ rows, loading = false }: { rows: NationRow[]; l
             setQuery(value);
             setPage(1);
           }}
-          placeholder="Search nation"
+          placeholder={x.search}
         />
         <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto">
           <div className="min-w-0 grid md:block">
-            <Select value={sort} onChange={setSort} options={SORTS} />
+            <Select value={sort} onChange={setSort} options={SORTS.map((value) => ({ value, label: x.sort[value] }))} />
           </div>
           <CsvButton
             onClick={() =>
@@ -63,9 +61,9 @@ export function NationsBrowser({ rows, loading = false }: { rows: NationRow[]; l
       <table className="w-full table-fixed border-collapse text-left">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-left`}>Nation</th>
-            <th className={`${HEAD_CELL} w-24 sm:w-32 text-right`} title="Rated athletes; in brackets those in a table today">
-              Athletes
+            <th className={`${HEAD_CELL} text-left`}>{x.columns.nation}</th>
+            <th className={`${HEAD_CELL} w-24 sm:w-32 text-right`} title={x.columns.athletesTip}>
+              {x.columns.athletes}
             </th>
             <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
@@ -90,13 +88,13 @@ export function NationsBrowser({ rows, loading = false }: { rows: NationRow[]; l
           ))}
         </tbody>
       </table>
-      {!loading && shown.length === 0 && <p className="py-6 text-[14px] text-muted">No nations match these filters.</p>}
+      {!loading && shown.length === 0 && <p className="py-6 text-[14px] text-muted">{x.empty}</p>}
       <Pagination
         loading={loading}
         total={shown.length}
         first={first}
         count={pageRows.length}
-        noun="nations"
+        noun={x.noun}
         pageSize={size}
         onPageSize={(value) => {
           setSize(value);

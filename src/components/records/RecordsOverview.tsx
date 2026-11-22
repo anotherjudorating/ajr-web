@@ -5,7 +5,9 @@ import { useState, useSyncExternalStore } from "react";
 
 import { recordColumns } from "@/components/records/columns";
 import { RecordTable } from "@/components/records/RecordTable";
+import { recordText } from "@/components/records/text";
 import { ViewSwitch } from "@/components/records/ViewSwitch";
+import { useI18n } from "@/i18n/client";
 import type { RecordRow } from "@/lib/api";
 import { GROUPS, type Group, places, RECORDS, type RecordInfo, recordView } from "@/lib/records";
 
@@ -22,7 +24,7 @@ function subscribe(onChange: () => void) {
 }
 function useGroup(): Group {
   const hash = useSyncExternalStore(subscribe, () => location.hash.slice(1), () => "");
-  return GROUPS.some((g) => g.key === hash) ? (hash as Group) : "ratings";
+  return (GROUPS as readonly string[]).includes(hash) ? (hash as Group) : "ratings";
 }
 
 type Gender = "" | "male" | "female";
@@ -30,6 +32,7 @@ type Gender = "" | "male" | "female";
 // /records: the group tabs, the Men/Women filter and the top 5 of each record.
 export function RecordsOverview({ rows }: { rows: Record<Gender, RecordRow[]> }) {
   const group = useGroup();
+  const { d } = useI18n();
   const [gender, setGender] = useState<Gender>("");
   const shown = rows[gender];
 
@@ -39,31 +42,31 @@ export function RecordsOverview({ rows }: { rows: Record<Gender, RecordRow[]> })
         {/* a label before each row of tabs, as in the weight switcher; the six groups
             wrap after the label on a phone (one line is wider than the screen) */}
         <div className="flex items-start lg:items-center">
-          <span className={`${LABEL} pt-2.5 lg:pt-0`}>Records</span>
-          <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0" aria-label="Record groups">
+          <span className={`${LABEL} pt-2.5 lg:pt-0`}>{d.records.overview.label}</span>
+          <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0" aria-label={d.records.overview.groupsLabel}>
             {GROUPS.map((g) => (
               <a
-                key={g.key}
-                href={`#${g.key}`}
-                className={`px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] border-b-2 ${g.key === group ? ACTIVE : INACTIVE}`}
+                key={g}
+                href={`#${g}`}
+                className={`px-1 py-1.5 sm:px-2 whitespace-nowrap text-[13px] sm:text-[15px] border-b-2 ${g === group ? ACTIVE : INACTIVE}`}
               >
-                {g.title}
+                {d.records.groups[g]}
               </a>
             ))}
           </nav>
         </div>
         <div className="flex items-center text-[13px] sm:text-[14px]">
-          <span className={LABEL}>Athletes</span>
+          <span className={LABEL}>{d.records.overview.athletes}</span>
           <div className="flex items-center gap-3">
             {(
               [
-                ["", "All"],
-                ["male", "Men"],
-                ["female", "Women"],
+                ["", d.records.overview.all],
+                ["male", d.common.gender.men],
+                ["female", d.common.gender.women],
               ] as const
             ).map(([value, label]) => (
               <button
-                key={label}
+                key={value}
                 type="button"
                 onClick={() => setGender(value)}
                 className={`px-1 pb-0.5 border-b-2 cursor-pointer ${value === gender ? ACTIVE : INACTIVE}`}
@@ -85,16 +88,19 @@ export function RecordsOverview({ rows }: { rows: Record<Gender, RecordRow[]> })
 }
 
 function RecordTitle({ info }: { info: RecordInfo }) {
-  if (!info.breakAfter) return <>{info.title}</>;
+  const { d } = useI18n();
+  const { title, breakAfter } = recordText(d, info);
+  if (!breakAfter) return <>{title}</>;
   return (
     <>
-      {info.breakAfter} <br className="min-[480px]:hidden" />
-      {info.title.slice(info.breakAfter.length + 1)}
+      {breakAfter} <br className="min-[480px]:hidden" />
+      {title.slice(breakAfter.length + 1)}
     </>
   );
 }
 
 function TopList({ info, rows }: { info: RecordInfo; rows: RecordRow[] }) {
+  const { d, f } = useI18n();
   const [key, setKey] = useState(recordView(info).key);
   const view = recordView(info, key);
   const top = rows.filter((r) => r.record === view.name).slice(0, SHOW);
@@ -111,11 +117,11 @@ function TopList({ info, rows }: { info: RecordInfo; rows: RecordRow[] }) {
             href={`/records/${info.slug}${info.views && key !== info.views[0].key ? `?view=${key}` : ""}`}
             className="font-serif whitespace-nowrap text-[14px] font-semibold text-claret hover:underline"
           >
-            Full list
+            {d.records.overview.fullList}
           </Link>
         </div>
       </div>
-      <RecordTable rows={top} ranks={places(top)} columns={recordColumns(info, false, view.name)} />
+      <RecordTable rows={top} ranks={places(top)} columns={recordColumns({ d, f }, info, false, view.name)} />
     </section>
   );
 }

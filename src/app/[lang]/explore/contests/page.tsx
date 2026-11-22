@@ -6,17 +6,14 @@ import { competitions, contestsPage, lastUpdate } from "@/lib/api";
 import { plain } from "@/lib/params";
 import { WEIGHTS } from "@/lib/weights";
 import { alternatesFor, hasParams, NOINDEX } from "@/lib/seo";
-import { currentLang } from "@/i18n/server";
+import { i18n } from "@/i18n/server";
 
 // The list is indexed; a filtered or sorted state of it is not.
 export async function generateMetadata({ searchParams }: PageProps<"/[lang]/explore/contests">): Promise<Metadata> {
-  const metadata: Metadata = {
-    title: "Judo contests and upsets with win chances",
-    description:
-      "Every rated judo contest since 2009 with each side's win chance: search by athlete, filter by tournament and weight, find the biggest upsets.",
-  };
+  const { lang, d } = await i18n();
+  const metadata: Metadata = { title: d.explore.contests.meta.title, description: d.explore.contests.meta.description };
   const filtered = hasParams(await searchParams);
-  metadata.alternates = alternatesFor(await currentLang(), "/explore/contests", { indexed: !filtered });
+  metadata.alternates = alternatesFor(lang, "/explore/contests", { indexed: !filtered });
   return filtered ? { ...metadata, robots: NOINDEX } : metadata;
 }
 

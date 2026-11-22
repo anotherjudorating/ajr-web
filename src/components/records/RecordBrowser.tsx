@@ -6,11 +6,14 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { recordColumns } from "@/components/records/columns";
 import { RecordTable } from "@/components/records/RecordTable";
+import { recordText } from "@/components/records/text";
 import { ViewSwitch } from "@/components/records/ViewSwitch";
 import { CONTROL, Pagination, PlaceholderRows, saveCsv } from "@/components/rankings/TableParts";
+import { useI18n } from "@/i18n/client";
+import { localeFormat } from "@/i18n/format";
 import type { RecordRow } from "@/lib/api";
 import { places, type RecordInfo, type RecordView } from "@/lib/records";
-import { WEIGHTS, weightTitle } from "@/lib/weights";
+import { WEIGHTS } from "@/lib/weights";
 
 type Sort = "value-desc" | "value-asc" | "date-desc" | "date-asc";
 
@@ -30,8 +33,11 @@ function searchText(row: RecordRow): string {
     .toLowerCase();
 }
 
-function downloadCsv(rows: RecordRow[], ranks: number[], info: RecordInfo, view: RecordView) {
-  const columns = recordColumns(info, true, view.name);
+// The file is for machines and spreadsheets: its headers and values are English in
+// every language (the English dictionary is fetched on the click, not with the page).
+async function downloadCsv(rows: RecordRow[], ranks: number[], info: RecordInfo, view: RecordView) {
+  const { en } = await import("@/i18n/en");
+  const columns = recordColumns({ d: en, f: localeFormat("en", en) }, info, true, view.name);
   const lines = rows.map((row, i) => [ranks[i], ...columns.map((c) => c.csv(row))]);
   const suffix = view.key && info.views && view.key !== info.views[0].key ? `-${view.key}` : "";
   saveCsv([["Place", ...columns.map((c) => c.label)], ...lines], `ajr-${info.slug}${suffix}.csv`);
@@ -55,6 +61,8 @@ export function RecordBrowser({
   loading?: boolean;
 }) {
   const router = useRouter();
+  const { d, f, t } = useI18n();
+  const text = recordText(d, info);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>(info.ascending ? "value-asc" : "value-desc");
   const [pageSize, setPageSize] = useState(20);
@@ -79,8 +87,9 @@ export function RecordBrowser({
   const currentPage = Math.min(page, pages);
   const first = (currentPage - 1) * pageSize;
   const pageRows = shown.slice(first, first + pageSize);
-  const columns = recordColumns(info, true, view.name);
+  const columns = recordColumns({ d, f }, info, true, view.name);
   const athletes = info.subject === "athlete" || info.subject === "pair";
+  const subject = info.subject === "pair" ? "athlete" : info.subject; // what the search box looks for
 
   const address = (nextGender: string, nextWeight: string, nextView: string) => {
     const params = new URLSearchParams();
@@ -113,7 +122,7 @@ export function RecordBrowser({
               setQuery(e.target.value);
               setPage(1);
             }}
-            placeholder={`Search ${athletes ? "athlete" : info.subject}`}
+            placeholder={d.records.browser.search[subject]}
             className="w-full h-8 pl-8 pr-2.5 bg-paper border border-rule text-[12px] placeholder:text-muted focus:outline-none focus:border-ink"
           />
         </div>
@@ -126,16 +135,16 @@ export function RecordBrowser({
               onChange={(e) => filter(e.target.value, "")}
               className={CONTROL}
             >
-              <option value="">Men and women</option>
-              <option value="men">Men</option>
-              <option value="women">Women</option>
+              <option value="">{d.records.browser.menAndWomen}</option>
+              <option value="men">{d.common.gender.men}</option>
+              <option value="women">{d.common.gender.women}</option>
             </select>
             {athletes && info.weights && (
               <select value={weight} onChange={(e) => filter("", e.target.value)} className={CONTROL}>
-                <option value="">All weights</option>
+                <option value="">{d.records.browser.allWeights}</option>
                 {WEIGHTS.map((w) => (
                   <option key={w.slug} value={w.slug}>
-                    {weightTitle(w)}
+                    {f.weightTitle(w)}
                   </option>
                 ))}
               </select>
@@ -145,10 +154,10 @@ export function RecordBrowser({
         <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto">
           <div className="min-w-0 grid md:block">
             <select value={sort} onChange={(e) => setSort(e.target.value as Sort)} className={CONTROL}>
-              <option value="value-desc">Sort: {info.sortLabel} ↓</option>
-              <option value="value-asc">Sort: {info.sortLabel} ↑</option>
-              <option value="date-desc">Sort: date ↓</option>
-              <option value="date-asc">Sort: date ↑</option>
+              <option value="value-desc">{t(d.records.browser.sortValueDesc, { label: text.sortLabel })}</option>
+              <option value="value-asc">{t(d.records.browser.sortValueAsc, { label: text.sortLabel })}</option>
+              <option value="date-desc">{d.records.browser.sortDateDesc}</option>
+              <option value="date-asc">{d.records.browser.sortDateAsc}</option>
             </select>
           </div>
           <button
@@ -157,7 +166,7 @@ export function RecordBrowser({
             className="w-full md:w-auto shrink-0 h-8 px-3 inline-flex items-center justify-center gap-1.5 border border-rule text-[12px] text-ink hover:border-ink"
           >
             <Icon size={16} name="download" className="text-muted" />
-            Export CSV
+            {d.records.browser.exportCsv}
           </button>
         </div>
       </div>
@@ -166,7 +175,7 @@ export function RecordBrowser({
         {loading && <PlaceholderRows columns={columns.length + 2} count={20} />}
       </RecordTable>
       {!loading && shown.length === 0 && (
-        <p className="py-6 text-[14px] text-muted">No {info.noun} match these filters.</p>
+        <p className="py-6 text-[14px] text-muted">{t(d.records.browser.empty, { noun: text.noun })}</p>
       )}
 
       <Pagination
@@ -174,7 +183,7 @@ export function RecordBrowser({
         total={shown.length}
         first={first}
         count={pageRows.length}
-        noun={info.noun}
+        noun={text.noun}
         pageSize={pageSize}
         onPageSize={(size) => {
           setPageSize(size);

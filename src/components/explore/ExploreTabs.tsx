@@ -1,22 +1,25 @@
 "use client";
 
 import Link from "@/components/Link";
+import { useDict } from "@/i18n/client";
 import { usePathname } from "@/i18n/navigation";
 
+// The lists, with the key of each one's name in the dictionary (d.explore.tabs).
 const TABS = [
-  { href: "/explore/tournaments", label: "Tournaments" },
-  { href: "/explore/athletes", label: "Athletes" },
-  { href: "/explore/contests", label: "Contests" },
-  { href: "/explore/nations", label: "Nations" },
-];
+  { href: "/explore/tournaments", key: "tournaments" },
+  { href: "/explore/athletes", key: "athletes" },
+  { href: "/explore/contests", key: "contests" },
+  { href: "/explore/nations", key: "nations" },
+] as const;
 
 // "EXPLORE  Tournaments Contests Athletes Nations" with the open one marked.
 export function ExploreTabs({ current }: { current: string }) {
+  const d = useDict();
   return (
-    <nav className="flex items-center gap-4 sm:gap-2" aria-label="Explore">
-      <span className="hidden sm:block w-14 shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted">Explore</span>
+    <nav className="flex items-center gap-4 sm:gap-2" aria-label={d.explore.tabs.label}>
+      <span className="hidden sm:block w-14 shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted">{d.explore.tabs.label}</span>
       <div className="flex items-center gap-4 sm:gap-2">
-        {TABS.map(({ href, label }) => (
+        {TABS.map(({ href, key }) => (
           <Link
             key={href}
             href={href}
@@ -24,7 +27,7 @@ export function ExploreTabs({ current }: { current: string }) {
               current.startsWith(href) ? "font-bold text-ink border-b-2 border-claret" : "text-muted hover:text-ink"
             }`}
           >
-            {label}
+            {d.explore.tabs[key]}
           </Link>
         ))}
       </div>

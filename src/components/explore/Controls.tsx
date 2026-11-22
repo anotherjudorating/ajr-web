@@ -1,5 +1,8 @@
+"use client";
+
 import { Icon } from "@/components/Icon";
 import { CONTROL } from "@/components/rankings/TableParts";
+import { useDict } from "@/i18n/client";
 
 // The parts of the Explore toolbars, as in the prototype (the rankings toolbar's look).
 
@@ -54,6 +57,7 @@ export function Select({
 }
 
 export function CsvButton({ onClick }: { onClick: () => void }) {
+  const d = useDict();
   return (
     <button
       type="button"
@@ -61,7 +65,7 @@ export function CsvButton({ onClick }: { onClick: () => void }) {
       className="w-full md:w-auto shrink-0 h-8 px-3 inline-flex items-center justify-center gap-1.5 border border-rule text-[12px] text-ink hover:border-ink"
     >
       <Icon size={16} name="download" className="text-muted" />
-      Export CSV
+      {d.explore.controls.exportCsv}
     </button>
   );
 }

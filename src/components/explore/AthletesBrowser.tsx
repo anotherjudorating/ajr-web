@@ -9,17 +9,13 @@ import { Flag } from "@/components/Flag";
 import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { HEAD_CELL, Pagination, PlaceholderRows, ROW_CELL, saveCsv } from "@/components/rankings/TableParts";
 import { RowLink } from "@/components/RowLink";
+import { useI18n } from "@/i18n/client";
 import type { AthleteListRow } from "@/lib/api";
 import { shortCompetition, shortName } from "@/lib/format";
-import { WEIGHTS, weightTitle } from "@/lib/weights";
+import { WEIGHTS } from "@/lib/weights";
 
-const SORTS = [
-  { value: "name-asc", label: "Sort: name ↑" },
-  { value: "name-desc", label: "Sort: name ↓" },
-  { value: "age-asc", label: "Sort: age ↑" },
-  { value: "age-desc", label: "Sort: age ↓" },
-  { value: "rating-desc", label: "Sort: rating ↓" },
-];
+// The sorts, named in the dictionary (d.explore.athletes.sort).
+const SORTS = ["name-asc", "name-desc", "age-asc", "age-desc", "rating-desc"] as const;
 const PATH = "/explore/athletes";
 
 // Every rated athlete, active or not, a page at a time (filters in the URL).
@@ -36,6 +32,8 @@ export function AthletesBrowser({
   year: number; // for the ages
   loading?: boolean;
 }) {
+  const { d, f } = useI18n();
+  const x = d.explore.athletes;
   const set = useFilters(PATH, filters);
   const [query, setQuery] = useState(filters.q ?? "");
   useEffect(() => {
@@ -50,30 +48,30 @@ export function AthletesBrowser({
 
   return (
     <>
-      <ExploreTitle title="Athletes" lead="Every athlete with a rating, active or not." />
+      <ExploreTitle title={x.title} lead={x.lead} />
       <ToolbarRow>
-        <SearchBox value={query} onChange={setQuery} placeholder="Search athlete" />
+        <SearchBox value={query} onChange={setQuery} placeholder={d.explore.filters.searchAthlete} />
         <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
           <Select
             value={filters.country ?? ""}
             onChange={(value) => set({ country: value })}
-            options={[{ value: "", label: "All countries" }, ...countries.map((c) => ({ value: c.code, label: c.name }))]}
+            options={[{ value: "", label: x.allCountries }, ...countries.map((c) => ({ value: c.code, label: c.name }))]}
             className="md:max-w-[180px]"
           />
           <Select
             value={filters.weight ?? ""}
             onChange={(value) => set({ weight: value })}
             options={[
-              { value: "", label: "All weights" },
-              { value: "men", label: "Men, all weights" },
-              { value: "women", label: "Women, all weights" },
-              ...WEIGHTS.map((w) => ({ value: w.slug, label: weightTitle(w) })),
+              { value: "", label: d.explore.filters.allWeights },
+              { value: "men", label: x.menAllWeights },
+              { value: "women", label: x.womenAllWeights },
+              ...WEIGHTS.map((w) => ({ value: w.slug, label: f.weightTitle(w) })),
             ]}
           />
         </div>
         <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto">
           <div className="min-w-0 grid md:block">
-            <Select value={filters.sort ?? "name-asc"} onChange={(value) => set({ sort: value })} options={SORTS} />
+            <Select value={filters.sort ?? "name-asc"} onChange={(value) => set({ sort: value })} options={SORTS.map((value) => ({ value, label: x.sort[value] }))} />
           </div>
           <CsvButton onClick={() => downloadCsv(rows, year)} />
         </div>
@@ -82,11 +80,11 @@ export function AthletesBrowser({
       <table className="w-full table-fixed border-collapse text-left">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-left`}>Athlete</th>
-            <th className={`${HEAD_CELL} hidden sm:table-cell w-24 text-left`}>Nat</th>
-            <th className={`${HEAD_CELL} w-16 sm:w-20 text-left`}>Weight</th>
-            <th className={`${HEAD_CELL} w-12 sm:w-16 text-right`}>Age</th>
-            <th className={`${HEAD_CELL} hidden md:table-cell w-64 text-left`}>Last contest</th>
+            <th className={`${HEAD_CELL} text-left`}>{x.columns.athlete}</th>
+            <th className={`${HEAD_CELL} hidden sm:table-cell w-24 text-left`}>{x.columns.nat}</th>
+            <th className={`${HEAD_CELL} w-16 sm:w-20 text-left`}>{x.columns.weight}</th>
+            <th className={`${HEAD_CELL} w-12 sm:w-16 text-right`}>{x.columns.age}</th>
+            <th className={`${HEAD_CELL} hidden md:table-cell w-64 text-left`}>{x.columns.lastContest}</th>
             <th className="w-8 sm:w-10 h-9 py-0" />
           </tr>
         </thead>
@@ -120,13 +118,13 @@ export function AthletesBrowser({
           ))}
         </tbody>
       </table>
-      {!loading && rows.length === 0 && <p className="py-6 text-[14px] text-muted">No athletes match these filters.</p>}
+      {!loading && rows.length === 0 && <p className="py-6 text-[14px] text-muted">{x.empty}</p>}
       <Pagination
         loading={loading}
         total={total}
         first={(page - 1) * size}
         count={rows.length}
-        noun="athletes"
+        noun={x.noun}
         pageSize={size}
         onPageSize={(value) => set({ size: String(value) })}
         page={page}

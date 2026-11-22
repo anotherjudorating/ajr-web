@@ -4,17 +4,14 @@ import { Suspense } from "react";
 import { TournamentsBrowser } from "@/components/explore/TournamentsBrowser";
 import { competitions, lastUpdate } from "@/lib/api";
 import { alternatesFor, hasParams, NOINDEX } from "@/lib/seo";
-import { currentLang } from "@/i18n/server";
+import { i18n } from "@/i18n/server";
 
 // The list is indexed; a filtered or sorted state of it is not.
 export async function generateMetadata({ searchParams }: PageProps<"/[lang]/explore/tournaments">): Promise<Metadata> {
-  const metadata: Metadata = {
-    title: "Judo tournament results",
-    description:
-      "Every judo World Tour tournament since 2009: Olympics, Worlds, Grand Slams and Grand Prix, with results, upsets and how often the favourite won.",
-  };
+  const { lang, d } = await i18n();
+  const metadata: Metadata = { title: d.explore.tournaments.meta.title, description: d.explore.tournaments.meta.description };
   const filtered = hasParams(await searchParams);
-  metadata.alternates = alternatesFor(await currentLang(), "/explore/tournaments", { indexed: !filtered });
+  metadata.alternates = alternatesFor(lang, "/explore/tournaments", { indexed: !filtered });
   return filtered ? { ...metadata, robots: NOINDEX } : metadata;
 }
 
