@@ -67,11 +67,13 @@ export function localePath(lang: Lang, path: string): string {
   return `/${lang}${path}`;
 }
 
-// A path as the browser shows it -> its language and the path without the prefix:
+// A path with its language -> the language and the path without the prefix:
 // "/ru/rankings/men-73" -> { lang: "ru", path: "/rankings/men-73" }, "/ru" -> "/".
+// "/en/..." too: the browser never shows it (the proxy sends it away), but it is the
+// path the server renders an English page under, and usePathname() gives it there.
 export function stripLocale(pathname: string): { lang: Lang; path: string } {
   const match = pathname.match(/^\/([a-z]{2})(?=\/|$)(.*)$/);
-  if (match && isLang(match[1]) && match[1] !== DEFAULT_LANG) {
+  if (match && isLang(match[1])) {
     return { lang: match[1], path: match[2] || "/" };
   }
   return { lang: DEFAULT_LANG, path: pathname || "/" };
