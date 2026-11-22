@@ -65,7 +65,7 @@ export function Header({ pathname }: { pathname: string }) {
             </nav>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <LanguageSwitch pathname={pathname} />
+            <LanguageSwitch pathname={pathname} bare />
             <Link
               href="/explore/athletes"
               aria-label={d.site.header.search}
