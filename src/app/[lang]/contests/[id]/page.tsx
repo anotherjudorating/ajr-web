@@ -6,18 +6,23 @@ import { ContestView } from "@/components/contest/ContestView";
 import { UpcomingContest } from "@/components/contest/UpcomingContest";
 import { athleteHistory, contest, contestContext, upcomingContest } from "@/lib/api";
 import { roundTitle, shortName } from "@/lib/format";
-import { NOINDEX } from "@/lib/seo";
+import { alternatesFor, NOINDEX } from "@/lib/seo";
+import { currentLang } from "@/i18n/server";
 
-export async function generateMetadata({ params }: PageProps<"/contests/[id]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/[lang]/contests/[id]">): Promise<Metadata> {
   const id = Number((await params).id);
   const found = Number.isInteger(id) ? ((await contest(id)) ?? (await upcomingContest(id))) : null;
   if (!found || !found.white_id || !found.blue_id) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const names = `${shortName(found.white_family_name, found.white_given_name)} vs ${shortName(found.blue_family_name, found.blue_given_name)}`;
   // 230 thousand of them: closed to crawlers (robots.ts), not indexed
-  return { title: `${names} — ${found.round ? roundTitle(found.round) : "contest"}, ${found.competition}`, robots: NOINDEX };
+  return {
+    title: `${names} — ${found.round ? roundTitle(found.round) : "contest"}, ${found.competition}`,
+    alternates: alternatesFor(await currentLang(), `/contests/${id}`, { indexed: false }),
+    robots: NOINDEX,
+  };
 }
 
-export default function ContestPage({ params }: PageProps<"/contests/[id]">) {
+export default function ContestPage({ params }: PageProps<"/[lang]/contests/[id]">) {
   return (
     <div className="w-full bg-paper pb-8">
       <Suspense fallback={<div className="min-h-[60vh]" />}>
@@ -27,7 +32,7 @@ export default function ContestPage({ params }: PageProps<"/contests/[id]">) {
   );
 }
 
-async function Contest({ params }: { params: PageProps<"/contests/[id]">["params"] }) {
+async function Contest({ params }: { params: PageProps<"/[lang]/contests/[id]">["params"] }) {
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const found = await contest(id);

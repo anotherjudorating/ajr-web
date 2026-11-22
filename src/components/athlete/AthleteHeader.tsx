@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 
 import { Flag } from "@/components/Flag";
 import { changeText, ijfDifference, placesText } from "@/components/rankings/Changes";

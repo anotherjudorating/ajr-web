@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { type ReactNode, Suspense } from "react";
 
 import { Calculator } from "@/components/methodology/Calculator";
@@ -13,15 +13,20 @@ import { DrawAnimation } from "@/components/methodology/DrawAnimation";
 import { Figure } from "@/components/methodology/Figure";
 import { NumberOneTable, ParisDraw, PointsOrStrength, TableRule, TwoGolds } from "@/components/methodology/Why";
 import data from "@/data/methodology.json";
+import { currentLang } from "@/i18n/server";
+import { alternatesFor } from "@/lib/seo";
 
 // PROTOTYPE of the methodology, one page in three parts: why the rating exists (a
 // story), how the rating is counted (the number, the calculator), does it work (the
 // benchmark, ajr-backend benchmark/). The numbers: src/data/methodology.json.
-export const metadata: Metadata = {
-  title: "How the rating works",
-  description:
-    "Why Another Judo Rating exists, how a contest moves it and how well it predicts: Paris 2024, IJF points against strength, a calculator, and a test on 24,503 contests against the IJF ranking.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "How the rating works",
+    description:
+      "Why Another Judo Rating exists, how a contest moves it and how well it predicts: Paris 2024, IJF points against strength, a calculator, and a test on 24,503 contests against the IJF ranking.",
+    alternates: alternatesFor(await currentLang(), "/methodology"),
+  };
+}
 
 const P = "mt-5";
 const LINK = "underline decoration-rule underline-offset-2 hover:decoration-ink";

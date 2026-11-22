@@ -7,7 +7,8 @@ import { TeamsBrowser } from "@/components/rankings/TeamsBrowser";
 import { teams } from "@/lib/api";
 import { tableDay } from "@/lib/days";
 import { formatDate } from "@/lib/format";
-import { NOINDEX } from "@/lib/seo";
+import { alternatesFor, NOINDEX } from "@/lib/seo";
+import { currentLang } from "@/i18n/server";
 
 const KINDS = { men: "Men", women: "Women", mixed: "Mixed" } as const;
 type Kind = keyof typeof KINDS;
@@ -17,19 +18,20 @@ export function generateStaticParams() {
   return Object.keys(KINDS).map((kind) => ({ kind, day: [] }));
 }
 
-export async function generateMetadata({ params }: PageProps<"/rankings/teams/[kind]/[[...day]]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/[lang]/rankings/teams/[kind]/[[...day]]">): Promise<Metadata> {
   const { kind, day } = await params;
   if (!(kind in KINDS)) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const title = `Judo nations ranking, ${WHO[kind as Kind]}`;
   const { past } = await tableDay(day);
   const top = (await teams(kind, past)).slice(0, 3).map((r) => `${r.place}. ${r.country_name ?? r.country}`).join(", ");
   const description = `Which country has the strongest judo team: each nation rated by its best athlete in every weight.${top ? ` ${top}.` : ""}`;
+  const lang = await currentLang();
   return past
-    ? { title: `${title} on ${formatDate(past)}`, description, robots: NOINDEX } // a past day
-    : { title, description };
+    ? { title: `${title} on ${formatDate(past)}`, description, alternates: alternatesFor(lang, `/rankings/teams/${kind}/${(day ?? []).join("/")}`, { indexed: false }), robots: NOINDEX } // a past day
+    : { title, description, alternates: alternatesFor(lang, `/rankings/teams/${kind}`) };
 }
 
-export default function Page({ params }: PageProps<"/rankings/teams/[kind]/[[...day]]">) {
+export default function Page({ params }: PageProps<"/[lang]/rankings/teams/[kind]/[[...day]]">) {
   // today's table (no day in the path) is built ahead and refreshed with the data;
   // a past day's on its first visit. The params are read inside the Suspense, so
   // the shell is static and a move between tables is instant.
@@ -40,7 +42,7 @@ export default function Page({ params }: PageProps<"/rankings/teams/[kind]/[[...
   );
 }
 
-async function Table({ params }: { params: PageProps<"/rankings/teams/[kind]/[[...day]]">["params"] }) {
+async function Table({ params }: { params: PageProps<"/[lang]/rankings/teams/[kind]/[[...day]]">["params"] }) {
   const { kind, day } = await params;
   if (!(kind in KINDS)) notFound();
   const path = `/rankings/teams/${kind}`;

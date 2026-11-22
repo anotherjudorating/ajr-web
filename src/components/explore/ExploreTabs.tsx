@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "@/components/Link";
+import { usePathname } from "@/i18n/navigation";
 
 const TABS = [
   { href: "/explore/tournaments", label: "Tournaments" },

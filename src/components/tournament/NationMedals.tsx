@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Fragment, useState } from "react";
 
 import { goToRow, useHash, useRowMark, useRowScroll } from "@/components/anchors";

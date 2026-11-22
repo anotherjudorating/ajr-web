@@ -5,19 +5,22 @@ import { ContestsBrowser } from "@/components/explore/ContestsBrowser";
 import { competitions, contestsPage, lastUpdate } from "@/lib/api";
 import { plain } from "@/lib/params";
 import { WEIGHTS } from "@/lib/weights";
-import { hasParams, NOINDEX } from "@/lib/seo";
+import { alternatesFor, hasParams, NOINDEX } from "@/lib/seo";
+import { currentLang } from "@/i18n/server";
 
 // The list is indexed; a filtered or sorted state of it is not.
-export async function generateMetadata({ searchParams }: PageProps<"/explore/contests">): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: PageProps<"/[lang]/explore/contests">): Promise<Metadata> {
   const metadata: Metadata = {
     title: "Judo contests and upsets with win chances",
     description:
       "Every rated judo contest since 2009 with each side's win chance: search by athlete, filter by tournament and weight, find the biggest upsets.",
   };
-  return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata;
+  const filtered = hasParams(await searchParams);
+  metadata.alternates = alternatesFor(await currentLang(), "/explore/contests", { indexed: !filtered });
+  return filtered ? { ...metadata, robots: NOINDEX } : metadata;
 }
 
-export default function ContestsPage({ searchParams }: PageProps<"/explore/contests">) {
+export default function ContestsPage({ searchParams }: PageProps<"/[lang]/explore/contests">) {
   return (
     <Suspense fallback={<ContestsBrowser loading rows={[]} filters={{}} tournaments={[]} years={[]} />}>
       <Contests searchParams={searchParams} />
@@ -25,7 +28,7 @@ export default function ContestsPage({ searchParams }: PageProps<"/explore/conte
   );
 }
 
-async function Contests({ searchParams }: { searchParams: PageProps<"/explore/contests">["searchParams"] }) {
+async function Contests({ searchParams }: { searchParams: PageProps<"/[lang]/explore/contests">["searchParams"] }) {
   const filters = plain(await searchParams);
   const latestYear = Number(((await lastUpdate()) ?? "1970").slice(0, 4));
   const year = Number(filters.year) >= 2009 && Number(filters.year) <= latestYear ? Number(filters.year) : latestYear;

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Flag } from "@/components/Flag";

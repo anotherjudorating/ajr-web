@@ -2,14 +2,18 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { formatDate } from "@/lib/format";
-import { SITE } from "@/lib/seo";
+import { alternatesFor, SITE } from "@/lib/seo";
 import { archive, type Archive } from "@/lib/tables";
+import { currentLang } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Judo rating data, CSV download",
-  description:
-    "Download the full rating history of every World Tour judoka as CSV: every contest since 2009 with win chances and ratings before and after. CC BY 4.0.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Judo rating data, CSV download",
+    description:
+      "Download the full rating history of every World Tour judoka as CSV: every contest since 2009 with win chances and ratings before and after. CC BY 4.0.",
+    alternates: alternatesFor(await currentLang(), "/data"),
+  };
+}
 
 const LICENSE = "https://creativecommons.org/licenses/by/4.0/";
 const CONTACT = "data@anotherjudorating.com";

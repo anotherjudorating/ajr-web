@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/components/Link";
+import { useLocalePath, useRouter } from "@/i18n/navigation";
 import { Children, cloneElement, isValidElement } from "react";
 
 // A table row that opens a page (a contest) on a click anywhere in it; a link inside
@@ -16,6 +16,7 @@ export function RowLink({ href, label = "Open", className = "", id, children }: 
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const p = useLocalePath();
   const cells = Children.toArray(children);
   const first = cells.findIndex((child) => isValidElement(child) && child.type === "td");
   if (first >= 0) {
@@ -35,11 +36,11 @@ export function RowLink({ href, label = "Open", className = "", id, children }: 
       id={id}
       onClick={(e) => {
         if (inLink(e.target)) return;
-        if (e.metaKey || e.ctrlKey) window.open(href, "_blank");
+        if (e.metaKey || e.ctrlKey) window.open(p(href), "_blank");
         else router.push(href);
       }}
       onAuxClick={(e) => {
-        if (e.button === 1 && !inLink(e.target)) window.open(href, "_blank");
+        if (e.button === 1 && !inLink(e.target)) window.open(p(href), "_blank");
       }}
       className={`group cursor-pointer has-[>td>a.sr-only:focus-visible]:outline-2 has-[>td>a.sr-only:focus-visible]:outline-claret ${className}`}
     >

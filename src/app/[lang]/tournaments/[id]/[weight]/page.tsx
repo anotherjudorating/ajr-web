@@ -6,8 +6,9 @@ import { stateOf, TournamentSkeleton, tournamentName } from "@/components/tourna
 import { WeightView } from "@/components/tournament/WeightView";
 import { competition, competitionChances, competitionContests, competitionResults, competitions, competitionSlots, lastUpdate } from "@/lib/api";
 import { WEIGHTS, weightBySlug, weightTitle } from "@/lib/weights";
-import { NOINDEX } from "@/lib/seo";
+import { alternatesFor, NOINDEX } from "@/lib/seo";
 import { shortName } from "@/lib/format";
+import { currentLang } from "@/i18n/server";
 
 const MEDALS = ["gold", "silver", "bronze"];
 
@@ -24,7 +25,7 @@ export async function generateStaticParams() {
   return found && weight ? [{ id: String(found.id), weight: weight.slug }] : [];
 }
 
-export async function generateMetadata({ params }: PageProps<"/tournaments/[id]/[weight]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/[lang]/tournaments/[id]/[weight]">): Promise<Metadata> {
   const { id, weight: slug } = await params;
   const weight = weightBySlug(slug);
   const found = Number.isInteger(Number(id)) && weight ? await competition(Number(id)) : null;
@@ -35,15 +36,17 @@ export async function generateMetadata({ params }: PageProps<"/tournaments/[id]/
   const medals = MEDALS.flatMap((medal) =>
     results.filter((r) => r.result === medal).map((r) => `${medal} ${shortName(r.family_name, r.given_name)}${r.country ? ` (${r.country})` : ""}`),
   );
+  const indexed = MAJOR.includes(found.rank_name ?? "");
   return {
     title: `${weightTitle(weight)} ${name} judo results`,
     description: `${weightTitle(weight)} at the ${name}${medals.length ? `: ${medals.join(", ")}` : ""}.`,
+    alternates: alternatesFor(await currentLang(), `/tournaments/${id}/${slug}`, { indexed }),
     // the weights of the events people search for; the others reachable, not indexed
-    ...(MAJOR.includes(found.rank_name ?? "") ? {} : { robots: NOINDEX }),
+    ...(indexed ? {} : { robots: NOINDEX }),
   };
 }
 
-export default function TournamentWeightPage({ params }: PageProps<"/tournaments/[id]/[weight]">) {
+export default function TournamentWeightPage({ params }: PageProps<"/[lang]/tournaments/[id]/[weight]">) {
   return (
     <Suspense fallback={<TournamentSkeleton />}>
       <TournamentWeight params={params} />
@@ -51,7 +54,7 @@ export default function TournamentWeightPage({ params }: PageProps<"/tournaments
   );
 }
 
-async function TournamentWeight({ params }: { params: PageProps<"/tournaments/[id]/[weight]">["params"] }) {
+async function TournamentWeight({ params }: { params: PageProps<"/[lang]/tournaments/[id]/[weight]">["params"] }) {
   const { id: raw, weight: slug } = await params;
   const id = Number(raw);
   const weight = weightBySlug(slug);

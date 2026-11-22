@@ -5,6 +5,8 @@ import { Suspense } from "react";
 import { CountryView } from "@/components/country/CountryView";
 import { country, countryLeaders, countryTournaments, lastUpdate, nations } from "@/lib/api";
 import { nationWeeks } from "@/lib/tables";
+import { currentLang } from "@/i18n/server";
+import { alternatesFor } from "@/lib/seo";
 
 // /countries/jpn: the IOC code, in lower case as in the prototype's links.
 const codeOf = (ioc: string) => (/^[a-z]{3}$/i.test(ioc) ? ioc.toUpperCase() : null);
@@ -17,17 +19,19 @@ export async function generateStaticParams() {
   return [...all].sort((a, b) => b.athletes - a.athletes).slice(0, 1).map((n) => ({ ioc: n.country.toLowerCase() }));
 }
 
-export async function generateMetadata({ params }: PageProps<"/countries/[ioc]">): Promise<Metadata> {
-  const code = codeOf((await params).ioc);
+export async function generateMetadata({ params }: PageProps<"/[lang]/countries/[ioc]">): Promise<Metadata> {
+  const { ioc } = await params;
+  const code = codeOf(ioc);
   const found = code ? await country(code) : null;
   if (!found) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   return {
     title: `${found.name} judo team rating and best athletes`,
     description: `${found.name} in judo:${found.place ? ` #${found.place} among the nations,` : ""} its strongest judoka in every weight, its tournaments and medals.`,
+    alternates: alternatesFor(await currentLang(), `/countries/${ioc}`),
   };
 }
 
-export default function CountryPage({ params }: PageProps<"/countries/[ioc]">) {
+export default function CountryPage({ params }: PageProps<"/[lang]/countries/[ioc]">) {
   return (
     <div className="w-full bg-paper pb-8">
       <Suspense fallback={<div className="min-h-[60vh]" />}>
@@ -37,7 +41,7 @@ export default function CountryPage({ params }: PageProps<"/countries/[ioc]">) {
   );
 }
 
-async function CountryContent({ params }: { params: PageProps<"/countries/[ioc]">["params"] }) {
+async function CountryContent({ params }: { params: PageProps<"/[lang]/countries/[ioc]">["params"] }) {
   const code = codeOf((await params).ioc);
   if (!code) notFound();
   const [found, leaders, history, tournaments, updated] = await Promise.all([

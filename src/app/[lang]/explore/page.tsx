@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { redirectTo } from "@/i18n/server";
 
-export default function Explore() {
-  redirect("/explore/tournaments");
+export default async function Explore() {
+  await redirectTo("/explore/tournaments");
 }

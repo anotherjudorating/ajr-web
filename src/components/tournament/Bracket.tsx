@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 
 import { Flag } from "@/components/Flag";

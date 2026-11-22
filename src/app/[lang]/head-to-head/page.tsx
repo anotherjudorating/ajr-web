@@ -9,7 +9,8 @@ import type { Picked } from "@/lib/h2h";
 import { popularMatchups } from "@/lib/matchups";
 import { WEIGHTS } from "@/lib/weights";
 import { fullName } from "@/lib/format";
-import { hasParams, NOINDEX } from "@/lib/seo";
+import { alternatesFor, hasParams, NOINDEX } from "@/lib/seo";
+import { currentLang } from "@/i18n/server";
 
 const METADATA: Metadata = {
   title: "Judo head-to-head, compare two judoka",
@@ -19,27 +20,32 @@ const METADATA: Metadata = {
 // The form is indexed; so is a pair that has met (the other way round, or with a
 // weight, is the same page: one address, the lower id first). A pair that never
 // met, or a filtered state, is reachable, not indexed.
-export async function generateMetadata({ searchParams }: PageProps<"/head-to-head">): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: PageProps<"/[lang]/head-to-head">): Promise<Metadata> {
   const query = await searchParams;
   const id = (key: string) => {
     const value = Number(query[key]);
     return Number.isInteger(value) && value > 0 ? value : null;
   };
   const [idA, idB] = [id("a"), id("b")];
-  if (!idA || !idB || idA === idB) return hasParams(query) ? { ...METADATA, robots: NOINDEX } : METADATA;
+  const lang = await currentLang();
+  if (!idA || !idB || idA === idB) {
+    const filtered = hasParams(query);
+    const form = { ...METADATA, alternates: alternatesFor(lang, "/head-to-head", { indexed: !filtered }) };
+    return filtered ? { ...form, robots: NOINDEX } : form;
+  }
   const [first, second, history] = await Promise.all([athlete(idA), athlete(idB), athleteHistory(idA)]);
-  if (!first || !second) return { ...METADATA, robots: NOINDEX };
+  if (!first || !second) return { ...METADATA, alternates: alternatesFor(lang, "/head-to-head", { indexed: false }), robots: NOINDEX };
   const met = history.some((contest) => contest.opponent_id === idB);
   const [low, high] = idA < idB ? [idA, idB] : [idB, idA];
   return {
     title: `${fullName(first.family_name, first.given_name)} vs ${fullName(second.family_name, second.given_name)}`,
     description: "Head-to-head: their ratings, the chance of each to win today and every contest between them.",
-    alternates: { canonical: `/head-to-head?a=${low}&b=${high}` },
+    alternates: alternatesFor(lang, `/head-to-head?a=${low}&b=${high}`, { indexed: met }),
     ...(met ? {} : { robots: NOINDEX }),
   };
 }
 
-export default function Page({ searchParams }: PageProps<"/head-to-head">) {
+export default function Page({ searchParams }: PageProps<"/[lang]/head-to-head">) {
   return (
     <div className="w-full bg-paper pt-[37.25px] sm:pt-[47.25px] md:pt-[48.75px] pb-8">
       <h1 className="font-serif text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold tracking-[-0.015em]">
@@ -54,7 +60,7 @@ export default function Page({ searchParams }: PageProps<"/head-to-head">) {
 }
 
 // "?w=men-73&a=13028&b=18842": the weight and the two athletes.
-async function Content({ searchParams }: { searchParams: PageProps<"/head-to-head">["searchParams"] }) {
+async function Content({ searchParams }: { searchParams: PageProps<"/[lang]/head-to-head">["searchParams"] }) {
   const query = await searchParams;
   const id = (key: string) => {
     const value = Number(query[key]);

@@ -5,32 +5,63 @@ import { Suspense } from "react";
 
 import { Footer } from "@/components/Footer";
 import { CurrentHeader, Header } from "@/components/Header";
-import "./globals.css";
-import { SITE } from "@/lib/seo";
+import { LanguageHint } from "@/components/LanguageHint";
+import "../globals.css";
+import { type Lang, LANGS, localeOf, PUBLISHED } from "@/i18n/locales";
+import EnProvider from "@/i18n/providers/en";
+import RuProvider from "@/i18n/providers/ru";
+import { currentLang, dict } from "@/i18n/server";
+import { NOINDEX, SITE } from "@/lib/seo";
 
-const serif = Source_Serif_4({ variable: "--font-source-serif", subsets: ["latin"] });
+// next/font cuts each family by unicode-range: an English page's visitor does not
+// download the Cyrillic (the loader wants the lists written out).
+const serif = Source_Serif_4({ variable: "--font-source-serif", subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"] });
 const sans = IBM_Plex_Sans({
   variable: "--font-ibm-plex-sans",
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
   weight: ["400", "500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE),
-  // no " | Another Judo Rating" after each title: Google writes the site's name over the
-  // address itself (the WebSite data below)
-  title: "Another Judo Rating",
-  description:
-    "Independent Glicko-2 judo rating: the strongest judoka in every weight, built from every IJF contest.",
-  // every page its own canonical address, without the query (filters, pairs)
-  alternates: { canonical: "./" },
-  openGraph: { siteName: "Another Judo Rating", type: "website", locale: "en_GB" },
-  twitter: { card: "summary_large_image" },
-};
+// The dictionary each language's pages hand the browser: one client chunk a language
+// (src/i18n/providers), the page loads only its own.
+const PROVIDERS: Record<Lang, typeof EnProvider> = { en: EnProvider, ru: RuProvider };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+// The language is the root parameter (/ru/...; English has no prefix: src/proxy.ts
+// rewrites its paths to /en/... inside). Every page is prerendered once a language.
+export function generateStaticParams() {
+  return LANGS.map((lang) => ({ lang }));
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await currentLang();
+  const d = await dict();
+  const locale = localeOf(lang);
+  const others = PUBLISHED.filter((l) => l.code !== lang).map((l) => l.ogLocale);
+  return {
+    metadataBase: new URL(SITE),
+    // no " | Another Judo Rating" after each title: Google writes the site's name over the
+    // address itself (the WebSite data on the home page)
+    title: d.site.name,
+    description: d.meta.site,
+    // the canonical address: each page's own, from lib/seo.ts alternatesFor (a relative
+    // "./" here would resolve to the rewritten /en/... path)
+    openGraph: {
+      siteName: d.site.name,
+      type: "website",
+      locale: locale.ogLocale,
+      ...(others.length ? { alternateLocale: others } : {}),
+    },
+    twitter: { card: "summary_large_image" },
+    // a language not published yet renders for checking, out of the index
+    ...(locale.published ? {} : { robots: NOINDEX }),
+  };
+}
+
+export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
+  const lang = await currentLang();
+  const Provider = PROVIDERS[lang];
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${serif.variable} ${sans.variable} antialiased`}>
+    <html lang={localeOf(lang).htmlLang} data-scroll-behavior="smooth" className={`${serif.variable} ${sans.variable} antialiased`}>
       <head>
         {/* Icons used by the design (search, close, download, arrows). "block": an icon
             font must not show its ligature names ("search") while loading. */}
@@ -41,18 +72,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="bg-paper font-sans text-ink antialiased min-h-screen flex flex-col selection:bg-claret selection:text-white">
-        <Suspense fallback={<Header pathname="" />}>
-          <CurrentHeader />
-        </Suspense>
-        <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 pt-[37.75px] md:pt-[53.25px] flex-1">
-          {/* below md the sections are a second fixed row (36px) under the header;
-              the paddings are the prototype's (its script sets them) */}
-          <div className="md:hidden h-9" />
-          {children}
-        </main>
-        <Suspense fallback={null}>
-          <Footer />
-        </Suspense>
+        <Provider>
+          <Suspense fallback={<Header pathname="" />}>
+            <CurrentHeader />
+          </Suspense>
+          <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 pt-[37.75px] md:pt-[53.25px] flex-1">
+            {/* below md the sections are a second fixed row (36px) under the header;
+                the paddings are the prototype's (its script sets them) */}
+            <div className="md:hidden h-9" />
+            <LanguageHint />
+            {children}
+          </main>
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
+        </Provider>
       </body>
     </html>
   );

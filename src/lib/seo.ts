@@ -3,6 +3,7 @@
 
 import type { Metadata } from "next";
 
+import { DEFAULT_LANG, type Lang, localeOf, localePath, PUBLISHED } from "@/i18n/locales";
 import { shortName } from "@/lib/format";
 
 export const SITE = "https://www.anotherjudorating.com";
@@ -31,4 +32,27 @@ export function podium(rows: { place: number; family_name: string | null; given_
 // Any query parameter makes a list page a filtered state of it.
 export function hasParams(query: Record<string, string | string[] | undefined>): boolean {
   return Object.values(query).some((value) => value !== undefined && value !== "");
+}
+
+// A page's address in a language: the site's, the prefix (none for English), the
+// path; the home page without a trailing slash, as the canonical has always been.
+export function localeUrl(lang: Lang, path: string): string {
+  const prefixed = localePath(lang, path);
+  return `${SITE}${prefixed === "/" ? "" : prefixed}`;
+}
+
+// The page's canonical address and, for an indexed page, the same page in every
+// published language (hreflang), English as the default. Explicit, not the relative
+// "./" the layout had: that would resolve to the rewritten /en/... path. A page kept
+// out of the index (NOINDEX) gets its canonical only.
+export function alternatesFor(lang: Lang, path: string, { indexed = true }: { indexed?: boolean } = {}): Metadata["alternates"] {
+  const canonical = localeUrl(lang, path);
+  if (!indexed || PUBLISHED.length < 2 || !localeOf(lang).published) return { canonical };
+  return {
+    canonical,
+    languages: {
+      ...Object.fromEntries(PUBLISHED.map((locale) => [locale.htmlLang, localeUrl(locale.code, path)])),
+      "x-default": localeUrl(DEFAULT_LANG, path),
+    },
+  };
 }

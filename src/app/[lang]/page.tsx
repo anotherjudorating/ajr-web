@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Suspense } from "react";
 
 import { Flag } from "@/components/Flag";
@@ -10,14 +10,19 @@ import { H2, LINK } from "@/components/tournament/styles";
 import { UpsetCard } from "@/components/UpsetCard";
 import { biggestMovers, homeLeaders, recentUpsets, upcoming } from "@/lib/api";
 import { dateRange, shortCompetition } from "@/lib/format";
-import { SITE } from "@/lib/seo";
+import { LangJump } from "@/components/LangJump";
+import { alternatesFor, SITE } from "@/lib/seo";
 import { MEN, WOMEN } from "@/lib/weights";
+import { currentLang } from "@/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Alternative judo world ranking",
-  description:
-    "An open, statistics-based judo ranking: a Glicko-2 rating from every World Tour contest since 2009, the leaders of every weight, the biggest movers and upsets.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Alternative judo world ranking",
+    description:
+      "An open, statistics-based judo ranking: a Glicko-2 rating from every World Tour contest since 2009, the leaders of every weight, the biggest movers and upsets.",
+    alternates: alternatesFor(await currentLang(), "/"),
+  };
+}
 
 const HEAD = "flex items-baseline justify-between border-b-2 border-ink pb-2";
 
@@ -31,6 +36,7 @@ export default function Home() {
   return (
     <div className="w-full bg-paper pt-[37.25px] sm:pt-[47.25px] md:pt-[48.75px] pb-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE) }} />
+      <LangJump />
       <section className="mb-10 md:mb-12 lg:mb-16">
         <h1 className="font-serif text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold tracking-[-0.015em] text-ink mb-2">
           Who is the strongest judoka right now?

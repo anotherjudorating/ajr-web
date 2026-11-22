@@ -7,7 +7,8 @@ import { P4PBrowser } from "@/components/rankings/P4PBrowser";
 import { countryNames, p4p } from "@/lib/api";
 import { tableDay } from "@/lib/days";
 import { formatDate } from "@/lib/format";
-import { NOINDEX } from "@/lib/seo";
+import { alternatesFor, NOINDEX } from "@/lib/seo";
+import { currentLang } from "@/i18n/server";
 
 const GENDERS = { men: "Men", women: "Women" } as const;
 type Gender = keyof typeof GENDERS;
@@ -16,17 +17,18 @@ export function generateStaticParams() {
   return Object.keys(GENDERS).map((gender) => ({ gender, day: [] }));
 }
 
-export async function generateMetadata({ params }: PageProps<"/rankings/p4p/[gender]/[[...day]]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/[lang]/rankings/p4p/[gender]/[[...day]]">): Promise<Metadata> {
   const { gender, day } = await params;
   if (!(gender in GENDERS)) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const title = `${GENDERS[gender as Gender]} pound for pound judo ranking`;
   const description = `The best ${GENDERS[gender as Gender].toLowerCase()} judoka across all weights: how far each stands above the rest of their category.`;
+  const lang = await currentLang();
   return day?.length
-    ? { title: `${title} on ${formatDate(day[0])}`, description, robots: NOINDEX } // a past day
-    : { title, description };
+    ? { title: `${title} on ${formatDate(day[0])}`, description, alternates: alternatesFor(lang, `/rankings/p4p/${gender}/${day.join("/")}`, { indexed: false }), robots: NOINDEX } // a past day
+    : { title, description, alternates: alternatesFor(lang, `/rankings/p4p/${gender}`) };
 }
 
-export default function Page({ params }: PageProps<"/rankings/p4p/[gender]/[[...day]]">) {
+export default function Page({ params }: PageProps<"/[lang]/rankings/p4p/[gender]/[[...day]]">) {
   // today's table (no day in the path) is built ahead and refreshed with the data;
   // a past day's on its first visit. The params are read inside the Suspense, so
   // the shell is static and a move between tables is instant.
@@ -37,7 +39,7 @@ export default function Page({ params }: PageProps<"/rankings/p4p/[gender]/[[...
   );
 }
 
-async function Table({ params }: { params: PageProps<"/rankings/p4p/[gender]/[[...day]]">["params"] }) {
+async function Table({ params }: { params: PageProps<"/[lang]/rankings/p4p/[gender]/[[...day]]">["params"] }) {
   const { gender, day } = await params;
   if (!(gender in GENDERS)) notFound();
   const path = `/rankings/p4p/${gender}`;

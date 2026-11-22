@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { careerLine, ChartSkeleton, ChartTip, TipEvents, TipPlaces, tipPlaces, useChartPointer, dotsFit, INK, nearest, PERIOD, pointerX, scale, TipBody } from "@/components/chart";

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { DEFAULT_LANG, isLang } from "@/i18n/locales";
 import { client, overloaded } from "@/lib/data-client";
 import { noteRequest, takePage } from "@/lib/page-limit";
 import { SITE } from "@/lib/seo";
@@ -15,10 +16,33 @@ const CRAWLER =
 // and so without its challenge (ajr-web/infra, waf_custom): sent to the site's address.
 const ORIGIN_HOST = /\.onrender\.com$/;
 
+// The pages live under app/[lang]/ (src/i18n/locales.ts). English has no prefix in
+// its addresses: "/rankings/men-73" is rewritten to "/en/rankings/men-73" inside, the
+// address in the browser stays. "/en/..." from outside is sent to the address without
+// it (one address a page). An unknown first segment ("/xx/foo") is rewritten like any
+// English path and gets the English 404. Not rewritten: the API, Next's own paths.
+function language(pathname: string): { rewrite?: string; redirect?: string } {
+  if (pathname.startsWith("/api/") || pathname.startsWith("/_")) return {};
+  const match = pathname.match(/^\/([a-z]{2})(?=\/|$)(.*)$/);
+  const first = match?.[1];
+  if (first === DEFAULT_LANG) return { redirect: match?.[2] || "/" };
+  if (first && isLang(first)) return {};
+  return { rewrite: `/${DEFAULT_LANG}${pathname}` };
+}
+
 export function proxy(request: NextRequest) {
   if (ORIGIN_HOST.test(request.headers.get("host") ?? "")) {
     const { pathname, search } = request.nextUrl;
     return NextResponse.redirect(`${SITE}${pathname}${search}`, 308);
+  }
+  // Nothing here reads Accept-Language or the language cookie: a page's HTML is cached
+  // at the edge for hours for everyone, so the language can only be chosen in the
+  // browser (src/components/LanguageHint.tsx).
+  const { rewrite, redirect } = language(request.nextUrl.pathname);
+  if (redirect) {
+    const url = request.nextUrl.clone();
+    url.pathname = redirect;
+    return NextResponse.redirect(url, 308);
   }
   const crawler = CRAWLER.test(request.headers.get("user-agent") ?? "");
   // A page's HTML as a browser asks for it (Accept: text/html; not Next's navigation and
@@ -62,6 +86,11 @@ export function proxy(request: NextRequest) {
       status: 503,
       headers: { "retry-after": "120", "cache-control": "no-store" },
     });
+  }
+  if (rewrite) {
+    const url = request.nextUrl.clone();
+    url.pathname = rewrite;
+    return NextResponse.rewrite(url);
   }
   return NextResponse.next();
 }

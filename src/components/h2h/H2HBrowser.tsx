@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import { glideToTop } from "@/components/anchors";

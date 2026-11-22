@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Fragment, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import type { HistoryRow } from "@/lib/api";

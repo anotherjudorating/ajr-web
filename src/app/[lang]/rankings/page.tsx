@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
+import { redirectTo } from "@/i18n/server";
 
 // The rankings open on the nations, men and women together.
-export default function Rankings() {
-  redirect("/rankings/teams/mixed");
+export default async function Rankings() {
+  await redirectTo("/rankings/teams/mixed");
 }

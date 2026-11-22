@@ -2,11 +2,16 @@ import type { Metadata } from "next";
 
 import { RecordsOverview } from "@/components/records/RecordsOverview";
 import { records } from "@/lib/api";
+import { currentLang } from "@/i18n/server";
+import { alternatesFor } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "All-time judo records",
-  description: "All-time judo records: highest ratings, longest reigns at #1, most medals, biggest upsets and more.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "All-time judo records",
+    description: "All-time judo records: highest ratings, longest reigns at #1, most medals, biggest upsets and more.",
+    alternates: alternatesFor(await currentLang(), "/records"),
+  };
+}
 
 // The top 5 of every record for all, men and women: the Men/Women filter switches
 // between them in the browser.

@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "@/components/Link";
+import { usePathname } from "@/i18n/navigation";
 import { useState } from "react";
 
 import { Icon } from "@/components/Icon";
+import { LanguageSwitch } from "@/components/LanguageSwitch";
 import { SiteSearch } from "@/components/SiteSearch";
 
 const SECTIONS = [
@@ -61,6 +62,7 @@ export function Header({ pathname }: { pathname: string }) {
             </nav>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
+            <LanguageSwitch pathname={pathname} />
             <Link
               href="/explore/athletes"
               aria-label="Search"
@@ -95,6 +97,8 @@ export function Header({ pathname }: { pathname: string }) {
               >
                 Another Judo Rating
               </Link>
+              {/* ml-auto: with the switcher hidden the row is as before (two ends) */}
+              <LanguageSwitch pathname={pathname} label={false} className="ml-auto" />
               <button
                 type="button"
                 aria-label="Search athletes or tournaments"

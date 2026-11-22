@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { notFound, permanentRedirect } from "next/navigation";
+import Link from "@/components/Link";
+import { notFound } from "next/navigation";
+import { permanentRedirectTo } from "@/i18n/server";
 import { Suspense } from "react";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -8,22 +9,28 @@ import { RecordBrowser } from "@/components/records/RecordBrowser";
 import { record } from "@/lib/api";
 import { GROUPS, MOVED, recordBySlug, RECORDS, recordView } from "@/lib/records";
 import { weightBySlug } from "@/lib/weights";
-import { hasParams, NOINDEX } from "@/lib/seo";
+import { alternatesFor, hasParams, NOINDEX } from "@/lib/seo";
+import { currentLang } from "@/i18n/server";
 
 export function generateStaticParams() {
   return RECORDS.map((r) => ({ name: r.slug }));
 }
 
-export async function generateMetadata({ params, searchParams }: PageProps<"/records/[name]">): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps<"/[lang]/records/[name]">): Promise<Metadata> {
   const slug = (await params).name;
-  if (MOVED[slug]) permanentRedirect(`/records/${MOVED[slug]}`); // a record renamed or dropped
+  if (MOVED[slug]) await permanentRedirectTo(`/records/${MOVED[slug]}`); // a record renamed or dropped
   const info = recordBySlug(slug);
   if (!info) notFound(); // a crawler is sent the head first: only here does a 404 get its status
-  const metadata = { title: `${info.title}, judo record`, description: info.description };
-  return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata; // a gender or weight picked
+  const filtered = hasParams(await searchParams); // a gender or weight picked
+  const metadata = {
+    title: `${info.title}, judo record`,
+    description: info.description,
+    alternates: alternatesFor(await currentLang(), `/records/${slug}`, { indexed: !filtered }),
+  };
+  return filtered ? { ...metadata, robots: NOINDEX } : metadata;
 }
 
-export default function RecordPage({ params, searchParams }: PageProps<"/records/[name]">) {
+export default function RecordPage({ params, searchParams }: PageProps<"/[lang]/records/[name]">) {
   return (
     <div className="w-full bg-paper pt-[33.25px] sm:pt-[41.25px] md:pt-[42.75px] pb-8">
       <Suspense fallback={<div className="min-h-[60vh]" />}>
@@ -33,9 +40,9 @@ export default function RecordPage({ params, searchParams }: PageProps<"/records
   );
 }
 
-async function Record({ params, searchParams }: PageProps<"/records/[name]">) {
+async function Record({ params, searchParams }: PageProps<"/[lang]/records/[name]">) {
   const slug = (await params).name;
-  if (MOVED[slug]) permanentRedirect(`/records/${MOVED[slug]}`);
+  if (MOVED[slug]) await permanentRedirectTo(`/records/${MOVED[slug]}`);
   const info = recordBySlug(slug);
   if (!info) notFound();
   const query = await searchParams;
@@ -73,7 +80,7 @@ async function Record({ params, searchParams }: PageProps<"/records/[name]">) {
 }
 
 // The rows depend on the filters in the URL (?gender=women, ?weight=women-52).
-async function Rows({ slug, searchParams }: { slug: string; searchParams: PageProps<"/records/[name]">["searchParams"] }) {
+async function Rows({ slug, searchParams }: { slug: string; searchParams: PageProps<"/[lang]/records/[name]">["searchParams"] }) {
   const info = recordBySlug(slug)!;
   const query = await searchParams;
   const view = recordView(info, typeof query.view === "string" ? query.view : undefined);

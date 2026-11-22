@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Fragment, useLayoutEffect, useMemo, useState } from "react";
 
 import { useHashTarget, useRowMark, useRowScroll } from "@/components/anchors";

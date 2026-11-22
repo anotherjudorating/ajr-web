@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useSelectedLayoutSegment } from "next/navigation";
 
 import { Breadcrumbs } from "@/components/Breadcrumbs";

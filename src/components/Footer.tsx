@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 
 import { lastUpdate } from "@/lib/api";
 import { formatDate } from "@/lib/format";

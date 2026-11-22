@@ -5,6 +5,8 @@ import { Suspense } from "react";
 import { Overview } from "@/components/tournament/Overview";
 import { TournamentSkeleton, tournamentName } from "@/components/tournament/TournamentHeader";
 import { competition, competitionChances, competitionContests, competitionResults, competitions } from "@/lib/api";
+import { currentLang } from "@/i18n/server";
+import { alternatesFor } from "@/lib/seo";
 
 // One tournament is built ahead (more would load the database at every deploy); any
 // other is built on its first visit, then served whole from the cache until the
@@ -15,7 +17,7 @@ export async function generateStaticParams() {
   return latest.slice(0, 1).map((c) => ({ id: String(c.id) }));
 }
 
-export async function generateMetadata({ params }: PageProps<"/tournaments/[id]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/[lang]/tournaments/[id]">): Promise<Metadata> {
   const id = Number((await params).id);
   const found = Number.isInteger(id) ? await competition(id) : null;
   if (!found) notFound(); // a crawler is sent the head first: only here does a 404 get its status
@@ -23,10 +25,11 @@ export async function generateMetadata({ params }: PageProps<"/tournaments/[id]"
   return {
     title: `${name} judo results`,
     description: `${name}: medallists of every weight, medals by nation, the biggest upsets and rating changes.`,
+    alternates: alternatesFor(await currentLang(), `/tournaments/${id}`),
   };
 }
 
-export default function TournamentPage({ params }: PageProps<"/tournaments/[id]">) {
+export default function TournamentPage({ params }: PageProps<"/[lang]/tournaments/[id]">) {
   return (
     <Suspense fallback={<TournamentSkeleton />}>
       <Tournament params={params} />
@@ -34,7 +37,7 @@ export default function TournamentPage({ params }: PageProps<"/tournaments/[id]"
   );
 }
 
-async function Tournament({ params }: { params: PageProps<"/tournaments/[id]">["params"] }) {
+async function Tournament({ params }: { params: PageProps<"/[lang]/tournaments/[id]">["params"] }) {
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const [found, results, contests, chances] = await Promise.all([

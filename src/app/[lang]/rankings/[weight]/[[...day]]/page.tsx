@@ -8,14 +8,15 @@ import { countryNames, leaderboard } from "@/lib/api";
 import { tableDay } from "@/lib/days";
 import { WEIGHTS, weightBySlug, weightTitle } from "@/lib/weights";
 import { formatDate } from "@/lib/format";
-import { NOINDEX, podium } from "@/lib/seo";
+import { alternatesFor, NOINDEX, podium } from "@/lib/seo";
+import { currentLang } from "@/i18n/server";
 
 // All 14 tables are rendered ahead of time and refreshed with the data (next.config.ts).
 export function generateStaticParams() {
   return WEIGHTS.map((w) => ({ weight: w.slug, day: [] }));
 }
 
-export async function generateMetadata({ params }: PageProps<"/rankings/[weight]/[[...day]]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/[lang]/rankings/[weight]/[[...day]]">): Promise<Metadata> {
   const { weight: slug, day } = await params;
   const weight = weightBySlug(slug);
   if (!weight) notFound(); // a crawler is sent the head first: only here does a 404 get its status
@@ -24,9 +25,10 @@ export async function generateMetadata({ params }: PageProps<"/rankings/[weight]
   const leaders = podium(await leaderboard(weight.api, past));
   const strongest = `The strongest ${weightTitle(weight).toLowerCase()} judoka${past ? ` on ${formatDate(past)}` : ""}`;
   const description = leaders ? `${strongest}: ${leaders}.` : `${strongest}.`;
+  const lang = await currentLang();
   return past
-    ? { title: `${title} on ${formatDate(past)}`, description, robots: NOINDEX } // a past day
-    : { title, description };
+    ? { title: `${title} on ${formatDate(past)}`, description, alternates: alternatesFor(lang, `/rankings/${slug}/${(day ?? []).join("/")}`, { indexed: false }), robots: NOINDEX } // a past day
+    : { title, description, alternates: alternatesFor(lang, `/rankings/${slug}`) };
 }
 
 // The rows sent with the page: the first page of the table (the whole of it, ~600 rows,
@@ -34,7 +36,7 @@ export async function generateMetadata({ params }: PageProps<"/rankings/[weight]
 // sorts or exports (/api/leaderboard).
 const FIRST_ROWS = 50;
 
-export default function RankingsPage({ params }: PageProps<"/rankings/[weight]/[[...day]]">) {
+export default function RankingsPage({ params }: PageProps<"/[lang]/rankings/[weight]/[[...day]]">) {
   // today's table (no day in the path) is built ahead and refreshed with the data;
   // a past day's on its first visit. The params are read inside the Suspense, so
   // the shell is static and a move between tables is instant.
@@ -45,7 +47,7 @@ export default function RankingsPage({ params }: PageProps<"/rankings/[weight]/[
   );
 }
 
-async function Rankings({ params }: { params: PageProps<"/rankings/[weight]/[[...day]]">["params"] }) {
+async function Rankings({ params }: { params: PageProps<"/[lang]/rankings/[weight]/[[...day]]">["params"] }) {
   const { weight: slug, day } = await params;
   const weight = weightBySlug(slug);
   if (!weight) notFound();

@@ -7,7 +7,7 @@ import { liveWeights } from "@/lib/live";
 
 // A tournament's header (the name, the place, the weights) stays while its weights
 // change: only the page under it loads again.
-export default function TournamentLayout({ params, children }: LayoutProps<"/tournaments/[id]">) {
+export default function TournamentLayout({ params, children }: LayoutProps<"/[lang]/tournaments/[id]">) {
   return (
     <div className="w-full bg-paper pb-8">
       <Suspense fallback={<div className="min-h-[180px]" />}>
@@ -18,7 +18,7 @@ export default function TournamentLayout({ params, children }: LayoutProps<"/tou
   );
 }
 
-async function Header({ params }: { params: LayoutProps<"/tournaments/[id]">["params"] }) {
+async function Header({ params }: { params: LayoutProps<"/[lang]/tournaments/[id]">["params"] }) {
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
   const [found, results, updated] = await Promise.all([competition(id), competitionResults(id), lastUpdate()]);

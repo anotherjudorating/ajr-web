@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import { currentLang } from "@/i18n/server";
+import { alternatesFor } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "How to reach Another Judo Rating: questions, corrections and ideas by email, bugs and wrong results on GitHub.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Contact",
+    description: "How to reach Another Judo Rating: questions, corrections and ideas by email, bugs and wrong results on GitHub.",
+    alternates: alternatesFor(await currentLang(), "/contact"),
+  };
+}
 
 const EMAIL = "info@anotherjudorating.com";
 const DATA = "data@anotherjudorating.com";

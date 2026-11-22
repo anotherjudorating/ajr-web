@@ -5,18 +5,21 @@ import { AthletesBrowser } from "@/components/explore/AthletesBrowser";
 import { athletesPage, lastUpdate, nations } from "@/lib/api";
 import { plain } from "@/lib/params";
 import { WEIGHTS } from "@/lib/weights";
-import { hasParams, NOINDEX } from "@/lib/seo";
+import { alternatesFor, hasParams, NOINDEX } from "@/lib/seo";
+import { currentLang } from "@/i18n/server";
 
 // The list is indexed; a filtered or sorted state of it is not.
-export async function generateMetadata({ searchParams }: PageProps<"/explore/athletes">): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: PageProps<"/[lang]/explore/athletes">): Promise<Metadata> {
   const metadata: Metadata = {
     title: "Every rated judoka, search by name, nation and weight",
     description: "Every judoka with a rating since 2009: search by name, filter by nation and weight, sort by rating, name or age.",
   };
-  return hasParams(await searchParams) ? { ...metadata, robots: NOINDEX } : metadata;
+  const filtered = hasParams(await searchParams);
+  metadata.alternates = alternatesFor(await currentLang(), "/explore/athletes", { indexed: !filtered });
+  return filtered ? { ...metadata, robots: NOINDEX } : metadata;
 }
 
-export default function AthletesPage({ searchParams }: PageProps<"/explore/athletes">) {
+export default function AthletesPage({ searchParams }: PageProps<"/[lang]/explore/athletes">) {
   return (
     <Suspense fallback={<AthletesBrowser loading rows={[]} filters={{}} countries={[]} year={0} />}>
       <Athletes searchParams={searchParams} />
@@ -24,7 +27,7 @@ export default function AthletesPage({ searchParams }: PageProps<"/explore/athle
   );
 }
 
-async function Athletes({ searchParams }: { searchParams: PageProps<"/explore/athletes">["searchParams"] }) {
+async function Athletes({ searchParams }: { searchParams: PageProps<"/[lang]/explore/athletes">["searchParams"] }) {
   const filters = plain(await searchParams);
   const size = [20, 50, 100].includes(Number(filters.size)) ? Number(filters.size) : 50;
   const page = Math.max(1, Number(filters.page) || 1);

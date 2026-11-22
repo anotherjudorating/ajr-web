@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 
 import { HashScroll } from "@/components/HashScroll";
 import { SECTION } from "@/lib/anchors";
