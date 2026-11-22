@@ -32,7 +32,7 @@ export const LOCALES: readonly Locale[] = [
     short: "RU",
     htmlLang: "ru",
     ogLocale: "ru_RU",
-    published: false,
+    published: true,
   },
 ];
 
