@@ -7,11 +7,12 @@ import { glideToTop } from "@/components/anchors";
 import { Flag } from "@/components/Flag";
 import { CHEVRON_CELL, Icon, RowChevron } from "@/components/Icon";
 import { countMatchup } from "@/lib/browser-api";
-import { monthYear, shortName } from "@/lib/format";
+import { useI18n } from "@/i18n/client";
+import { shortName } from "@/lib/format";
 import { COLORS, h2hPath, type Picked } from "@/lib/h2h";
 import { type AthleteHit, loadSearchIndex, searchAthletes, type SearchIndex } from "@/lib/search-index";
 import type { Matchup } from "@/lib/matchups";
-import { MEN, WEIGHTS, WOMEN, weightTitle } from "@/lib/weights";
+import { MEN, WEIGHTS, WOMEN } from "@/lib/weights";
 
 type Slot = keyof typeof COLORS;
 
@@ -38,6 +39,7 @@ export function H2HBrowser({
   result: ReactNode;
   loading?: boolean; // the page's fallback, while the URL's pair is read
 }) {
+  const { d, f } = useI18n();
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [weight, setWeight] = useState(initialWeight);
@@ -89,7 +91,7 @@ export function H2HBrowser({
       <section className="mt-6 flex flex-col gap-3 sm:max-w-[560px]">
         <div>
           <label htmlFor="h2h-weight" className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1.5">
-            Weight category
+            {d.h2h.form.weightCategory}
           </label>
           {loading ? (
             <div className="w-full sm:w-64 h-10 px-3 border border-rule flex items-center">
@@ -106,16 +108,16 @@ export function H2HBrowser({
               className="w-full sm:w-64 h-10 px-3 bg-paper border border-rule text-[14px] text-ink focus:outline-none focus:border-ink cursor-pointer rounded-none"
             >
               <option value="" disabled>
-                Choose weight
+                {d.h2h.form.chooseWeight}
               </option>
               {[
-                { label: "Men", weights: MEN },
-                { label: "Women", weights: WOMEN },
+                { label: d.common.gender.men, weights: MEN },
+                { label: d.common.gender.women, weights: WOMEN },
               ].map((group) => (
                 <optgroup key={group.label} label={group.label}>
                   {group.weights.map((w) => (
                     <option key={w.slug} value={w.slug}>
-                      {weightTitle(w)}
+                      {f.weightTitle(w)}
                     </option>
                   ))}
                 </optgroup>
@@ -167,6 +169,7 @@ function AthleteSlot({
   inputRef?: React.RefObject<HTMLInputElement | null>;
   onPick: (athlete: Picked | null) => void;
 }) {
+  const { d, f, t } = useI18n();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState<SearchIndex | null>(null); // loaded on the first focus
@@ -200,7 +203,7 @@ function AthleteSlot({
     <div ref={box} className="relative">
       <div className="text-[11px] font-bold uppercase tracking-wider text-muted mb-1.5 flex items-center gap-2">
         <span className="w-3 h-[3px] shrink-0" style={{ background: COLORS[slot] }} />
-        Athlete {slot === "a" ? 1 : 2}
+        {t(d.h2h.form.athlete, { n: slot === "a" ? 1 : 2 })}
       </div>
       {loading ? (
         <div className="h-10 px-3 border border-rule flex items-center">
@@ -215,7 +218,7 @@ function AthleteSlot({
           <span className="text-[12px] text-muted shrink-0 tnum">{picked.score}</span>
           <button
             type="button"
-            aria-label="Clear"
+            aria-label={d.h2h.form.clear}
             onClick={() => {
               onPick(null);
               // the search box replaces the name: focus it once it is there
@@ -238,7 +241,7 @@ function AthleteSlot({
             type="text"
             autoComplete="off"
             value={query}
-            placeholder="Search athlete"
+            placeholder={d.h2h.form.searchAthlete}
             onFocus={() => {
               loadSearchIndex().then(setIndex, () => {});
             }}
@@ -269,7 +272,7 @@ function AthleteSlot({
                     <Flag ioc={hit.country} />
                     <span className="font-medium truncate">{shortName(hit.family_name, hit.given_name)}</span>
                     {/* another weight than the one picked: say which */}
-                    {other && <span className="text-[12px] text-muted shrink-0">{weightTitle(other)}</span>}
+                    {other && <span className="text-[12px] text-muted shrink-0">{f.weightTitle(other)}</span>}
                     <span className={`ml-auto w-10 text-right tnum shrink-0 ${hit.place === null ? "text-muted" : "font-semibold"}`}>
                       {hit.score ?? "—"}
                     </span>
@@ -278,7 +281,7 @@ function AthleteSlot({
               );
             })
           ) : (
-            <li className="h-10 px-3 flex items-center text-[13px] text-muted">No athletes found</li>
+            <li className="h-10 px-3 flex items-center text-[13px] text-muted">{d.h2h.form.noAthletes}</li>
           )}
         </ul>
       )}
@@ -302,19 +305,20 @@ function ResultSkeleton() {
 }
 
 function PopularMatchups({ matchups, onPick }: { matchups: Matchup[]; onPick: (matchup: Matchup) => void }) {
+  const { d, f } = useI18n();
   return (
     <section className="mt-10 lg:mt-12">
       <div className="flex items-baseline justify-between gap-3 border-b-2 border-ink pb-2">
         <h2 className="font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight">
-          Popular matchups
+          {d.h2h.popular.title}
         </h2>
       </div>
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tnum">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${TH} text-left`}>Athletes</th>
-            <th className={`${TH} text-right w-14 sm:w-20`}>Score</th>
-            <th className={`${TH} text-right w-28 hidden sm:table-cell`}>Last meeting</th>
+            <th className={`${TH} text-left`}>{d.h2h.popular.athletes}</th>
+            <th className={`${TH} text-right w-14 sm:w-20`}>{d.h2h.popular.score}</th>
+            <th className={`${TH} text-right w-28 hidden sm:table-cell`}>{d.h2h.popular.lastMeeting}</th>
             <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
@@ -335,7 +339,7 @@ function PopularMatchups({ matchups, onPick }: { matchups: Matchup[]; onPick: (m
               <td className={`${TD} w-14 sm:w-20 text-right font-semibold`}>
                 {m.wins}–{m.losses}
               </td>
-              <td className={`${TD} w-28 text-right text-muted hidden sm:table-cell`}>{m.last ? monthYear(m.last) : "–"}</td>
+              <td className={`${TD} w-28 text-right text-muted hidden sm:table-cell`}>{m.last ? f.monthYear(m.last) : "–"}</td>
               <td className={`${CHEVRON_CELL}`}>
                 <RowChevron />
               </td>

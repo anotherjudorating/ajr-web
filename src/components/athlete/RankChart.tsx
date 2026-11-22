@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { ChartTip, monthTicks, nearest, pointerX, useChartPointer } from "@/components/chart";
-import { formatDate, monthYear } from "@/lib/format";
+import { useI18n } from "@/i18n/client";
 import type { Places } from "@/lib/places";
 import { type Highlight, SINCE } from "@/lib/standing";
 
@@ -42,6 +42,7 @@ export function RankChart({
   idle?: { from: number; to: number }[];
   ends?: boolean; // the latest places after the line (a phone: in the header)
 }) {
+  const { d, f, t } = useI18n();
   useEffect(() => {
     if (!run || !onClear) return;
     const key = (e: KeyboardEvent) => e.key === "Escape" && onClear();
@@ -115,7 +116,7 @@ export function RankChart({
                 <rect x={x1} y={TOP} width={Math.max(x2 - x1, 0)} height={BOTTOM - TOP} fill="url(#rank-inactive)" />
                 {x2 - x1 > 70 && (
                   <text x={(x1 + x2) / 2} y={BOTTOM - 8} textAnchor="middle" fill="#66605C" fontFamily={FONT} fontSize="11">
-                    Inactive
+                    {d.athlete.chart.inactive}
                   </text>
                 )}
               </g>
@@ -163,7 +164,7 @@ export function RankChart({
             {last.place !== null && last.p4p !== null && Math.abs(y(last.place) - y(last.p4p)) < 14 ? (
               <text fill="#33302E" x={x(last.day) + 8} y={y(last.place) + 4}>
                 <tspan fontWeight="700">#{last.place}</tspan>
-                <tspan fill="#66605C"> P4P #{last.p4p}</tspan>
+                <tspan fill="#66605C"> {t(d.athlete.chart.p4pPlace, { place: last.p4p })}</tspan>
               </text>
             ) : (
               <>
@@ -174,7 +175,7 @@ export function RankChart({
                 )}
                 {last.p4p !== null && (
                   <text fill="#66605C" x={x(last.day) + 8} y={y(last.p4p) + 4}>
-                    P4P #{last.p4p}
+                    {t(d.athlete.chart.p4pPlace, { place: last.p4p })}
                   </text>
                 )}
               </>
@@ -184,21 +185,23 @@ export function RankChart({
         <g fill="#66605C" fontFamily={FONT} fontSize={at.font} textAnchor="middle">
           {ticks.map((tick) => (
             <text key={tick} x={x(tick)} y={at.datesY}>
-              {monthYear(new Date(tick).toISOString())}
+              {f.monthYear(new Date(tick).toISOString())}
             </text>
           ))}
           <text x={RIGHT} y={at.datesY} textAnchor={ends ? "middle" : "end"}>
-            {monthYear(new Date(now).toISOString())}
+            {f.monthYear(new Date(now).toISOString())}
           </text>
         </g>
       </svg>
       {hovered && (
         <ChartTip left={(x(hovered.day) / at.width) * 100} top={((hovered.place !== null ? y(hovered.place) : TOP) / at.height) * 100} hold={hold} docked={touched}>
-          <div className="font-semibold text-ink">Week of {formatDate(new Date(hovered.day).toISOString().slice(0, 10))}</div>
+          <div className="font-semibold text-ink">{t(d.athlete.chart.weekOf, { date: f.formatDate(new Date(hovered.day).toISOString().slice(0, 10)) })}</div>
           <div className="text-muted">
-            {hovered.place !== null ? `#${hovered.place} in ${weight.replace("-", "−")} kg` : `Not in the ${weight.replace("-", "−")} kg table`}
+            {hovered.place !== null
+              ? t(d.athlete.chart.placeIn, { place: hovered.place, weight: weight.replace("-", "−") })
+              : t(d.athlete.chart.notInTable, { weight: weight.replace("-", "−") })}
           </div>
-          {hovered.p4p !== null && <div className="text-muted">#{hovered.p4p} pound for pound</div>}
+          {hovered.p4p !== null && <div className="text-muted">{t(d.athlete.chart.placeP4p, { place: hovered.p4p })}</div>}
         </ChartTip>
       )}
     </div>

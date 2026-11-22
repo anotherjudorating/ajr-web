@@ -10,24 +10,15 @@ import { RowLink } from "@/components/RowLink";
 import { HEAD_CELL, ROW_CELL } from "@/components/tournament/styles";
 import type { HistoryRow } from "@/lib/api";
 import { SECTION } from "@/lib/anchors";
-import { formatDate, shortCompetition } from "@/lib/format";
+import { useI18n } from "@/i18n/client";
+import { shortCompetition } from "@/lib/format";
 import { LEVELS, levelOf } from "@/lib/levels";
 import { tournamentPath, WEIGHTS } from "@/lib/weights";
 
-// The levels too long for one line of a phone's Results table.
-const SHORT: Record<string, string> = {
-  "World Championships": "World Ch.",
-  "Continental Championships": "Continental Ch.",
-  "Continental Opens & Cups": "Opens & Cups",
-};
 const H2 = "font-serif text-[20px] sm:text-[24px] font-bold text-ink border-b-2 border-ink pb-2";
 const KINDS: MedalKind[] = ["gold", "silver", "bronze"];
-// The places without a medal, as columns: key, heading, tooltip.
-const PLACES = [
-  ["fifth", "5th", "Fifth place"],
-  ["seventh", "7th", "Seventh place"],
-  ["other", "Other", "Out earlier, or a result judobase does not give"],
-] as const;
+// The places without a medal, as columns (the heading and the tooltip: in the component).
+const PLACES = ["fifth", "seventh", "other"] as const;
 const WIDE = "hidden md:table-cell";
 
 type Entry = {
@@ -71,6 +62,7 @@ const isMedal = (result: string | null): result is MedalKind => KINDS.includes(r
 //
 // #results opens the page here (lib/anchors.ts).
 export function Medals({ history }: { history: HistoryRow[] }) {
+  const { d, f } = useI18n();
   const { ref, scrollNow } = useHashTarget(SECTION.results);
   const [open, setOpen] = useState<string | null>(null);
   useLayoutEffect(scrollNow, [scrollNow]);
@@ -85,29 +77,37 @@ export function Medals({ history }: { history: HistoryRow[] }) {
     return { title: level.title, list, gold, silver, bronze, fifth, seventh, other };
   }).filter((level) => level.list.length > 0);
   if (levels.length === 0) return null;
+  // the levels too long for one line of a phone's Results table
+  const short = d.athlete.results.short as Record<string, string | undefined>;
+  // the places without a medal, as columns: heading, tooltip
+  const places = {
+    fifth: [d.common.results["5th"], d.athlete.results.fifth],
+    seventh: [d.common.results["7th"], d.athlete.results.seventh],
+    other: [d.athlete.results.other, d.athlete.results.otherTitle],
+  };
 
   return (
     <section id={SECTION.results} ref={ref} className="mt-14 md:mt-16">
-      <h2 className={H2}>Results</h2>
+      <h2 className={H2}>{d.athlete.results.title}</h2>
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-left`}>Level</th>
+            <th className={`${HEAD_CELL} text-left`}>{d.athlete.results.level}</th>
             {KINDS.map((kind) => (
-              <th key={kind} className={`${HEAD_CELL} text-center w-11 sm:w-14`} title={kind}>
+              <th key={kind} className={`${HEAD_CELL} text-center w-11 sm:w-14`} title={d.athlete.results.medals[kind]}>
                 <span className="inline-flex justify-center w-full">
                   <Medal kind={kind} />
                 </span>
               </th>
             ))}
             {/* places without a medal: on wider screens only */}
-            {PLACES.map(([key, label, title]) => (
-              <th key={key} className={`${HEAD_CELL} ${WIDE} text-center w-14`} title={title}>
-                {label}
+            {PLACES.map((key) => (
+              <th key={key} className={`${HEAD_CELL} ${WIDE} text-center w-14`} title={places[key][1]}>
+                {places[key][0]}
               </th>
             ))}
-            <th className={`${HEAD_CELL} text-right w-14 sm:w-16`} title="Tournaments entered">
-              Total
+            <th className={`${HEAD_CELL} text-right w-14 sm:w-16`} title={d.athlete.results.totalTitle}>
+              {d.athlete.results.total}
             </th>
             <th className="w-8 sm:w-10 h-9 py-0" />
           </tr>
@@ -124,9 +124,9 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                 >
                   <td className={`${ROW_CELL} font-medium`}>
                     {/* a phone: the long levels shortened to one line (two lines filled the row) */}
-                    {SHORT[level.title] ? (
+                    {short[level.title] ? (
                       <>
-                        <span className="sm:hidden">{SHORT[level.title]}</span>
+                        <span className="sm:hidden">{short[level.title]}</span>
                         <span className="hidden sm:inline">{level.title}</span>
                       </>
                     ) : (
@@ -138,7 +138,7 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                       {level[kind]}
                     </td>
                   ))}
-                  {PLACES.map(([key]) => (
+                  {PLACES.map((key) => (
                     <td key={key} className={`${ROW_CELL} ${WIDE} text-center`}>
                       {level[key]}
                     </td>
@@ -160,7 +160,7 @@ export function Medals({ history }: { history: HistoryRow[] }) {
                     >
                       <td colSpan={4} className="h-9 pl-4 sm:pl-6 pr-2 py-1.5">
                         <span className="flex items-center gap-2 min-w-0">
-                          <span className="hidden sm:inline text-muted tabular-nums w-[88px] shrink-0">{formatDate(e.day)}</span>
+                          <span className="hidden sm:inline text-muted tabular-nums w-[88px] shrink-0">{f.formatDate(e.day)}</span>
                           <span className="text-muted tabular-nums w-9 sm:w-10 shrink-0">{e.weight ? weightLabel(e.weight) : ""}</span>
                           {e.country && <Flag ioc={e.country} />}
                           <span className="text-ink truncate group-hover:underline sm:hidden">{shortCompetition(e.competition)}</span>

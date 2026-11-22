@@ -8,9 +8,11 @@ import { type ChartAthlete, H2HChart } from "@/components/h2h/H2HChart";
 import { CHEVRON_CELL, RowChevron } from "@/components/Icon";
 import { changeText, isUpset } from "@/components/rankings/Changes";
 import { RowLink } from "@/components/RowLink";
+import type { Dict } from "@/i18n/en";
 import type { Athlete, HistoryRow } from "@/lib/api";
 import type { Places } from "@/lib/places";
-import { formatChance, formatDate, monthYear, roundCode, shortCompetition, shortName } from "@/lib/format";
+import { i18n } from "@/i18n/server";
+import { roundCode, shortCompetition, shortName } from "@/lib/format";
 import { COLORS, winChance } from "@/lib/h2h";
 import { tournamentPath } from "@/lib/weights";
 
@@ -36,7 +38,8 @@ function calculatorLink(a: Athlete, b: Athlete): string {
 
 // Two athletes side by side: their chances today, both ratings over time and every
 // meeting between them.
-export function Comparison({ a, b, today }: { a: Side; b: Side; today: string }) {
+export async function Comparison({ a, b, today }: { a: Side; b: Side; today: string }) {
+  const { d, f, t } = await i18n();
   const chanceA = winChance(a.athlete.rating ?? 0, a.athlete.rd ?? 0, b.athlete.rating ?? 0, b.athlete.rd ?? 0);
   const meetings = a.history.filter((contest) => contest.opponent_id === b.athlete.id);
   const winsA = meetings.filter((contest) => contest.won).length;
@@ -53,25 +56,25 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
     <>
       <section className="mt-10 lg:mt-12">
         <div className="flex items-baseline justify-between gap-3 border-b-2 border-ink pb-2">
-          <h2 className={H2}>Current chances</h2>
+          <h2 className={H2}>{d.h2h.comparison.currentChances}</h2>
           <Link
             href={calculatorLink(a.athlete, b.athlete)}
             className="font-serif shrink-0 whitespace-nowrap text-[14px] font-semibold text-claret hover:underline"
           >
-            How ratings work
+            {d.h2h.comparison.howRatingsWork}
           </Link>
         </div>
         <table className="w-full border-collapse text-[13px] sm:text-[14px] tabular-nums">
           <thead>
             <tr className="bg-panel border-b border-rule">
-              <th className={`${TH} text-left`}>Athlete</th>
-              <th className={`${TH} text-right w-12 sm:w-16`}>Rank</th>
-              <th className={`${TH} text-right w-16 sm:w-20`}>Rating</th>
-              <th className={`${TH} text-right w-20 hidden sm:table-cell`}>Skill</th>
-              <th className={`${TH} text-right w-16 hidden sm:table-cell`}>RD</th>
-              <th className={`${TH} text-right w-20 hidden sm:table-cell`}>90 days</th>
-              <th className={`${TH} text-right w-24 hidden sm:table-cell`}>W–L 12m</th>
-              <th className={`${TH} text-right w-16 sm:w-20`}>Chance</th>
+              <th className={`${TH} text-left`}>{d.h2h.comparison.athlete}</th>
+              <th className={`${TH} text-right w-12 sm:w-16`}>{d.h2h.comparison.rank}</th>
+              <th className={`${TH} text-right w-16 sm:w-20`}>{d.h2h.comparison.rating}</th>
+              <th className={`${TH} text-right w-20 hidden sm:table-cell`}>{d.h2h.comparison.skill}</th>
+              <th className={`${TH} text-right w-16 hidden sm:table-cell`}>{d.h2h.comparison.rd}</th>
+              <th className={`${TH} text-right w-20 hidden sm:table-cell`}>{d.h2h.comparison.days90}</th>
+              <th className={`${TH} text-right w-24 hidden sm:table-cell`}>{d.h2h.comparison.winsLosses12m}</th>
+              <th className={`${TH} text-right w-16 sm:w-20`}>{d.h2h.comparison.chance}</th>
             </tr>
           </thead>
           <tbody>
@@ -102,13 +105,13 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
                   <td className={`${TD} text-right hidden sm:table-cell`}>
                     {wins}–{year.length - wins}
                   </td>
-                  <td className={`${TD} text-right text-muted`}>{formatChance(chance)}</td>
+                  <td className={`${TD} text-right text-muted`}>{f.formatChance(chance)}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-        <p className="mt-2 text-[12px] text-muted">Chance from the ratings. Rating = skill − RD.</p>
+        <p className="mt-2 text-[12px] text-muted">{d.h2h.comparison.note}</p>
       </section>
 
       <H2HChart athletes={chart} today={today} />
@@ -116,28 +119,28 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
       <section id={SECTION.meetings} className="mt-14 lg:mt-16">
         <HashScroll id={SECTION.meetings} />
         <div className="flex items-baseline justify-between gap-3 border-b-2 border-ink pb-2">
-          <h2 className={H2}>{meetingsTitle(a.athlete, b.athlete, winsA, meetings.length - winsA)}</h2>
+          <h2 className={H2}>{meetingsTitle(d.h2h.comparison, t, a.athlete, b.athlete, winsA, meetings.length - winsA)}</h2>
         </div>
         {meetings.length === 0 ? (
-          <p className="py-4 text-[14px] text-muted">They have not met in IJF events yet.</p>
+          <p className="py-4 text-[14px] text-muted">{d.h2h.comparison.notMet}</p>
         ) : (
           <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
             <thead>
               <tr className="h-0">
                 <th className="w-[72px] sm:w-32 h-0 p-0">
-                  <span className="sr-only">Date</span>
+                  <span className="sr-only">{d.h2h.comparison.date}</span>
                 </th>
                 <th className="w-[96px] sm:w-auto h-0 p-0">
-                  <span className="sr-only">Tournament</span>
+                  <span className="sr-only">{d.h2h.comparison.tournament}</span>
                 </th>
                 <th className="w-10 sm:w-20 h-0 p-0">
-                  <span className="sr-only">Round</span>
+                  <span className="sr-only">{d.h2h.comparison.round}</span>
                 </th>
                 <th className="h-0 p-0">
-                  <span className="sr-only">Winner</span>
+                  <span className="sr-only">{d.h2h.comparison.winner}</span>
                 </th>
                 <th className="w-32 h-0 p-0 hidden sm:table-cell">
-                  <span className="sr-only">Winner&apos;s chance</span>
+                  <span className="sr-only">{d.h2h.comparison.winnersChance}</span>
                 </th>
                 <th className="w-8 sm:w-10 h-0 p-0" />
               </tr>
@@ -149,8 +152,8 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
                 return (
                   <RowLink key={contest.contest_id} href={`/contests/${contest.contest_id}`} className="border-b border-rule hover:bg-panel/40">
                     <td className={`${TD} whitespace-nowrap text-muted`}>
-                      <span className="sm:hidden">{monthYear(contest.fought_on)}</span>
-                      <span className="hidden sm:inline">{formatDate(contest.fought_on)}</span>
+                      <span className="sm:hidden">{f.monthYear(contest.fought_on)}</span>
+                      <span className="hidden sm:inline">{f.formatDate(contest.fought_on)}</span>
                     </td>
                     <td className={`${TD} whitespace-nowrap overflow-hidden`}>
                       {/* the tournament's page of that weight, the row the contest's */}
@@ -170,14 +173,14 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
                       <span className="inline-flex items-center gap-1.5">
                         {isUpset(true, chance) && (
                           <span className="text-[10px] font-bold uppercase tracking-[0.05em] px-1 py-0.5 border leading-none text-gain border-gain">
-                            Upset
+                            {d.h2h.comparison.upset}
                           </span>
                         )}
-                        {formatChance(chance)}
+                        {f.formatChance(chance)}
                       </span>
                     </td>
                     <td className={`${CHEVRON_CELL}`}>
-                      <Link href={`/contests/${contest.contest_id}`} aria-label="The contest">
+                      <Link href={`/contests/${contest.contest_id}`} aria-label={d.h2h.comparison.theContest}>
                         <RowChevron />
                       </Link>
                     </td>
@@ -193,10 +196,12 @@ export function Comparison({ a, b, today }: { a: Side; b: Side; today: string })
 }
 
 // "Heydarov leads 3–1", "Level at 2–2", "No meetings yet"
-function meetingsTitle(a: Athlete, b: Athlete, winsA: number, winsB: number): string {
-  if (winsA + winsB === 0) return "No meetings yet";
-  if (winsA === winsB) return `Level at ${winsA}–${winsB}`;
+function meetingsTitle(words: Dict["h2h"]["comparison"], t: Fill, a: Athlete, b: Athlete, winsA: number, winsB: number): string {
+  if (winsA + winsB === 0) return words.noMeetings;
+  if (winsA === winsB) return t(words.level, { a: winsA, b: winsB });
   const leader = winsA > winsB ? a : b;
   const name = shortName(leader.family_name, null);
-  return `${name} leads ${Math.max(winsA, winsB)}–${Math.min(winsA, winsB)}`;
+  return t(words.leads, { name, high: Math.max(winsA, winsB), low: Math.min(winsA, winsB) });
 }
+
+type Fill = Awaited<ReturnType<typeof i18n>>["t"];

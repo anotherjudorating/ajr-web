@@ -10,12 +10,7 @@ import { popularMatchups } from "@/lib/matchups";
 import { WEIGHTS } from "@/lib/weights";
 import { fullName } from "@/lib/format";
 import { alternatesFor, hasParams, NOINDEX } from "@/lib/seo";
-import { currentLang } from "@/i18n/server";
-
-const METADATA: Metadata = {
-  title: "Judo head-to-head, compare two judoka",
-  description: "Compare any two judoka: their ratings over time, the chance of each to win today and every contest between them.",
-};
+import { i18n } from "@/i18n/server";
 
 // The form is indexed; so is a pair that has met (the other way round, or with a
 // weight, is the same page: one address, the lower id first). A pair that never
@@ -27,7 +22,8 @@ export async function generateMetadata({ searchParams }: PageProps<"/[lang]/head
     return Number.isInteger(value) && value > 0 ? value : null;
   };
   const [idA, idB] = [id("a"), id("b")];
-  const lang = await currentLang();
+  const { lang, d, t } = await i18n();
+  const METADATA: Metadata = { title: d.h2h.meta.title, description: d.h2h.meta.description };
   if (!idA || !idB || idA === idB) {
     const filtered = hasParams(query);
     const form = { ...METADATA, alternates: alternatesFor(lang, "/head-to-head", { indexed: !filtered }) };
@@ -38,20 +34,21 @@ export async function generateMetadata({ searchParams }: PageProps<"/[lang]/head
   const met = history.some((contest) => contest.opponent_id === idB);
   const [low, high] = idA < idB ? [idA, idB] : [idB, idA];
   return {
-    title: `${fullName(first.family_name, first.given_name)} vs ${fullName(second.family_name, second.given_name)}`,
-    description: "Head-to-head: their ratings, the chance of each to win today and every contest between them.",
+    title: t(d.h2h.meta.pairTitle, { a: fullName(first.family_name, first.given_name), b: fullName(second.family_name, second.given_name) }),
+    description: d.h2h.meta.pairDescription,
     alternates: alternatesFor(lang, `/head-to-head?a=${low}&b=${high}`, { indexed: met }),
     ...(met ? {} : { robots: NOINDEX }),
   };
 }
 
-export default function Page({ searchParams }: PageProps<"/[lang]/head-to-head">) {
+export default async function Page({ searchParams }: PageProps<"/[lang]/head-to-head">) {
+  const { d } = await i18n();
   return (
     <div className="w-full bg-paper pt-[37.25px] sm:pt-[47.25px] md:pt-[48.75px] pb-8">
       <h1 className="font-serif text-[30px] leading-[36px] sm:text-[36px] sm:leading-[40px] font-bold tracking-[-0.015em]">
-        Head-to-head
+        {d.h2h.title}
       </h1>
-      <p className="mt-1.5 text-[14px] text-muted">Compare two athletes: ratings, win chance and every meeting.</p>
+      <p className="mt-1.5 text-[14px] text-muted">{d.h2h.lead}</p>
       <Suspense fallback={<H2HBrowser weight={null} a={null} b={null} popular={[]} result={null} loading />}>
         <Content searchParams={searchParams} />
       </Suspense>
