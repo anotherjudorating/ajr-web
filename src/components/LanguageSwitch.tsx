@@ -11,18 +11,18 @@ export function rememberLang(lang: Lang) {
 }
 
 // The header's language choice: the site's own select (the toolbars' control) with the
-// "language" icon in it (a globe; not "translate", which says machine translation), the
-// languages by their own names, on a phone by their codes. Choosing one remembers it and
+// "language" icon in it (a globe; not "translate", which says machine translation) and
+// the languages' codes (EN, RU), on a phone without the box. Choosing one remembers it and
 // opens the same page (path, query and hash) in that language; crawlers find the other
 // languages in the head's hreflang links. Shown only when there is a language to switch to.
-export function LanguageSwitch({ pathname, short = false, className = "" }: { pathname: string; short?: boolean; className?: string }) {
+export function LanguageSwitch({ pathname, bare = false, className = "" }: { pathname: string; bare?: boolean; className?: string }) {
   const d = useDict();
   const lang = useLang();
   if (PUBLISHED.length < 2) return null;
   const path = stripLocale(pathname || "/").path;
   return (
     <div className={`relative shrink-0 ${className}`}>
-      <Icon size={16} name="language" className="absolute left-2 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+      <Icon size={16} name="language" className={`absolute ${bare ? "left-0" : "left-2"} top-1/2 -translate-y-1/2 text-muted pointer-events-none`} />
       <select
         value={lang}
         aria-label={d.site.language.label}
@@ -33,11 +33,12 @@ export function LanguageSwitch({ pathname, short = false, className = "" }: { pa
           // eslint-disable-next-line @next/next/no-location-assign-relative-destination
           location.assign(`${localePath(to, path)}${location.search}${location.hash}`);
         }}
-        className={`${CONTROL} pl-7`}
+        // a phone's header: the globe and the code only, no box and no arrow, as light as the search icon
+        className={bare ? "h-8 pl-5 pr-0 bg-transparent appearance-none text-[12px] font-medium text-muted focus:outline-none cursor-pointer" : `${CONTROL} pl-7`}
       >
         {PUBLISHED.map((locale) => (
           <option key={locale.code} value={locale.code} lang={locale.htmlLang}>
-            {short ? locale.short : locale.name}
+            {locale.short}
           </option>
         ))}
       </select>
