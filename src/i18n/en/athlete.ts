@@ -18,7 +18,7 @@ export const athlete = {
   // "−73 kg": a weight tab, a filter's option, the Rank chart's legend
   weightKg: "{weight} kg",
   header: {
-    age: "{age} y.o.",
+    age: forms({ other: "{n} y.o." }),
     rank: "Rank",
     best: "Best",
     peak: "Peak",
@@ -138,11 +138,11 @@ export const athlete = {
     otherTitle: "Out earlier, or a result judobase does not give",
     total: "Total",
     totalTitle: "Tournaments entered",
-    // the levels too long for one line of a phone, by their title (lib/levels.ts)
+    // the levels too long for one line of a phone, by their id (lib/levels.ts)
     short: {
-      "World Championships": "World Ch.",
-      "Continental Championships": "Continental Ch.",
-      "Continental Opens & Cups": "Opens & Cups",
+      worlds: "World Ch.",
+      continental: "Continental Ch.",
+      opens: "Opens & Cups",
     },
   },
 };

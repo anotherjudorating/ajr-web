@@ -7,12 +7,14 @@
 import type { Dict } from "@/i18n/en";
 import type { Lang } from "@/i18n/locales";
 import { plural, t } from "@/i18n/t";
+import { FLAG_CODES } from "@/lib/flags";
 import { roundCode } from "@/lib/format";
 import type { Weight } from "@/lib/weights";
 
 export type Format = ReturnType<typeof localeFormat>;
 
 const ORDINALS = new Map<Lang, Intl.PluralRules>();
+const REGIONS = new Map<Lang, Intl.DisplayNames>();
 const NUMBERS = new Map<Lang, Intl.NumberFormat>();
 
 // toLocaleString("en-US") across the English site: "24,503"; Russian "24 503".
@@ -48,7 +50,7 @@ export function localeFormat(lang: Lang, dict: Dict) {
     // "2026-03-14" -> "Mar 2026"
     monthYear(value: string): string {
       const date = new Date(value);
-      return `${months[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+      return `${common.monthsStandalone[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
     },
     // A place: 1st, 2nd, 3rd, 4th… 11th, 21st (the language's ordinal rules).
     ordinal(n: number): string {
@@ -77,6 +79,25 @@ export function localeFormat(lang: Lang, dict: Dict) {
     // 24503 -> "24,503"
     number(value: number): string {
       return numberFormat(lang).format(value);
+    },
+    // A nation's name: in English as the database has it; in another language by its
+    // ISO code (lib/flags.ts) through Intl.DisplayNames, the dictionary's exceptions
+    // first (teams without a country, names the language writes otherwise), the English
+    // name when neither knows it. `name` is the database's, `code` the IOC code.
+    country(code: string | null | undefined, name: string | null | undefined): string {
+      const fallback = name ?? code ?? "";
+      if (lang === "en" || !code) return fallback;
+      const own = (common.countries as Record<string, string | undefined>)[code];
+      if (own) return own;
+      const iso = FLAG_CODES[code];
+      if (!iso) return fallback;
+      let regions = REGIONS.get(lang);
+      if (!regions) REGIONS.set(lang, (regions = new Intl.DisplayNames([lang], { type: "region" })));
+      try {
+        return regions.of(iso.toUpperCase()) ?? fallback;
+      } catch {
+        return fallback;
+      }
     },
     // The count with its noun: plural(dict.common.contests, 5) -> "5 contests".
     count(forms: Dict["common"]["contests"], n: number, shown: string | number = n): string {

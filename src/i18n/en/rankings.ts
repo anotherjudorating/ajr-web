@@ -2,6 +2,8 @@
 
 export const rankings = {
   teams: "Teams",
+  // WeightSwitcher: the small labels before the rows (a language may abbreviate)
+  switcher: { men: "Men", women: "Women", teams: "Teams" },
   breadcrumb: "Rankings",
   // "−73 kg": a weight in a list or a column
   weightKg: "{label} kg",

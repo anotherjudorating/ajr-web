@@ -69,7 +69,7 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
   };
   const medals = (t: CountryTournament) => t.gold * 1e6 + t.silver * 1e3 + t.bronze;
   const years = [...new Set(all.map((t) => t.date_from.slice(0, 4)))];
-  const levels = LEVELS.map((l) => l.title).filter((title) => all.some((t) => levelOf(t.rank_name) === title));
+  const levels = LEVELS.map((l) => l.id).filter((id) => all.some((t) => levelOf(t.rank_name) === id));
   const needle = query.trim().toLowerCase();
   const rows = all
     .filter(
@@ -95,7 +95,7 @@ export function Tournaments({ rows: all, ioc }: { rows: CountryTournament[]; ioc
           <Select
             value={level}
             onChange={reset(setLevel)}
-            options={[{ value: "", label: words.allLevels }, ...levels.map((l) => ({ value: l, label: l }))]}
+            options={[{ value: "", label: words.allLevels }, ...levels.map((l) => ({ value: l, label: d.common.levels[l] }))]}
           />
         </div>
         <div className="grid grid-cols-2 gap-2 md:flex md:items-center md:justify-end lg:ml-auto">

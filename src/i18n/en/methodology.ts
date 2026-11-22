@@ -1,6 +1,5 @@
 // The methodology's figures (src/components/methodology): the calculator, the draw, the
-// charts, the quiz and the tables. The page's prose (src/app/[lang]/methodology/page.tsx)
-// is not here yet.
+// charts, the quiz and the tables. The page's prose is in src/content/methodology/<lang>.tsx.
 
 export const methodology = {
   // "−81 kg": a weight with its unit, the code as the data writes it
@@ -74,6 +73,33 @@ export const methodology = {
       wikipedia: "Wikipedia",
       paper: "Mark Glickman's paper",
     },
+  },
+  // The test's figures on the page itself: AJR against IJF, the five models' table,
+  // the folded details.
+  test: {
+    ajrVsIjf: "AJR against IJF",
+    contestsFromTo: "{contests} from July 2025 to November 2026.",
+    coin: "50% coin",
+    differentWinners: "Contests where AJR and IJF picked different winners",
+    ajrPickWon: "AJR's pick won {n} times in 100",
+    ijfPickWon: "IJF's {n}",
+    accuracy: "Accuracy",
+    logLoss: "Log loss",
+    notesTitle: "Test details and settings",
+    models: { coin: "Coin flip", ijf: "IJF World Ranking List", elo: "Elo (K = 32)", glicko2: "Glicko-2, textbook", ours: "Another Judo Rating" },
+    modelsShort: { coin: "Coin", ijf: "IJF", elo: "Elo", glicko2: "Glicko-2", ours: "AJR" },
+    slices: { all: "All contests", medal_rounds: "Medal rounds of majors", newcomers: "With a newcomer (under 10 contests)" },
+    // the settings' table: [label, value]
+    params: [
+      ["Start: skill, RD, volatility σ", "1500, 350, 0.06"],
+      ["τ (how fast the volatility moves)", "0.5"],
+      ["RD growth a day away", "RD² + 5² a day, at most 350"],
+      ["Rating period", "every contest"],
+      ["Rating", "skill − 1 × RD"],
+      ["A change of weight", "skill × 0.95 up, × 1.05 down"],
+      ["Elo baseline", "start 1500, K = 32, scale 400"],
+      ["Textbook Glicko-2 baseline", "monthly periods, same start and τ"],
+    ] as [string, string][],
   },
   calibration: {
     title: "Does 70% mean 70%?",

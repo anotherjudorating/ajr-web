@@ -12,7 +12,7 @@ import type { HistoryRow } from "@/lib/api";
 import { SECTION } from "@/lib/anchors";
 import { useI18n } from "@/i18n/client";
 import { shortCompetition } from "@/lib/format";
-import { LEVELS, levelOf } from "@/lib/levels";
+import { type LevelId, LEVELS, levelOf } from "@/lib/levels";
 import { tournamentPath, WEIGHTS } from "@/lib/weights";
 
 const H2 = "font-serif text-[20px] sm:text-[24px] font-bold text-ink border-b-2 border-ink pb-2";
@@ -31,8 +31,8 @@ type Entry = {
 };
 
 // One entry per tournament and weight (an athlete can enter two weights of one event).
-function entries(history: HistoryRow[]): (Entry & { level: string })[] {
-  const byKey = new Map<string, Entry & { level: string }>();
+function entries(history: HistoryRow[]): (Entry & { level: LevelId })[] {
+  const byKey = new Map<string, Entry & { level: LevelId }>();
   for (const row of history) {
     const key = `${row.competition_id}/${row.weight}`;
     const seen = byKey.get(key);
@@ -64,21 +64,21 @@ const isMedal = (result: string | null): result is MedalKind => KINDS.includes(r
 export function Medals({ history }: { history: HistoryRow[] }) {
   const { d, f } = useI18n();
   const { ref, scrollNow } = useHashTarget(SECTION.results);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<LevelId | null>(null);
   useLayoutEffect(scrollNow, [scrollNow]);
   const all = entries(history);
   const levels = LEVELS.map((level) => {
-    const list = all.filter((e) => e.level === level.title);
+    const list = all.filter((e) => e.level === level.id);
     const count = (m: MedalKind) => list.filter((e) => e.result === m).length;
     const gold = count("gold"), silver = count("silver"), bronze = count("bronze");
     const fifth = list.filter((e) => e.result === "5th").length;
     const seventh = list.filter((e) => e.result === "7th").length;
     const other = list.length - gold - silver - bronze - fifth - seventh;
-    return { title: level.title, list, gold, silver, bronze, fifth, seventh, other };
+    return { id: level.id, title: d.common.levels[level.id], list, gold, silver, bronze, fifth, seventh, other };
   }).filter((level) => level.list.length > 0);
   if (levels.length === 0) return null;
   // the levels too long for one line of a phone's Results table
-  const short = d.athlete.results.short as Record<string, string | undefined>;
+  const short = d.athlete.results.short as Partial<Record<LevelId, string>>;
   // the places without a medal, as columns: heading, tooltip
   const places = {
     fifth: [d.common.results["5th"], d.athlete.results.fifth],
@@ -114,19 +114,19 @@ export function Medals({ history }: { history: HistoryRow[] }) {
         </thead>
         <tbody>
           {levels.map((level) => {
-            const isOpen = open === level.title;
+            const isOpen = open === level.id;
             return (
-              <Fragment key={level.title}>
+              <Fragment key={level.id}>
                 <tr
                   className="border-b border-rule cursor-pointer hover:bg-panel/40"
-                  onClick={() => setOpen(isOpen ? null : level.title)}
+                  onClick={() => setOpen(isOpen ? null : level.id)}
                   aria-expanded={isOpen}
                 >
                   <td className={`${ROW_CELL} font-medium`}>
                     {/* a phone: the long levels shortened to one line (two lines filled the row) */}
-                    {short[level.title] ? (
+                    {short[level.id] ? (
                       <>
-                        <span className="sm:hidden">{short[level.title]}</span>
+                        <span className="sm:hidden">{short[level.id]}</span>
                         <span className="hidden sm:inline">{level.title}</span>
                       </>
                     ) : (

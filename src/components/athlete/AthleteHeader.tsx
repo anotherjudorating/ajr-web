@@ -95,15 +95,15 @@ export function AthleteHeader({
             {athlete.country ? (
               <Link href={`/countries/${athlete.country.toLowerCase()}`} className="group inline-flex items-center hover:text-ink">
                 <Flag ioc={athlete.country} className="mr-2" />
-                <span className="group-hover:underline">{athlete.country_name ?? athlete.country}</span>
+                <span className="group-hover:underline">{f.country(athlete.country, athlete.country_name)}</span>
               </Link>
             ) : (
-              <span>{athlete.country_name}</span>
+              <span>{f.country(athlete.country, athlete.country_name)}</span>
             )}
             {age !== null && (
               <>
                 <span className="inline-block w-px h-3 bg-rule mx-3 align-middle" />
-                <span>{t(d.athlete.header.age, { age })}</span>
+                <span>{n(d.athlete.header.age, age)}</span>
               </>
             )}
 

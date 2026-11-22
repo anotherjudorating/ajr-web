@@ -178,7 +178,7 @@ function Day({ name, country, event, bouts, points }: { name: string; country: s
             left={{ name, country, chance: b.chance }}
             right={{ name: b.opponent, country: b.country, chance: 1 - b.chance }}
             leftWon={b.won}
-            where={t(s.where, { round: b.round, change: `${b.change > 0 ? "+" : b.change < 0 ? "−" : "±"}${Math.abs(b.change)}` })}
+            where={t(s.where, { round: b.round === "Final" ? d.common.rounds.F : b.round, change: `${b.change > 0 ? "+" : b.change < 0 ? "−" : "±"}${Math.abs(b.change)}` })}
           />
         ))}
       </div>

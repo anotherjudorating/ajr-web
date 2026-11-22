@@ -5,6 +5,8 @@ import { forms } from "@/i18n/t";
 export const common = {
   // Three-letter months everywhere ("Sep", while en-GB writes "Sept").
   months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  // The month on its own, "Mar 2026" (a language may decline the one after a day).
+  monthsStandalone: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
   // A place: 1st, 2nd, 3rd, 4th (Intl.PluralRules with type "ordinal" picks the form).
   ordinal: forms({ one: "{n}st", two: "{n}nd", few: "{n}rd", other: "{n}th" }),
   gender: { men: "Men", women: "Women", mixed: "Mixed" },
@@ -21,6 +23,20 @@ export const common = {
     tour: "Round {n}", // a tour of a round robin
   },
   ratingGap: "Rating gap {points} points",
+  // The levels of a tournament (lib/levels.ts), by id.
+  levels: {
+    olympics: "Olympic Games",
+    worlds: "World Championships",
+    continental: "Continental Championships",
+    masters: "Masters",
+    grandSlam: "Grand Slam",
+    grandPrix: "Grand Prix",
+    opens: "Continental Opens & Cups",
+    other: "Other",
+  },
+  // Nations named otherwise than Intl.DisplayNames does, by IOC code, and the teams
+  // without a country (AIN, EOR, the unions). English takes the database's names.
+  countries: {} as Record<string, string>,
   // The results as the database names them.
   results: { gold: "Gold", silver: "Silver", bronze: "Bronze", "5th": "5th", "7th": "7th" },
   contests: forms({ one: "{n} contest", other: "{n} contests" }),
@@ -33,4 +49,8 @@ export const common = {
   years: forms({ one: "{n} year", other: "{n} years" }),
   wins: forms({ one: "{n} win", other: "{n} wins" }),
   losses: forms({ one: "{n} loss", other: "{n} losses" }),
+  // the records' rows (components/records: a record's noun names one of these)
+  titles: forms({ one: "{n} title", other: "{n} titles" }),
+  rivalries: forms({ one: "{n} rivalry", other: "{n} rivalries" }),
+  pairs: forms({ one: "{n} pair", other: "{n} pairs" }),
 };

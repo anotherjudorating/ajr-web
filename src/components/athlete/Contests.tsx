@@ -61,7 +61,7 @@ export function Contests({
   const [weight, setWeight] = useState(picked ?? "");
   const [level, setLevel] = useState("");
   const contests = useMemo(() => all.filter((c) => !weight || c.weight === weight), [all, weight]);
-  const levels = LEVELS.map((l) => l.title).filter((title) => all.some((c) => levelOf(c.competition_rank) === title));
+  const levels = LEVELS.map((l) => l.id).filter((id) => all.some((c) => levelOf(c.competition_rank) === id));
   const [result, setResult] = useState<Result>(preset?.result ?? "");
   const [sort, setSort] = useState<Sort>(preset?.sort ?? "date-desc");
   const [pageSize, setPageSize] = useState(SHORT_SIZES[0]);
@@ -167,7 +167,7 @@ export function Contests({
             <option value="">{d.athlete.contests.allLevels}</option>
             {levels.map((l) => (
               <option key={l} value={l}>
-                {l}
+                {d.common.levels[l]}
               </option>
             ))}
           </select>
