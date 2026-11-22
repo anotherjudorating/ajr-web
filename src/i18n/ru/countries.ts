@@ -119,7 +119,7 @@ export const countries: Record<string, string> = {
   JUA: "JUA",
   KAZ: "Казахстан",
   KEN: "Кения",
-  KGZ: "Киргизия",
+  KGZ: "Кыргызстан",
   KIR: "Кирибати",
   KOR: "Южная Корея",
   KOS: "Косово",
