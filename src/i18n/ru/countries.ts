@@ -223,7 +223,7 @@ export const countries: Record<string, string> = {
   TKM: "Туркменистан",
   TLS: "Тимор-Лесте",
   TOG: "Того",
-  TPE: "Китайский Тайбэй",
+  TPE: "Тайвань",
   TTO: "Тринидад и Тобаго",
   TUN: "Тунис",
   TUR: "Турция",
