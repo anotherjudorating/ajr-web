@@ -8,6 +8,8 @@ import { signed } from "@/lib/format";
 import { Figure } from "@/components/methodology/Figure";
 import { PARIS, parisPlay } from "@/components/methodology/facts";
 import data from "@/data/methodology.json";
+import type { Dict } from "@/i18n/en";
+import { useI18n } from "@/i18n/client";
 
 // PROTOTYPE of the methodology's first chapter, why the rating exists: the numbers are
 // the bench's (a copy of production, rating = skill − RD) of 11 November 2026; the WRL
@@ -18,12 +20,14 @@ const STEP = "text-[13px] tabular-nums";
 // The contest that should have been a final, and what it did to both; "What if Abe
 // had won": the same maths with the other result.
 export function ParisDraw() {
+  const { d } = useI18n();
+  const s = d.methodology.paris;
   const { abe: a, keldiyorova: k } = PARIS;
   return (
-    <Figure title="Paris 2024, 1/8" caption="Olympic Games, women −52 kg, 28 July 2024.">
+    <Figure title={s.title} caption={s.caption}>
       <ContestSnap
-        left={{ name: a.name, country: a.country, chance: PARIS.abeChance, note: "AJR #1, IJF unseeded" }}
-        right={{ name: k.name, country: k.country, chance: 1 - PARIS.abeChance, note: "AJR #5, IJF seed 1" }}
+        left={{ name: a.name, country: a.country, chance: PARIS.abeChance, note: s.abeNote }}
+        right={{ name: k.name, country: k.country, chance: 1 - PARIS.abeChance, note: s.keldiyorovaNote }}
         leftWon={false}
         href={`/contests/${PARIS.contest}`}
       />
@@ -34,6 +38,9 @@ export function ParisDraw() {
 // What the contest did to both, and what the other result would have done: the real
 // formula, both ways.
 export function ParisWhatIf() {
+  const { d, t } = useI18n();
+  const s = d.methodology.whatIf;
+  const labels = d.methodology.labels;
   const { abe: a, keldiyorova: k } = PARIS;
   const [abeWon, setAbeWon] = useState(false);
   const ua = update(a, k, abeWon ? 1 : 0);
@@ -43,20 +50,20 @@ export function ParisWhatIf() {
       <thead>
         <tr className="border-b border-ink text-left">
           <th className="py-1 pr-3 font-semibold">{name}</th>
-          <th className="py-1 px-2 text-right font-normal text-muted">before</th>
-          <th className="py-1 px-2 text-right font-normal text-muted">after</th>
+          <th className="py-1 px-2 text-right font-normal text-muted">{s.before}</th>
+          <th className="py-1 px-2 text-right font-normal text-muted">{s.after}</th>
           <th className="py-1 pl-2 text-right font-normal text-muted" />
         </tr>
       </thead>
       <tbody>
-        {([["Skill", before.skill, after.skill], ["RD", before.rd, after.rd], ["Rating", ratingOf(before), ratingOf(after)]] as const).map(([label, x, y]) => {
-          const d = Math.round(y) - Math.round(x);
+        {([["skill", before.skill, after.skill], ["rd", before.rd, after.rd], ["rating", ratingOf(before), ratingOf(after)]] as const).map(([key, x, y]) => {
+          const diff = Math.round(y) - Math.round(x);
           return (
-            <tr key={label} className="border-b border-rule">
-              <td className="py-1.5 pr-3 text-muted">{label}</td>
+            <tr key={key} className="border-b border-rule">
+              <td className="py-1.5 pr-3 text-muted">{labels[key]}</td>
               <td className="py-1.5 px-2 text-right">{Math.round(x)}</td>
-              <td className={`py-1.5 px-2 text-right ${label === "Rating" ? "font-bold" : "font-semibold"}`}>{Math.round(y)}</td>
-              <td className={`py-1.5 pl-2 text-right font-semibold ${d > 0 ? "text-gain" : d < 0 ? "text-drop" : "text-muted"}`}>{d === 0 ? "±0" : signed(d)}</td>
+              <td className={`py-1.5 px-2 text-right ${key === "rating" ? "font-bold" : "font-semibold"}`}>{Math.round(y)}</td>
+              <td className={`py-1.5 pl-2 text-right font-semibold ${diff > 0 ? "text-gain" : diff < 0 ? "text-drop" : "text-muted"}`}>{diff === 0 ? "±0" : signed(diff)}</td>
             </tr>
           );
         })}
@@ -66,10 +73,10 @@ export function ParisWhatIf() {
   return (
     <div className="p-4 sm:p-5">
       <div className="flex flex-wrap items-center gap-2 text-[13px]">
-        <span className="text-muted">The result:</span>
+        <span className="text-muted">{s.result}</span>
         {[false, true].map((w) => (
           <button key={String(w)} type="button" onClick={() => setAbeWon(w)} aria-pressed={abeWon === w} className={`h-9 px-3 border font-semibold cursor-pointer ${abeWon === w ? "border-ink bg-ink text-paper" : "border-rule bg-paper text-ink hover:border-ink"}`}>
-            {w ? "What if Abe had won" : "Keldiyorova won"}
+            {w ? s.abeWon : s.keldiyorovaWon}
           </button>
         ))}
       </div>
@@ -78,11 +85,9 @@ export function ParisWhatIf() {
         {table(k.name, k, uk)}
       </div>
       <p className={`mt-3 ${STEP} text-muted`}>
-        {abeWon
-          ? `The expected result: a few points change hands. Abe's RD still shrinks a little, so her rating rises more than her skill.`
-          : `A surprise moves both a lot, and Abe most: with two tournaments in a year her RD was ${Math.round(a.rd)}, so one result could move her far.`}{" "}
+        {abeWon ? s.expected : t(s.surprise, { rd: Math.round(a.rd) })}{" "}
         <a href={parisPlay()} className="font-semibold text-claret hover:underline">
-          Every step of the maths
+          {s.everyStep}
         </a>
       </p>
     </div>
@@ -95,38 +100,42 @@ export function ParisWhatIf() {
 // the most points on the latest list before the event, among the entrants; ours: the
 // highest rating on the eve. Counted on 17 November 2026 (ajr-backend benchmark data and
 // production, read-only); the mixed team events and the multi-sport games (the
-// Commonwealth, the Mediterranean and others) left out.
-const NUMBER_ONE = [
-  { label: "World Championships", weights: 28, ijf: 6, ours: 15 },
-  { label: "Grand Slams", weights: 210, ijf: 58, ours: 77 },
-  { label: "Grand Prix", weights: 111, ijf: 29, ours: 39 },
-  { label: "Continental championships", weights: 166, ijf: 68, ours: 81 },
-  { label: "Continental opens", weights: 428, ijf: 136, ours: 166 },
-  { label: "European Cups", weights: 148, ijf: 44, ours: 43 },
+// Commonwealth, the Mediterranean and others) left out. `key`: the row's name in the
+// dictionary (methodology.numberOne.rows).
+type NumberOneRow = { key: keyof Dict["methodology"]["numberOne"]["rows"]; weights: number; ijf: number; ours: number };
+const NUMBER_ONE: NumberOneRow[] = [
+  { key: "worlds", weights: 28, ijf: 6, ours: 15 },
+  { key: "grandSlams", weights: 210, ijf: 58, ours: 77 },
+  { key: "grandPrix", weights: 111, ijf: 29, ours: 39 },
+  { key: "continentals", weights: 166, ijf: 68, ours: 81 },
+  { key: "opens", weights: 428, ijf: 136, ours: 166 },
+  { key: "europeanCups", weights: 148, ijf: 44, ours: 43 },
 ];
 const TOTAL = NUMBER_ONE.reduce((t, r) => ({ weights: t.weights + r.weights, ijf: t.ijf + r.ijf, ours: t.ours + r.ours }), { weights: 0, ijf: 0, ours: 0 });
 
 export function NumberOneTable() {
+  const { d } = useI18n();
+  const s = d.methodology.numberOne;
   const pct = (n: number, of: number) => `${Math.round((n / of) * 100)}%`;
   const cell = "py-1.5 px-2 text-right tabular-nums";
   return (
     <Figure
-      title="Did the number 1 win the gold?"
-      caption="Every tournament from March 2025 to November 2026."
+      title={s.title}
+      caption={s.caption}
     >
       <div className="overflow-x-auto">
         <table className="w-full text-[13px] sm:text-[14px] border-collapse">
           <thead>
             <tr className="border-b-2 border-ink text-left">
-              <th className="py-2 pr-2 font-semibold">Tournaments</th>
-              <th className="py-2 px-2 font-semibold text-right">IJF #1</th>
-              <th className="py-2 pl-2 font-semibold text-right text-claret">AJR #1</th>
+              <th className="py-2 pr-2 font-semibold">{s.tournaments}</th>
+              <th className="py-2 px-2 font-semibold text-right">{s.ijf}</th>
+              <th className="py-2 pl-2 font-semibold text-right text-claret">{s.ajr}</th>
             </tr>
           </thead>
           <tbody>
             {NUMBER_ONE.map((r) => (
-              <tr key={r.label} className="border-b border-rule">
-                <td className="py-1.5 pr-2">{r.label}</td>
+              <tr key={r.key} className="border-b border-rule">
+                <td className="py-1.5 pr-2">{s.rows[r.key]}</td>
                 <td className={`${cell} ${r.ijf > r.ours ? "font-semibold" : ""}`}>
                   {r.ijf} <span className="text-muted text-[12px]">{pct(r.ijf, r.weights)}</span>
                 </td>
@@ -136,7 +145,7 @@ export function NumberOneTable() {
               </tr>
             ))}
             <tr className="border-t-2 border-ink font-semibold">
-              <td className="py-2 pr-2">All</td>
+              <td className="py-2 pr-2">{s.all}</td>
               <td className={cell}>
                 {TOTAL.ijf} <span className="text-muted text-[12px] font-normal">{pct(TOTAL.ijf, TOTAL.weights)}</span>
               </td>
@@ -155,6 +164,8 @@ export function NumberOneTable() {
 // against the IJF's points (two units, two scales: never one bar for both).
 type Bout = { round: string; opponent: string; country: string; chance: number; change: number; won: boolean };
 function Day({ name, country, event, bouts, points }: { name: string; country: string; event: string; bouts: Bout[]; points: number }) {
+  const { d, f, t } = useI18n();
+  const s = d.methodology.day;
   const total = bouts.reduce((t, b) => t + b.change, 0);
   return (
     <div>
@@ -167,18 +178,18 @@ function Day({ name, country, event, bouts, points }: { name: string; country: s
             left={{ name, country, chance: b.chance }}
             right={{ name: b.opponent, country: b.country, chance: 1 - b.chance }}
             leftWon={b.won}
-            where={`${b.round}: rating ${b.change > 0 ? "+" : b.change < 0 ? "−" : "±"}${Math.abs(b.change)}`}
+            where={t(s.where, { round: b.round, change: `${b.change > 0 ? "+" : b.change < 0 ? "−" : "±"}${Math.abs(b.change)}` })}
           />
         ))}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3 tabular-nums">
         <div className="border border-claret bg-paper px-3 py-2">
-          <div className="text-[11px] uppercase tracking-wider font-semibold text-muted">AJR points</div>
+          <div className="text-[11px] uppercase tracking-wider font-semibold text-muted">{s.ajrPoints}</div>
           <div className="font-serif text-[26px] font-bold text-claret">{total > 0 ? "+" : "−"}{Math.abs(total)}</div>
         </div>
         <div className="border border-ink bg-paper px-3 py-2">
-          <div className="text-[11px] uppercase tracking-wider font-semibold text-muted">IJF points</div>
-          <div className="font-serif text-[26px] font-bold text-ink">+{points.toLocaleString("en-US")}</div>
+          <div className="text-[11px] uppercase tracking-wider font-semibold text-muted">{s.ijfPoints}</div>
+          <div className="font-serif text-[26px] font-bold text-ink">+{f.number(points)}</div>
         </div>
       </div>
     </div>
@@ -188,13 +199,15 @@ function Day({ name, country, event, bouts, points }: { name: string; country: s
 // Yangiboyev's first two Grand Slams: the same round both times, the same 160 IJF points
 // (the weekly lists of 2026, weeks 13 and 19), and two very different opponents.
 export function PointsOrStrength() {
+  const { d } = useI18n();
+  const s = d.methodology.pointsOrStrength;
   return (
-    <Figure title="The same round, the same points" caption="Yangiboyev B. (UZB), −81 kg, his first two Grand Slams, with the AJR chance before each contest and what it changed.">
+    <Figure title={s.title} caption={s.caption}>
       <div className="space-y-8">
         <Day
           name="Yangiboyev B."
           country="UZB"
-          event="Tbilisi Grand Slam, 21 March 2026"
+          event={s.tbilisi}
           points={160}
           bouts={[
             { round: "1/16", opponent: "Turluev A.", country: "RUS", chance: 0.04, change: 565, won: true },
@@ -204,7 +217,7 @@ export function PointsOrStrength() {
         <Day
           name="Yangiboyev B."
           country="UZB"
-          event="Dushanbe Grand Slam, 2 May 2026"
+          event={s.dushanbe}
           points={160}
           bouts={[
             { round: "1/16", opponent: "Parchiev A.", country: "RUS", chance: 0.827, change: 59, won: true },
@@ -218,11 +231,13 @@ export function PointsOrStrength() {
 
 // How sure a chance is, from the test: how often favourites of each band won.
 export function ReadingChances() {
+  const { d, t } = useI18n();
+  const s = d.methodology.readingChances;
   const bands: [number, number, string][] = [
-    [0.5, 0.6, "close to a coin"],
-    [0.6, 0.75, "a favourite, often beaten"],
-    [0.75, 0.9, "a clear favourite"],
-    [0.9, 1, "a heavy favourite, still beaten sometimes"],
+    [0.5, 0.6, s.coin],
+    [0.6, 0.75, s.oftenBeaten],
+    [0.75, 0.9, s.clear],
+    [0.9, 1, s.heavy],
   ];
   const won = (from: number, to: number) => {
     const bins = data.calibration.ours.filter((b) => b.from >= from - 1e-9 && b.to <= to + 1e-9);
@@ -231,15 +246,15 @@ export function ReadingChances() {
   };
   return (
     <div className="my-5 border border-rule bg-paper">
-      <div className="px-3 py-2 border-b border-rule text-[11px] font-semibold uppercase tracking-wider text-muted">Reading a chance</div>
+      <div className="px-3 py-2 border-b border-rule text-[11px] font-semibold uppercase tracking-wider text-muted">{s.title}</div>
       <ul className="divide-y divide-rule px-3 text-[14px] tabular-nums">
         {bands.map(([from, to, words]) => (
           <li key={from} className="py-2 grid grid-cols-[80px_1fr_auto] gap-3 items-baseline">
             <b>
-              {Math.round(from * 100)} to {Math.round(to * 100)}%
+              {t(s.band, { from: Math.round(from * 100), to: Math.round(to * 100) })}
             </b>
             <span className="text-muted">{words}</span>
-            <span>won {won(from, to)} in 100</span>
+            <span>{t(s.wonInHundred, { n: won(from, to) })}</span>
           </li>
         ))}
       </ul>
@@ -251,13 +266,15 @@ export function ReadingChances() {
 // that pays a tenth (the weekly lists: Buchard's gold in week 19 of 2025, Turluev's
 // +100 in week 8 of 2026).
 export function TwoGolds() {
+  const { d } = useI18n();
+  const s = d.methodology.twoGolds;
   return (
-    <Figure title="Two golds" caption="The AJR chance before each contest and what it changed, with the IJF points each gold carries.">
+    <Figure title={s.title} caption={s.caption}>
       <div className="space-y-8">
         <Day
           name="Buchard A."
           country="FRA"
-          event="Buchard A. (FRA), −52 kg, Dushanbe Grand Slam, 2 May 2025"
+          event={s.buchard}
           points={1000}
           bouts={[
             { round: "1/8", opponent: "Tursunboeva F.", country: "UZB", chance: 0.995, change: 0, won: true },
@@ -269,7 +286,7 @@ export function TwoGolds() {
         <Day
           name="Turluev A."
           country="RUS"
-          event="Turluev A. (RUS), −81 kg, Ljubljana European Open, 14 February 2026"
+          event={s.turluev}
           points={100}
           bouts={[
             { round: "1/16", opponent: "Koc M.", country: "TUR", chance: 0.079, change: 506, won: true },
@@ -286,20 +303,22 @@ export function TwoGolds() {
 
 // Which leaderboard an athlete stands on, by example: the rule of ajr/rating/ranking.py
 // (listed_weights), three tournaments in a weight in the last 365 days first. Each
-// tournament is a dot in its weight's row, the championships a ring.
-type Case = { at81: number; at90: number; worlds?: "-81" | "-90"; board: string; why: string };
+// tournament is a dot in its weight's row, the championships a ring. `board`: the weight
+// listed, both, or none; `why`: the reason's name in the dictionary (methodology.tableRule.why).
+type Case = { at81: number; at90: number; worlds?: "-81" | "-90"; board: "-81" | "-90" | "both" | "none"; why: keyof Dict["methodology"]["tableRule"]["why"] };
 const TABLE_RULE: Case[] = [
-  { at81: 5, at90: 0, board: "−81 kg", why: "Three or more at −81 kg" },
-  { at81: 4, at90: 3, board: "−81 kg and −90 kg", why: "Three or more at both" },
-  { at81: 4, at90: 2, worlds: "-90", board: "−81 kg", why: "Three or more at −81 kg only" },
-  { at81: 2, at90: 1, worlds: "-90", board: "−90 kg", why: "Under three anywhere: the latest championships" },
-  { at81: 2, at90: 1, board: "−81 kg", why: "Under three anywhere: the most tournaments" },
-  { at81: 0, at90: 0, board: "None", why: "No contest in the last 12 months" },
+  { at81: 5, at90: 0, board: "-81", why: "three81" },
+  { at81: 4, at90: 3, board: "both", why: "threeBoth" },
+  { at81: 4, at90: 2, worlds: "-90", board: "-81", why: "three81Only" },
+  { at81: 2, at90: 1, worlds: "-90", board: "-90", why: "championships" },
+  { at81: 2, at90: 1, board: "-81", why: "most" },
+  { at81: 0, at90: 0, board: "none", why: "none" },
 ];
 
 function Dots({ n, ring }: { n: number; ring: boolean }) {
+  const { d, t } = useI18n();
   return (
-    <span className="flex items-center gap-1" aria-label={`${n} tournaments${ring ? ", one of them the Worlds" : ""}`}>
+    <span className="flex items-center gap-1" aria-label={t(ring ? d.methodology.tableRule.dotsWorlds : d.methodology.tableRule.dots, { n })}>
       {Array.from({ length: n }, (_, k) =>
         ring && k === n - 1 ? (
           <span key={k} className="w-2.5 h-2.5 rounded-full border-2 border-claret" />
@@ -313,29 +332,33 @@ function Dots({ n, ring }: { n: number; ring: boolean }) {
 }
 
 export function TableRule() {
+  const { d, t } = useI18n();
+  const s = d.methodology.tableRule;
+  const kg = (weight: string) => t(d.methodology.weightKg, { weight: weight.replace("-", "−") });
+  const board = (c: Case) => (c.board === "both" ? s.bothWeights : c.board === "none" ? s.none : kg(c.board));
   return (
-    <Figure title="Two weights, one athlete" caption="Tournaments in the last 12 months.">
+    <Figure title={s.title} caption={s.caption}>
       <div className="mb-3 flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-muted">
         <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-ink/70" aria-hidden />a tournament
+          <span className="w-2.5 h-2.5 rounded-full bg-ink/70" aria-hidden />{s.aTournament}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full border-2 border-claret" aria-hidden />
-          the Worlds
+          {s.theWorlds}
         </span>
       </div>
       <ol className="divide-y divide-rule border-y border-rule">
         {TABLE_RULE.map((c, k) => (
           <li key={k} className="py-3 grid grid-cols-[124px_1fr] gap-x-4 items-center">
             <div className="grid grid-cols-[44px_1fr] gap-x-2 gap-y-1 items-center text-[12px] text-muted tabular-nums">
-              <span>−81 kg</span>
+              <span>{kg("-81")}</span>
               <Dots n={c.at81} ring={c.worlds === "-81"} />
-              <span>−90 kg</span>
+              <span>{kg("-90")}</span>
               <Dots n={c.at90} ring={c.worlds === "-90"} />
             </div>
             <div className="min-w-0">
-              <div className="font-semibold text-claret text-[14px]">{c.board}</div>
-              <div className="text-[13px] text-muted leading-snug">{c.why}</div>
+              <div className="font-semibold text-claret text-[14px]">{board(c)}</div>
+              <div className="text-[13px] text-muted leading-snug">{s.why[c.why]}</div>
             </div>
           </li>
         ))}

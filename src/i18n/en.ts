@@ -12,6 +12,7 @@ import { explore } from "./en/explore";
 import { h2h } from "./en/h2h";
 import { home } from "./en/home";
 import { meta } from "./en/meta";
+import { methodology } from "./en/methodology";
 import { rankings } from "./en/rankings";
 import { records } from "./en/records";
 import { site } from "./en/site";
@@ -30,6 +31,7 @@ export const en = {
   country,
   explore,
   records,
+  methodology,
 };
 
 export type Dict = typeof en;

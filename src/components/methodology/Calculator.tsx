@@ -7,6 +7,9 @@ import { type ReactNode, useState } from "react";
 import { Arrow } from "@/components/Icon";
 import { pct } from "@/components/methodology/ContestSnap";
 import { chanceSteps, type Player, ratingOf, SCALE, updateSteps } from "@/components/methodology/glicko";
+import { useI18n } from "@/i18n/client";
+import type { Dict } from "@/i18n/en";
+import { t } from "@/i18n/t";
 import { signed } from "@/lib/format";
 
 // The rating calculator: two athletes as the site keeps them (skill, RD), the chance
@@ -16,19 +19,20 @@ import { signed } from "@/lib/format";
 
 type Side = { name: string; skill: number; rd: number; volatility: number };
 type Preset = { label: string; a: Side; b: Side; won: "a" | "b" | null; where?: ReactNode };
+type Calc = Dict["methodology"]["calc"];
 
 const V = 0.06;
-const DEFAULT: Preset = {
+const defaultPreset = (s: Calc): Preset => ({
   label: "Default",
-  a: { name: "White", skill: 2100, rd: 70, volatility: V },
-  b: { name: "Blue", skill: 1900, rd: 150, volatility: V },
+  a: { name: s.white, skill: 2100, rd: 70, volatility: V },
+  b: { name: s.blue, skill: 1900, rd: 150, volatility: V },
   won: null,
-};
+});
 
 // "?a=skill,rd,volatility&b=…&an=…&bn=…&won=a|b&contest=id": a contest's two athletes
 // as they were before it (the contest page's link); without won and contest, two
 // athletes as they are today (Head-to-head's link), the winner left to pick.
-function fromQuery(query: URLSearchParams): Preset | null {
+function fromQuery(query: URLSearchParams, s: Calc): Preset | null {
   const player = (key: string): Player | null => {
     const parts = (query.get(key) ?? "").split(",").map(Number);
     return parts.length === 3 && parts.every(Number.isFinite) ? { skill: parts[0], rd: parts[1], volatility: parts[2] } : null;
@@ -39,8 +43,9 @@ function fromQuery(query: URLSearchParams): Preset | null {
   const won = given === "a" || given === "b" ? given : null; // none: a meeting still to come (Head-to-head)
   if (!a || !b) return null;
   const contest = query.get("contest");
-  const an = query.get("an") ?? "White";
-  const bn = query.get("bn") ?? "Blue";
+  const an = query.get("an") ?? s.white;
+  const bn = query.get("bn") ?? s.blue;
+  const pair = t(s.versus, { a: an, b: bn });
   return {
     label: "This contest",
     a: { ...a, name: an },
@@ -49,19 +54,20 @@ function fromQuery(query: URLSearchParams): Preset | null {
     where: contest ? (
       <>
         <Link href={`/contests/${contest}`} className="underline decoration-rule underline-offset-2 hover:decoration-ink">
-          {an} v {bn}
+          {pair}
         </Link>
-        , as both were before it
+        {s.asBothWereBefore}
       </>
     ) : (
-      `${an} v ${bn}, as both ${won ? "were before it" : "are today"}`
+      `${pair}${won ? s.asBothWereBefore : s.asBothAreToday}`
     ),
   };
 }
 
 export function Calculator() {
+  const { d } = useI18n();
   const query = useSearchParams();
-  return <Calc key={query.toString()} given={fromQuery(query)} />;
+  return <Calc key={query.toString()} given={fromQuery(query, d.methodology.calc)} />;
 }
 
 const r1 = (v: number) => Math.round(v * 10) / 10; // the same on the server and the browser
@@ -80,7 +86,9 @@ const RANGE = [
 const inner = (text: string) => (text.startsWith("−") ? `(${text})` : text);
 
 function Calc({ given }: { given: Preset | null }) {
-  const start = given ?? DEFAULT;
+  const { d } = useI18n();
+  const s = d.methodology.calc;
+  const start = given ?? defaultPreset(s);
   const [a, setA] = useState<Side>(start.a);
   const [b, setB] = useState<Side>(start.b);
   const [won, setWon] = useState<"a" | "b" | null>(start.won);
@@ -94,7 +102,7 @@ function Calc({ given }: { given: Preset | null }) {
   return (
     <figure id="calc" className="my-6 border border-rule bg-panel/40 scroll-mt-32 lg:scroll-mt-24">
       <div className="px-4 sm:px-5 pt-3 pb-2 border-b border-rule flex flex-wrap items-center gap-x-4 gap-y-1">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">Rating calculator</span>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">{s.title}</span>
       </div>
       <div className="p-4 sm:p-5">
         {start.where && <p className="mb-4 text-[13px] text-muted">{start.where}</p>}
@@ -107,7 +115,7 @@ function Calc({ given }: { given: Preset | null }) {
         <div className="mt-4">
           <div className="flex items-end justify-between">
             <div className="font-serif text-[30px] sm:text-[36px] leading-none font-bold tabular-nums text-ink">{pct(c.chance)}</div>
-            <div className="text-[12px] text-muted self-center">chance before the contest</div>
+            <div className="text-[12px] text-muted self-center">{s.chanceBefore}</div>
             <div className="font-serif text-[30px] sm:text-[36px] leading-none font-bold tabular-nums text-ink">{pct(1 - c.chance)}</div>
           </div>
           <div className="mt-2 h-3 w-full flex border border-ink overflow-hidden" aria-hidden>
@@ -126,7 +134,7 @@ function Calc({ given }: { given: Preset | null }) {
               aria-pressed={won === side}
               className={`h-10 border text-[14px] font-semibold cursor-pointer transition-colors ${won === side ? "border-gain bg-gain text-paper" : "border-rule bg-paper text-ink hover:border-gain hover:text-gain"}`}
             >
-              {(side === "a" ? a : b).name} won
+              {t(s.won, { name: (side === "a" ? a : b).name })}
             </button>
           ))}
         </div>
@@ -160,24 +168,24 @@ function Calc({ given }: { given: Preset | null }) {
         {/* the calculation, step by step */}
         <details className="mt-6 border-t border-rule pt-3 group">
           <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center gap-3 font-serif text-[18px] font-bold text-ink hover:text-claret">
-            The calculation, step by step, with these numbers
+            {s.stepsSummary}
             <span className="ml-auto font-sans text-muted group-open:rotate-90 transition-transform" aria-hidden>
               ›
             </span>
           </summary>
         <div className="mt-4 space-y-5">
-          <Step number={1} title="The chance before the contest">
+          <Step number={1} title={s.step1}>
             <p className="text-[14px]">
-              Both ratings, the gap between them, softened by how uncertain both are.
+              {s.step1Text}
             </p>
-            <Line label="Ratings" formula={`${a.name} ${i(pa.skill)} − ${i(pa.rd)} = ${i(ratingOf(pa))}, ${b.name} ${i(pb.skill)} − ${i(pb.rd)} = ${i(ratingOf(pb))}`} value={`gap ${i(c.gap)}`} />
-            <Line label="Both RDs" formula={`√(${i(pa.rd)}² + ${i(pb.rd)}²) = ${i(Math.hypot(pa.rd, pb.rd))}, which shrinks the gap by a factor g = ${n(c.g, 2)}`} value={`g ${n(c.g, 2)}`} />
-            <Line label="Chance" formula={`1 / (1 + e^(−${n(c.g, 2)} × ${inner(i(c.gap))} / ${n(SCALE, 1)})) = ${pct(c.chance)}`} value={`${a.name} ${pct(c.chance)}`} big />
+            <Line label={s.ratings} formula={`${a.name} ${i(pa.skill)} − ${i(pa.rd)} = ${i(ratingOf(pa))}, ${b.name} ${i(pb.skill)} − ${i(pb.rd)} = ${i(ratingOf(pb))}`} value={t(s.gap, { n: i(c.gap) })} />
+            <Line label={s.bothRds} formula={t(s.bothRdsFormula, { a: i(pa.rd), b: i(pb.rd), hyp: i(Math.hypot(pa.rd, pb.rd)), g: n(c.g, 2) })} value={`g ${n(c.g, 2)}`} />
+            <Line label={s.chance} formula={`1 / (1 + e^(−${n(c.g, 2)} × ${inner(i(c.gap))} / ${n(SCALE, 1)})) = ${pct(c.chance)}`} value={`${a.name} ${pct(c.chance)}`} big />
           </Step>
 
           {ua && ub && won ? (
             <>
-              <Step number={2} title="The new ratings">
+              <Step number={2} title={s.step2}>
                 <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
                   <After who={a.name} before={pa} after={ua.after} won={won === "a"} />
                   <After who={b.name} before={pb} after={ub.after} won={won === "b"} />
@@ -185,12 +193,12 @@ function Calc({ given }: { given: Preset | null }) {
               </Step>
               <details className="text-[13px] tabular-nums group/maths">
                 <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center gap-2 font-semibold text-claret hover:underline">
-                  Every step of the Glicko-2 maths
+                  {s.mathsSummary}
                   <span className="text-muted group-open/maths:rotate-90 transition-transform" aria-hidden>
                     ›
                   </span>
                 </summary>
-                <div className="mt-3 flex gap-2" role="group" aria-label="Whose maths">
+                <div className="mt-3 flex gap-2" role="group" aria-label={s.whoseMaths}>
                   {(["a", "b"] as const).map((side) => (
                     <button
                       key={side}
@@ -212,7 +220,7 @@ function Calc({ given }: { given: Preset | null }) {
               </details>
             </>
           ) : (
-            <p className="text-[14px] text-muted">Pick who won to see the new ratings.</p>
+            <p className="text-[14px] text-muted">{s.pickWinner}</p>
           )}
         </div>
         </details>
@@ -223,6 +231,8 @@ function Calc({ given }: { given: Preset | null }) {
 
 // An athlete's card: the name, the skill and the RD (editable), the rating they make.
 function Athlete({ side, onChange, align }: { side: Side; onChange: (s: Side) => void; align: "left" | "right" }) {
+  const { d } = useI18n();
+  const s = d.methodology.calc;
   // the judogi as the site marks it: white on the left, blue on the right
   const judogi = align === "left" ? "bg-paper" : "bg-oxford";
   const right = align === "right";
@@ -235,7 +245,7 @@ function Athlete({ side, onChange, align }: { side: Side; onChange: (s: Side) =>
         max={max}
         value={Math.round(side[key])}
         onChange={(e) => onChange({ ...side, [key]: Math.min(max, Math.max(min, Number(e.target.value) || min)) })}
-        aria-label={`${side.name}: ${label}`}
+        aria-label={t(s.field, { name: side.name, label })}
         className={`w-[72px] h-8 px-2 border border-rule bg-paper tabular-nums font-semibold ${right ? "text-right" : ""}`}
       />
       <input
@@ -246,7 +256,7 @@ function Athlete({ side, onChange, align }: { side: Side; onChange: (s: Side) =>
         value={Math.round(side[key])}
         onChange={(e) => onChange({ ...side, [key]: Number(e.target.value) })}
         className={RANGE}
-        aria-label={`${side.name}: ${label}, slider`}
+        aria-label={t(s.fieldSlider, { name: side.name, label })}
       />
     </label>
   );
@@ -259,15 +269,15 @@ function Athlete({ side, onChange, align }: { side: Side; onChange: (s: Side) =>
           value={side.name}
           onChange={(e) => onChange({ ...side, name: e.target.value.slice(0, 24) || "?" })}
           className={`min-w-0 flex-1 h-8 px-1 -mx-1 border-b border-transparent hover:border-rule focus:border-ink bg-transparent font-semibold text-[15px] text-ink ${right ? "text-right" : ""}`}
-          aria-label="Name"
+          aria-label={s.name}
         />
       </div>
       <div className="mt-2 space-y-1.5">
-        {field("Skill", "skill", 1000, 3000)}
-        {field("RD", "rd", 30, 350)}
+        {field(d.methodology.labels.skill, "skill", 1000, 3000)}
+        {field(d.methodology.labels.rd, "rd", 30, 350)}
       </div>
       <div className="mt-3 text-[12px] text-muted">
-        Rating = skill − RD
+        {s.ratingIs}
       </div>
       <div className="font-serif text-[28px] leading-8 font-bold tabular-nums text-claret">{Math.round(ratingOf(side))}</div>
     </div>
@@ -299,7 +309,9 @@ function Line({ label, formula, value, big = false }: { label: string; formula: 
 }
 
 function After({ who, before, after, won }: { who: string; before: Player; after: Player; won: boolean }) {
-  const d = (x: number, y: number) => {
+  const { d } = useI18n();
+  const labels = d.methodology.labels;
+  const diff = (x: number, y: number) => {
     const v = Math.round(y) - Math.round(x);
     return <span className={`font-semibold ${v > 0 ? "text-gain" : v < 0 ? "text-drop" : "text-muted"}`}>{v === 0 ? "±0" : signed(v)}</span>;
   };
@@ -311,44 +323,46 @@ function After({ who, before, after, won }: { who: string; before: Player; after
         <Arrow />
         {i(y)}
       </span>
-      {d(x, y)}
+      {diff(x, y)}
     </div>
   );
   return (
     <div className="tabular-nums text-[13px]">
       <div className="font-semibold mt-1 flex items-center gap-2">
         {who}
-        <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 border ${won ? "border-gain text-gain" : "border-rule text-muted"}`}>{won ? "Won" : "Lost"}</span>
+        <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 border ${won ? "border-gain text-gain" : "border-rule text-muted"}`}>{won ? d.methodology.snap.won : d.methodology.snap.lost}</span>
       </div>
-      {row("Skill", before.skill, after.skill)}
-      {row("RD", before.rd, after.rd)}
-      {row("Rating", ratingOf(before), ratingOf(after), true)}
+      {row(labels.skill, before.skill, after.skill)}
+      {row(labels.rd, before.rd, after.rd)}
+      {row(labels.rating, ratingOf(before), ratingOf(after), true)}
     </div>
   );
 }
 
 // The paper's steps with these numbers, on Glicko-2's scale.
 function Maths({ rival, me, u, score }: { rival: string; me: Player; u: ReturnType<typeof updateSteps>; score: number }) {
+  const { d } = useI18n();
+  const s = d.methodology.calc.maths;
   return (
     <div className="mt-2">
-      <Line label="Scale" formula={`μ = (${i(me.skill)} − 1500) / ${n(SCALE)},  φ = ${i(me.rd)} / ${n(SCALE)}`} value={`${n(u.mu, 3)}, ${n(u.phi, 3)}`} />
+      <Line label={s.scale} formula={`μ = (${i(me.skill)} − 1500) / ${n(SCALE)},  φ = ${i(me.rd)} / ${n(SCALE)}`} value={`${n(u.mu, 3)}, ${n(u.phi, 3)}`} />
       <Line label={`${rival}`} formula={`μⱼ = ${n(u.muJ, 3)},  g(φⱼ) = 1 / √(1 + 3 × ${n(u.phiJ, 3)}² / π²)`} value={n(u.gJ, 3)} />
-      <Line label="Expected" formula={`E = 1 / (1 + e^(−${n(u.gJ, 3)} × (${n(u.mu, 3)} − ${inner(n(u.muJ, 3))})))`} value={n(u.expected, 3)} />
-      <Line label="Variance" formula={`v = 1 / (${n(u.gJ, 3)}² × ${n(u.expected, 3)} × ${n(1 - u.expected, 3)})`} value={n(u.v, 3)} />
-      <Line label="Delta" formula={`Δ = ${n(u.v, 3)} × ${n(u.gJ, 3)} × (${score} − ${n(u.expected, 3)})`} value={n(u.delta, 3)} />
-      <Line label="Volatility" formula="σ′: solved from Δ, v and τ = 0.5 (the paper's step 5)" value={n(u.sigma, 5)} />
-      <Line label="RD, pre" formula={`φ* = √(${n(u.phi, 3)}² + ${n(u.sigma, 4)}²)`} value={n(u.phiStar, 3)} />
-      <Line label="New RD" formula={`φ′ = 1 / √(1/${n(u.phiStar, 3)}² + 1/${n(u.v, 3)})`} value={n(u.newPhi, 3)} />
-      <Line label="New skill" formula={`μ′ = ${n(u.mu, 3)} + ${n(u.newPhi, 3)}² × ${n(u.gJ, 3)} × (${score} − ${n(u.expected, 3)})`} value={n(u.newMu, 3)} />
-      <Line label="Back" formula={`skill = 1500 + ${n(SCALE)} × ${n(u.newMu, 3)}, RD = ${n(SCALE)} × ${n(u.newPhi, 3)}`} value={`${i(u.after.skill)}, ${i(u.after.rd)}`} />
+      <Line label={s.expected} formula={`E = 1 / (1 + e^(−${n(u.gJ, 3)} × (${n(u.mu, 3)} − ${inner(n(u.muJ, 3))})))`} value={n(u.expected, 3)} />
+      <Line label={s.variance} formula={`v = 1 / (${n(u.gJ, 3)}² × ${n(u.expected, 3)} × ${n(1 - u.expected, 3)})`} value={n(u.v, 3)} />
+      <Line label={s.delta} formula={`Δ = ${n(u.v, 3)} × ${n(u.gJ, 3)} × (${score} − ${n(u.expected, 3)})`} value={n(u.delta, 3)} />
+      <Line label={s.volatility} formula={s.volatilityFormula} value={n(u.sigma, 5)} />
+      <Line label={s.rdPre} formula={`φ* = √(${n(u.phi, 3)}² + ${n(u.sigma, 4)}²)`} value={n(u.phiStar, 3)} />
+      <Line label={s.newRd} formula={`φ′ = 1 / √(1/${n(u.phiStar, 3)}² + 1/${n(u.v, 3)})`} value={n(u.newPhi, 3)} />
+      <Line label={s.newSkill} formula={`μ′ = ${n(u.mu, 3)} + ${n(u.newPhi, 3)}² × ${n(u.gJ, 3)} × (${score} − ${n(u.expected, 3)})`} value={n(u.newMu, 3)} />
+      <Line label={s.back} formula={t(s.backFormula, { scale: n(SCALE), mu: n(u.newMu, 3), phi: n(u.newPhi, 3) })} value={`${i(u.after.skill)}, ${i(u.after.rd)}`} />
       <p className="mt-2 text-muted">
-        Glicko-2:{" "}
+        {s.glicko}{" "}
         <a href="https://en.wikipedia.org/wiki/Glicko_rating_system" target="_blank" rel="noopener noreferrer" className="underline decoration-rule underline-offset-2 hover:decoration-ink">
-          Wikipedia
+          {s.wikipedia}
         </a>
         ,{" "}
         <a href="http://www.glicko.net/glicko/glicko2.pdf" target="_blank" rel="noopener noreferrer" className="underline decoration-rule underline-offset-2 hover:decoration-ink">
-          Mark Glickman&apos;s paper
+          {s.paper}
         </a>
         .
       </p>

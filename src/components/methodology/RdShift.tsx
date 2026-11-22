@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Figure } from "@/components/methodology/Figure";
 import data from "@/data/methodology.json";
+import { useI18n } from "@/i18n/client";
 
 const METRICS = data.rdShift.metrics;
 const DEBUT = data.stories.debut;
@@ -26,20 +27,22 @@ const cy = (v: number) => round(B - ((v - LOW) / (HIGH - LOW)) * (B - T));
 // ranks him above a proven regular; at n = 3 (our tables until November 2026) the
 // regulars are favoured too hard; n = 1 predicts best.
 export function RdShift() {
+  const { d, t } = useI18n();
+  const s = d.methodology.rdShift;
   const [n, setN] = useState(1);
   const m = METRICS.find((x) => x.n === n) ?? METRICS[2];
   const people = [
-    { name: DEBUT.name, note: `debut: beat ${DEBUT.beat} (skill ${DEBUT.beatSkill})`, skill: DEBUT.skill, rd: DEBUT.rd },
-    { name: DEBUT.regular.name, note: "dozens of contests", skill: DEBUT.regular.skill, rd: DEBUT.regular.rd },
+    { name: DEBUT.name, note: t(s.debutNote, { name: DEBUT.beat, skill: DEBUT.beatSkill }), skill: DEBUT.skill, rd: DEBUT.rd },
+    { name: DEBUT.regular.name, note: s.regularNote, skill: DEBUT.regular.skill, rd: DEBUT.regular.rd },
   ].map((p) => ({ ...p, rating: Math.round(p.skill - n * p.rd) }));
   const order = [...people].sort((a, b) => b.rating - a.rating);
   return (
     <Figure
-      title="Rating = skill − n × RD"
-      caption="A debutant and a regular of May 2026 at each n, and how well each n predicted the test contests."
+      title={s.title}
+      caption={s.caption}
     >
       <div className="flex items-center gap-2" role="group" aria-label="n">
-        <span className="mr-1 text-[13px] font-semibold text-muted">n =</span>
+        <span className="mr-1 text-[13px] font-semibold text-muted">{s.nEquals}</span>
         {[0, 1, 2, 3, 4, 5].map((v) => (
           <button
             key={v}
@@ -69,7 +72,7 @@ export function RdShift() {
           ))}
         </ol>
         <div>
-          <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={`Log loss ${m.logLoss} at n = ${n}`}>
+          <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={t(s.chartLabel, { logLoss: m.logLoss, n })}>
             <polyline points={METRICS.map((x) => `${cx(x.n)},${cy(x.logLoss)}`).join(" ")} fill="none" stroke="#33302E" strokeWidth="2" />
             <circle cx={cx(n)} cy={cy(m.logLoss)} r="5" fill="#990f3d" />
             {[0, 1, 2, 3, 4, 5].map((v) => (
@@ -77,13 +80,13 @@ export function RdShift() {
                 {v}
               </text>
             ))}
-            <text x={L - 4} y={T + 8} textAnchor="end" fontSize="10" fill="#66605C">worse</text>
-            <text x={L - 4} y={B} textAnchor="end" fontSize="10" fill="#66605C">better</text>
+            <text x={L - 4} y={T + 8} textAnchor="end" fontSize="10" fill="#66605C">{s.worse}</text>
+            <text x={L - 4} y={B} textAnchor="end" fontSize="10" fill="#66605C">{s.better}</text>
           </svg>
           <dl className="mt-2 grid grid-cols-2 gap-2 text-center tabular-nums">
             {[
-              ["Accuracy", `${(m.accuracy * 100).toFixed(1)}%`],
-              ["Log loss", m.logLoss.toFixed(3)],
+              [s.accuracy, `${(m.accuracy * 100).toFixed(1)}%`],
+              [s.logLoss, m.logLoss.toFixed(3)],
             ].map(([label, value]) => (
               <div key={label} className="border border-rule bg-paper py-2">
                 <dt className="text-[10px] uppercase tracking-wider font-semibold text-muted">{label}</dt>

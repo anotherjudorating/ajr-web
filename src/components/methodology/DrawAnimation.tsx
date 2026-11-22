@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { Flag } from "@/components/Flag";
 import { Figure } from "@/components/methodology/Figure";
+import { useI18n } from "@/i18n/client";
 
 // Paris 2024, women −52 kg: the draw, played out in the site's bracket style. The
 // entrants in a list by the seeding's order (left) go into the first round's contests
@@ -131,7 +132,7 @@ const ROW = 24; // a name's row, in the list and in a contest's box (the site's 
 const BOX_GAP = 8; // between two first-round contests
 const POOL_GAP = 16; // between two pools
 const TOP = 30; // the columns' titles
-const ROUNDS = ["1/16", "1/8", "1/4", "1/2", "Final"];
+const ROUNDS = ["1/16", "1/8", "1/4", "1/2", "F"]; // the codes; "F" is written out (common.rounds.F)
 const RATING_ORDER = [...ENTRANTS]
   .sort((a, b) => b.rating - a.rating)
   .map((e) => e.id);
@@ -155,6 +156,9 @@ const listY = (index: number) => TOP + index * ROW + (index >= 8 ? ROW : 0); // 
 const LINE = "rgba(102, 96, 92, 0.6)"; // the site's bracket lines: border-muted/60
 
 export function DrawAnimation() {
+  const { d, t } = useI18n();
+  const s = d.methodology.draw;
+  const roundName = (code: string) => (code === "F" ? d.common.rounds.F : code);
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(640);
   const [mode, setMode] = useState<Mode>("ijf");
@@ -246,7 +250,7 @@ export function DrawAnimation() {
   const nodeX = (lv: number) => treeX + (treeW * (lv - 1)) / (lastLevel - 1);
   let level = 1;
   while (Math.floor(pa / 2 ** level) !== Math.floor(pk / 2 ** level)) level++;
-  const meetRound = ROUNDS[level - 1];
+  const meetRound = roundName(ROUNDS[level - 1]);
   const settled = phase === "done";
   const lit = phase === "path" || phase === "done"; // the ways drawn
   const placed = phase === "rest" || lit; // everyone in the bracket
@@ -264,15 +268,11 @@ export function DrawAnimation() {
 
   return (
     <Figure
-      title="The draw"
-      caption={
-        phone
-          ? "Paris 2024, women −52 kg: the half of the draw with both of them, as it was and as AJR would have seeded it."
-          : "Paris 2024, women −52 kg: the real draw, and the same draw seeded by AJR rating on the eve."
-      }
+      title={s.title}
+      caption={phone ? s.captionPhone : s.caption}
     >
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        <span className="text-[12px] text-muted mr-1">Seeded by</span>
+        <span className="text-[12px] text-muted mr-1">{s.seededBy}</span>
         {(["ijf", "ours"] as const).map((m) => (
           <button
             key={m}
@@ -280,7 +280,7 @@ export function DrawAnimation() {
             onClick={() => run(m)}
             className={`h-8 px-2.5 border text-[12px] sm:text-[13px] font-semibold cursor-pointer ${mode === m ? "border-ink bg-ink text-paper" : "border-rule bg-paper text-ink hover:border-ink"}`}
           >
-            {m === "ijf" ? "IJF rating" : "AJR rating"}
+            {m === "ijf" ? s.ijfRating : s.ajrRating}
           </button>
         ))}
         <button
@@ -288,7 +288,7 @@ export function DrawAnimation() {
           onClick={() => run(mode)}
           className="ml-auto text-[13px] font-semibold text-claret hover:underline cursor-pointer"
         >
-          Replay
+          {s.replay}
         </button>
         {/* where they meet, once the ways are drawn */}
         <p
@@ -298,7 +298,7 @@ export function DrawAnimation() {
             transition: `opacity 500ms ${EASE}`,
           }}
         >
-          Abe and Keldiyorova meet in {meetRound}.
+          {t(s.meet, { round: meetRound })}
         </p>
       </div>
       <div
@@ -313,7 +313,7 @@ export function DrawAnimation() {
           className={`absolute ${title} border-b border-rule`}
           style={{ left: 0, top: 0, width: listW, height: TOP - 8 }}
         >
-          {mode === "ijf" ? "By IJF rating" : "By AJR rating"}
+          {mode === "ijf" ? s.byIjf : s.byAjr}
         </div>
         {listed.map((id, i) => {
           const e = byId.get(id)!;
@@ -354,7 +354,7 @@ export function DrawAnimation() {
           className={`absolute ${title} normal-case tracking-normal italic font-normal`}
           style={{ left: 8, top: listY(8) - ROW + 6, width: listW }}
         >
-          Not seeded, drawn randomly
+          {s.notSeeded}
         </div>
         </>
         )}
@@ -370,7 +370,7 @@ export function DrawAnimation() {
           }}
         >
           <div className={title} style={{ width: boxW }}>
-            {ROUNDS[0]}
+            {roundName(ROUNDS[0])}
           </div>
           {ROUNDS.slice(1, lastLevel).map((r, i) => (
               <div
@@ -379,7 +379,7 @@ export function DrawAnimation() {
                 // a phone's narrow columns: each title ends where its round's lines meet
                 style={phone ? { left: joint(i + 2) - boxX - 4, transform: "translateX(-100%)" } : { left: nodeX(i + 2) - boxX + 6 }}
               >
-                {r}
+                {roundName(r)}
               </div>
             ))}
         </div>
@@ -441,7 +441,7 @@ export function DrawAnimation() {
                   key={side}
                   className="absolute pl-[26px] flex items-center text-muted"
                   style={{ top: side * ROW, height: ROW }}
-                  title="Bye"
+                  title={s.bye}
                 >
                   —
                 </div>
@@ -565,7 +565,7 @@ export function DrawAnimation() {
       {phone && (
         <details className="mt-4 group/list text-[13px]">
           <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden flex items-center gap-2 font-semibold text-claret">
-            {mode === "ijf" ? "The order by IJF rating" : "The order by AJR rating"}
+            {mode === "ijf" ? s.orderIjf : s.orderAjr}
             <span className="text-muted group-open/list:rotate-90 transition-transform" aria-hidden>
               ›
             </span>
@@ -583,7 +583,7 @@ export function DrawAnimation() {
               );
             })}
           </ol>
-          {mode === "ijf" && <p className="mt-1 text-[12px] text-muted">Seeds 1 to 8, the rest not seeded, drawn randomly.</p>}
+          {mode === "ijf" && <p className="mt-1 text-[12px] text-muted">{s.seedsNote}</p>}
         </details>
       )}
     </Figure>

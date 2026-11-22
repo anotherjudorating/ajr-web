@@ -2,37 +2,35 @@
 
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { useI18n } from "@/i18n/client";
+
 // The page's three chapters, each with its sections: the story, the number and how a
 // contest moves it, the test. The sections are the questions a reader asks in order.
+// The ids are the anchors; the titles are in the dictionary (methodology.chapters),
+// a section's under `key`.
 export const CHAPTERS = [
   {
     id: "why",
-    title: "Why it was built",
-    short: "Why",
     sections: [
-      { id: "paris", title: "An Olympic final in 1/8" },
-      { id: "newcomers", title: "Points punish the young" },
+      { id: "paris", key: "paris" },
+      { id: "newcomers", key: "newcomers" },
     ],
   },
   {
     id: "number",
-    title: "How the rating is counted",
-    short: "How it is counted",
     sections: [
-      { id: "skill", title: "Skill, uncertainty, rating" },
-      { id: "calculator", title: "The calculator" },
-      { id: "weights", title: "Weights and leaderboards" },
+      { id: "skill", key: "skill" },
+      { id: "calculator", key: "calculator" },
+      { id: "weights", key: "weights" },
     ],
   },
   {
     id: "works",
-    title: "Does it work?",
-    short: "Does it work",
     sections: [
-      { id: "test", title: "Five models, one test" },
-      { id: "calibration", title: "How to read a chance" },
-      { id: "one-rd", title: "Why skill minus one RD" },
-      { id: "limits", title: "What it cannot see" },
+      { id: "test", key: "test" },
+      { id: "calibration", key: "calibration" },
+      { id: "one-rd", key: "oneRd" },
+      { id: "limits", key: "limits" },
     ],
   },
 ] as const;
@@ -43,11 +41,12 @@ const ALL_IDS: string[] = CHAPTERS.flatMap((c) => [c.id, ...c.sections.map((s) =
 
 // A chapter's opening: its number, its title, a rule over it; the navigation's target.
 export function Chapter({ id, children }: { id: ChapterId; children?: ReactNode }) {
+  const { d, t } = useI18n();
   const index = CHAPTERS.findIndex((c) => c.id === id);
   return (
     <div id={id} className="scroll-mt-32 lg:scroll-mt-24 mt-16 pt-4 border-t-2 border-ink">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-claret">Part {index + 1}</div>
-      <h2 className="font-serif text-[30px] leading-[36px] sm:text-[36px] sm:leading-[42px] font-bold text-ink">{CHAPTERS[index].title}</h2>
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-claret">{t(d.methodology.chapters.part, { n: index + 1 })}</div>
+      <h2 className="font-serif text-[30px] leading-[36px] sm:text-[36px] sm:leading-[42px] font-bold text-ink">{d.methodology.chapters[id].title}</h2>
       {children && <p className="mt-3 text-[17px] text-muted">{children}</p>}
     </div>
   );
@@ -65,10 +64,11 @@ export function Section({ id, children }: { id: SectionId; children: ReactNode }
 // "Try it yourself": a figure folded under the story, for the reader who wants to
 // touch the thing the text just described.
 export function TryIt({ title, children, open = false }: { title: string; children: ReactNode; open?: boolean }) {
+  const { d } = useI18n();
   return (
     <details open={open} className="my-6 border border-rule bg-panel/40 group">
       <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden px-4 sm:px-5 py-3 flex items-center gap-3 text-[14px] font-semibold text-ink hover:bg-panel/70 whitespace-nowrap">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-claret">Try it</span>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-claret">{d.methodology.chapters.tryIt}</span>
         <span className="min-w-0 truncate">{title}</span>
         <span className="ml-auto text-muted group-open:rotate-90 transition-transform" aria-hidden>
           ›
@@ -105,10 +105,11 @@ function useCurrent(): { chapter: string; section: string | null } {
 // The page's contents on a desktop: a column at the right that stays in view, the
 // current chapter and section marked.
 export function ChapterNav() {
+  const { d } = useI18n();
   const { chapter, section } = useCurrent();
   return (
-    <nav aria-label="Contents" className="hidden lg:block sticky top-24 self-start w-60 shrink-0 text-[14px]">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-2">Contents</div>
+    <nav aria-label={d.methodology.chapters.contents} className="hidden lg:block sticky top-24 self-start w-60 shrink-0 text-[14px]">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted mb-2">{d.methodology.chapters.contents}</div>
       <ol className="border-l border-rule">
         {CHAPTERS.map((c, i) => (
           <li key={c.id}>
@@ -118,7 +119,7 @@ export function ChapterNav() {
               className={`block pl-3 py-1.5 -ml-px border-l-2 ${chapter === c.id ? "border-claret text-ink font-semibold" : "border-transparent text-muted hover:text-ink"}`}
             >
               <span className="tabular-nums mr-2 text-muted">{i + 1}</span>
-              {c.title}
+              {d.methodology.chapters[c.id].title}
             </a>
             {chapter === c.id && (
               <ol className="mb-1">
@@ -129,7 +130,7 @@ export function ChapterNav() {
                       aria-current={section === s.id ? "true" : undefined}
                       className={`block pl-8 py-1 -ml-px border-l-2 text-[13px] ${section === s.id ? "border-claret text-ink" : "border-transparent text-muted hover:text-ink"}`}
                     >
-                      {s.title}
+                      {d.methodology.chapters.sections[s.key]}
                     </a>
                   </li>
                 ))}
@@ -144,6 +145,7 @@ export function ChapterNav() {
 
 // On a phone: a strip of chapters under the header, sticky, the current one marked.
 export function ChapterStrip() {
+  const { d } = useI18n();
   const { chapter } = useCurrent();
   const strip = useRef<HTMLElement>(null);
   // how far down the page the reader is, as a claret line under the strip
@@ -164,12 +166,12 @@ export function ChapterStrip() {
   }, [chapter]);
   return (
     <div className="lg:hidden sticky top-[84px] md:top-16 z-30 -mx-4 sm:-mx-6 md:-mx-8 bg-paper border-b border-rule">
-      <nav ref={strip} aria-label="Contents" className="relative px-4 sm:px-6 md:px-8 overflow-x-auto">
+      <nav ref={strip} aria-label={d.methodology.chapters.contents} className="relative px-4 sm:px-6 md:px-8 overflow-x-auto">
         <ol className="flex gap-5 h-10 items-center whitespace-nowrap text-[13px] pr-8">
           {CHAPTERS.map((c, i) => (
             <li key={c.id}>
               <a href={`#${c.id}`} className={chapter === c.id ? "text-claret font-semibold" : "text-muted"}>
-                {i + 1} {c.short}
+                {i + 1} {d.methodology.chapters[c.id].short}
               </a>
             </li>
           ))}
