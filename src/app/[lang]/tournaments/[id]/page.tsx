@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { Overview } from "@/components/tournament/Overview";
 import { TournamentSkeleton, tournamentName } from "@/components/tournament/TournamentHeader";
 import { competition, competitionChances, competitionContests, competitionResults, competitions } from "@/lib/api";
-import { currentLang } from "@/i18n/server";
+import { currentLang, i18n } from "@/i18n/server";
 import { alternatesFor } from "@/lib/seo";
 
 // One tournament is built ahead (more would load the database at every deploy); any
@@ -22,9 +22,10 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/tournament
   const found = Number.isInteger(id) ? await competition(id) : null;
   if (!found) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const name = tournamentName(found.name);
+  const { d, t } = await i18n();
   return {
-    title: `${name} judo results`,
-    description: `${name}: medallists of every weight, medals by nation, the biggest upsets and rating changes.`,
+    title: t(d.tournament.meta.title, { name }),
+    description: t(d.tournament.meta.description, { name }),
     alternates: alternatesFor(await currentLang(), `/tournaments/${id}`),
   };
 }
@@ -47,6 +48,7 @@ async function Tournament({ params }: { params: PageProps<"/[lang]/tournaments/[
     competitionChances(id),
   ]);
   if (!found) notFound();
+  const { d } = await i18n();
   const drawn = chances.length > 0 || results.length > 0;
   return (
     <>
@@ -55,11 +57,9 @@ async function Tournament({ params }: { params: PageProps<"/[lang]/tournaments/[
       ) : (
         <div className="mt-10 lg:mt-12 border-t-2 border-ink pt-6 max-w-2xl">
           <h2 className="font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight">
-            Draw not published yet
+            {d.tournament.noDraw.title}
           </h2>
-          <p className="mt-2 text-[14px] text-muted">
-            Medal chances appear here once the IJF publishes the draw, usually a day or two before the tournament.
-          </p>
+          <p className="mt-2 text-[14px] text-muted">{d.tournament.noDraw.lead}</p>
         </div>
       )}
     </>

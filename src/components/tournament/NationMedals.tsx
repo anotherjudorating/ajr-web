@@ -11,6 +11,7 @@ import { HashScroll } from "@/components/HashScroll";
 import { Medal, type MedalKind } from "@/components/Medal";
 import { HEAD_CELL, Pagination, ROW_CELL, SHORT_SIZES } from "@/components/rankings/TableParts";
 import { H2, HEAD } from "@/components/tournament/styles";
+import { useI18n } from "@/i18n/client";
 import type { CompetitionResult } from "@/lib/api";
 import { medallistRow, nationRow, SECTION } from "@/lib/anchors";
 import { shortName } from "@/lib/format";
@@ -19,7 +20,7 @@ import { MEN, WEIGHTS, WOMEN } from "@/lib/weights";
 const KINDS: MedalKind[] = ["gold", "silver", "bronze"];
 const weightIndex = (api: string) => WEIGHTS.findIndex((w) => w.api === api);
 // the medals of all the weights, the men's or the women's
-const GENDERS = { All: WEIGHTS, Men: MEN, Women: WOMEN };
+const GENDERS = { all: WEIGHTS, men: MEN, women: WOMEN };
 type Gender = keyof typeof GENDERS;
 
 // Medals by nation, golds first, a page at a time: 20 rows on wider screens and 10
@@ -36,7 +37,8 @@ export function NationMedals({
   medallists: CompetitionResult[];
   nations?: { country: string; weight: string }[];
 }) {
-  const [gender, setGender] = useState<Gender>("All");
+  const { d } = useI18n();
+  const [gender, setGender] = useState<Gender>("all");
   const ofGender = (weight: string) => GENDERS[gender].some((w) => w.api === weight);
   const medallists = all.filter((r) => ofGender(r.weight));
   const entered = new Set(drawn.filter((n) => ofGender(n.weight)).map((n) => n.country));
@@ -96,8 +98,8 @@ export function NationMedals({
     <section id={SECTION.nations}>
       <HashScroll id={SECTION.nations} />
       <div className={HEAD}>
-        <h2 className={H2}>Medals by nation</h2>
-        <div className="flex items-center gap-3 text-[13px] sm:text-[14px]" role="group" aria-label="All, men or women">
+        <h2 className={H2}>{d.tournament.nationMedals.title}</h2>
+        <div className="flex items-center gap-3 text-[13px] sm:text-[14px]" role="group" aria-label={d.tournament.nationMedals.allMenOrWomen}>
           {(Object.keys(GENDERS) as Gender[]).map((g) => (
             <button
               key={g}
@@ -109,7 +111,7 @@ export function NationMedals({
               }}
               className={`px-1 pb-0.5 border-b-2 cursor-pointer ${gender === g ? "font-bold text-ink border-claret" : "text-muted hover:text-ink border-transparent"}`}
             >
-              {g}
+              {g === "all" ? d.tournament.nationMedals.all : d.common.gender[g]}
             </button>
           ))}
         </div>
@@ -117,15 +119,15 @@ export function NationMedals({
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-left`}>Nation</th>
+            <th className={`${HEAD_CELL} text-left`}>{d.tournament.nationMedals.nation}</th>
             {KINDS.map((kind) => (
-              <th key={kind} className={`${HEAD_CELL} text-center w-11 sm:w-14`} title={kind}>
+              <th key={kind} className={`${HEAD_CELL} text-center w-11 sm:w-14`} title={d.tournament.medal[kind]}>
                 <span className="inline-flex justify-center w-full">
                   <Medal kind={kind} />
                 </span>
               </th>
             ))}
-            <th className={`${HEAD_CELL} text-right w-14 sm:w-16`}>Total</th>
+            <th className={`${HEAD_CELL} text-right w-14 sm:w-16`}>{d.tournament.nationMedals.total}</th>
             <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>
         </thead>
@@ -164,7 +166,7 @@ export function NationMedals({
                 </tr>
                 {isOpen &&
                   // all the weights: the men's medallists, then the women's, each under its title
-                  (gender === "All" ? (["Men", "Women"] as const) : [null]).map((group) => {
+                  (gender === "all" ? (["men", "women"] as const) : [null]).map((group) => {
                     const theirs = group ? own.filter((r) => GENDERS[group].some((w) => w.api === r.weight)) : own;
                     if (theirs.length === 0) return null;
                     return (
@@ -172,7 +174,7 @@ export function NationMedals({
                         {group && (
                           <tr className="bg-panel/50 border-b border-rule/50">
                             <td colSpan={KINDS.length + 3} className="pl-4 sm:pl-6 pr-2 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted">
-                              {group}
+                              {d.common.gender[group]}
                             </td>
                           </tr>
                         )}

@@ -14,10 +14,11 @@ import { RowLink } from "@/components/RowLink";
 import { UpsetCard } from "@/components/UpsetCard";
 import { NationMedals } from "@/components/tournament/NationMedals";
 import { H2, HEAD, HEAD_CELL, LINK, ROW_CELL } from "@/components/tournament/styles";
+import { useI18n } from "@/i18n/client";
 import type { Competition, CompetitionContest, CompetitionResult, MedalChance } from "@/lib/api";
 import { shortName, signed } from "@/lib/format";
 import { liveWeights } from "@/lib/live";
-import { MEN, type Weight, WEIGHTS, weightTitle, WOMEN } from "@/lib/weights";
+import { MEN, type Weight, WEIGHTS, WOMEN } from "@/lib/weights";
 
 const MEDALS: string[] = ["gold", "silver", "bronze"];
 const UPSET = 0.35; // a winner's chance of 35% or less, as everywhere on the site
@@ -60,7 +61,7 @@ export function Overview({
   const year = c.date_from.slice(0, 4);
   return (
     <>
-      <Podium id={c.id} groups={{ Men: MEN, Women: WOMEN }} medallists={medallists} live={live} />
+      <Podium id={c.id} groups={{ men: MEN, women: WOMEN }} medallists={medallists} live={live} />
       <div className="mt-14 lg:mt-16 grid grid-cols-1 lg:grid-cols-2 gap-y-14 lg:gap-x-24 items-start">
         <NationMedals
           medallists={medallists}
@@ -80,6 +81,7 @@ export function Overview({
 }
 
 const PLACE: Record<MedalKind, string> = { gold: "1", silver: "2", bronze: "3" };
+type Gender = "men" | "women";
 
 // Men or women. Wide screens: every weight a row of its four medallists, as a weight's
 // page heads. Phones: a line each medallist, the weight (and Live) spanning its lines.
@@ -91,33 +93,34 @@ function Podium({
   live,
 }: {
   id: number;
-  groups: Record<"Men" | "Women", Weight[]>;
+  groups: Record<Gender, Weight[]>;
   medallists: CompetitionResult[];
   live: Set<string>;
 }) {
+  const { d, t } = useI18n();
   // a medallist picked in the medals by nation (#medallist-…): their gender shown, marked
   const hash = useHash();
-  const [picked, setPicked] = useState<{ gender: "Men" | "Women"; hash: string }>({ gender: "Men", hash: "" });
-  const hashed = (["Men", "Women"] as const).find((g) =>
+  const [picked, setPicked] = useState<{ gender: Gender; hash: string }>({ gender: "men", hash: "" });
+  const hashed = (["men", "women"] as const).find((g) =>
     groups[g].some((w) => linesOf(w, medallists).some((l) => medallistRow(w.slug, l.athleteId) === hash)),
   );
   // #men, #women (the sections' old anchors): that gender
-  const named = hash === SECTION.men ? "Men" : hash === SECTION.women ? "Women" : undefined;
+  const named = hash === SECTION.men ? "men" : hash === SECTION.women ? "women" : undefined;
   if ((hashed ?? named) && picked.hash !== hash) setPicked({ gender: (hashed ?? named)!, hash });
   const gender = picked.gender;
-  const setGender = (g: "Men" | "Women") => setPicked({ gender: g, hash });
+  const setGender = (g: Gender) => setPicked({ gender: g, hash });
   const lit = useRowMark(Boolean(hashed), hash);
   useRowScroll(hash, Boolean(hashed) && picked.hash === hash);
   const rows = groups[gender].map((w) => ({ weight: w, lines: linesOf(w, medallists) }));
   const weightCell = (weight: Weight, span: number) => (
     <td rowSpan={span} className="relative h-10 py-2.5 px-2 sm:px-3 w-14 sm:w-16 whitespace-nowrap text-muted align-top border-b border-rule">
       {/* the weight's cell opens the weight's page (the rows: the athlete's row there) */}
-      <Link href={`/tournaments/${id}/${weight.slug}`} className="absolute inset-0" aria-label={`${weight.label} kg`} />
+      <Link href={`/tournaments/${id}/${weight.slug}`} className="absolute inset-0" aria-label={t(d.tournament.kg, { label: weight.label })} />
       <span className="block">{weight.label}</span>
       {live.has(weight.api) && (
         <span className="flex items-center gap-1 text-[11px] leading-[14px] font-semibold text-claret">
           <span className="w-1.5 h-1.5 rounded-full bg-claret" />
-          Live
+          {d.tournament.header.live}
         </span>
       )}
     </td>
@@ -126,9 +129,9 @@ function Podium({
     <section id={named ? hash : undefined} className="mt-12">
       {named && <HashScroll id={hash} />}
       <div className={HEAD}>
-        <h2 className={H2}>Podium</h2>
-        <div className="flex items-center gap-3 text-[13px] sm:text-[14px]" role="group" aria-label="Men or women">
-          {(["Men", "Women"] as const).map((g) => (
+        <h2 className={H2}>{d.tournament.podium.title}</h2>
+        <div className="flex items-center gap-3 text-[13px] sm:text-[14px]" role="group" aria-label={d.tournament.podium.menOrWomen}>
+          {(["men", "women"] as const).map((g) => (
             <button
               key={g}
               type="button"
@@ -136,7 +139,7 @@ function Podium({
               onClick={() => setGender(g)}
               className={`px-1 pb-0.5 border-b-2 cursor-pointer ${gender === g ? "font-bold text-ink border-claret" : "text-muted hover:text-ink border-transparent"}`}
             >
-              {g}
+              {d.common.gender[g]}
             </button>
           ))}
         </div>
@@ -149,7 +152,7 @@ function Podium({
               {live.has(weight.api) && (
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-claret">
                   <span className="w-1.5 h-1.5 rounded-full bg-claret" />
-                  Live
+                  {d.tournament.header.live}
                 </span>
               )}
             </>
@@ -203,7 +206,7 @@ function Podium({
           {rows.map(({ weight, lines }) =>
             lines.length === 0 ? (
               // not over: the whole line opens the weight's page
-              <RowLink key={weight.slug} href={`/tournaments/${id}/${weight.slug}`} label={`${weight.label} kg`} className="border-b border-rule">
+              <RowLink key={weight.slug} href={`/tournaments/${id}/${weight.slug}`} label={t(d.tournament.kg, { label: weight.label })} className="border-b border-rule">
                 {weightCell(weight, 1)}
                 <td colSpan={2} className="h-10 px-2 sm:px-3 text-muted">
                   —
@@ -249,6 +252,7 @@ function Podium({
 
 // The five least likely wins: the winner and their chance on the left, the bar of it.
 function Upsets({ contests, total, href }: { contests: CompetitionContest[]; total: number; href: string }) {
+  const { d, f, n } = useI18n();
   const upsets = contests
     .filter((c) => c.real_fight) // rated: a chance and scores on both sides
     .map((c) => {
@@ -267,9 +271,9 @@ function Upsets({ contests, total, href }: { contests: CompetitionContest[]; tot
     <section id={SECTION.upsets}>
       <HashScroll id={SECTION.upsets} />
       <div className={HEAD}>
-        <h2 className={H2}>Biggest upsets</h2>
+        <h2 className={H2}>{d.tournament.upsets.title}</h2>
         <Link href={href} className={LINK}>
-          All {total} upsets
+          {n(d.tournament.upsets.all, total)}
         </Link>
       </div>
       <div className="flex flex-col text-[14px]">
@@ -281,7 +285,7 @@ function Upsets({ contests, total, href }: { contests: CompetitionContest[]; tot
               href={`/contests/${contest.contest_id}`}
               winner={winner}
               loser={loser}
-              where={weight ? weightTitle(weight) : contest.weight}
+              where={weight ? f.weightTitle(weight) : contest.weight}
               round={contest.round}
             />
           );
@@ -295,6 +299,7 @@ function Upsets({ contests, total, href }: { contests: CompetitionContest[]; tot
 // EXPERIENCE contests before it: the score of an athlete the rating knows little
 // about starts low and leaps.
 function Gains({ results, href }: { results: CompetitionResult[]; href: string }) {
+  const { d } = useI18n();
   const rows = results
     .filter((r) => r.contests_before >= EXPERIENCE)
     .sort((a, b) => gainOf(b) - gainOf(a))
@@ -304,16 +309,16 @@ function Gains({ results, href }: { results: CompetitionResult[]; href: string }
     <section id={SECTION.gains}>
       <HashScroll id={SECTION.gains} />
       <div className={HEAD}>
-        <h2 className={H2}>Biggest gains</h2>
+        <h2 className={H2}>{d.tournament.gains.title}</h2>
         <Link href={href} className={LINK}>
-          All rating changes
+          {d.tournament.gains.all}
         </Link>
       </div>
       <table className="w-full table-fixed border-collapse text-[13px] sm:text-[14px] tabular-nums">
         <thead>
           <tr className="bg-panel border-b border-rule">
-            <th className={`${HEAD_CELL} text-left`}>Athlete</th>
-            <th className={`${HEAD_CELL} text-right w-28`}>Rating</th>
+            <th className={`${HEAD_CELL} text-left`}>{d.tournament.gains.athlete}</th>
+            <th className={`${HEAD_CELL} text-right w-28`}>{d.tournament.gains.rating}</th>
             <th className={`${HEAD_CELL} text-right w-14`}>+/−</th>
             <th className="w-8 sm:w-10 h-9 py-0 pl-1 pr-0" />
           </tr>

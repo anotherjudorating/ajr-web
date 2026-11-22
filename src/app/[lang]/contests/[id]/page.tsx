@@ -5,18 +5,19 @@ import { Suspense } from "react";
 import { ContestView } from "@/components/contest/ContestView";
 import { UpcomingContest } from "@/components/contest/UpcomingContest";
 import { athleteHistory, contest, contestContext, upcomingContest } from "@/lib/api";
-import { roundTitle, shortName } from "@/lib/format";
+import { shortName } from "@/lib/format";
 import { alternatesFor, NOINDEX } from "@/lib/seo";
-import { currentLang } from "@/i18n/server";
+import { currentLang, i18n } from "@/i18n/server";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/contests/[id]">): Promise<Metadata> {
   const id = Number((await params).id);
   const found = Number.isInteger(id) ? ((await contest(id)) ?? (await upcomingContest(id))) : null;
   if (!found || !found.white_id || !found.blue_id) notFound(); // a crawler is sent the head first: only here does a 404 get its status
-  const names = `${shortName(found.white_family_name, found.white_given_name)} vs ${shortName(found.blue_family_name, found.blue_given_name)}`;
+  const { d, f, t } = await i18n();
+  const names = t(d.contest.meta.names, { white: shortName(found.white_family_name, found.white_given_name), blue: shortName(found.blue_family_name, found.blue_given_name) });
   // 230 thousand of them: closed to crawlers (robots.ts), not indexed
   return {
-    title: `${names} — ${found.round ? roundTitle(found.round) : "contest"}, ${found.competition}`,
+    title: t(d.contest.meta.title, { names, round: found.round ? f.roundTitle(found.round) : d.contest.meta.noRound, competition: found.competition }),
     alternates: alternatesFor(await currentLang(), `/contests/${id}`, { indexed: false }),
     robots: NOINDEX,
   };

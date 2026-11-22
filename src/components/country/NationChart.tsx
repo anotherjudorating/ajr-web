@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { ChartTip, dotsFit, useChartPointer, INK, LABEL_ROOM, monthTicks, nearest, PEAK, PERIOD, PeakLabel, peakShift, periodName, type Range, scale, TipBody } from "@/components/chart";
+import { ChartTip, dotsFit, useChartPointer, INK, LABEL_ROOM, monthTicks, nearest, PEAK, PERIOD, PeakLabel, peakShift, periodName, type Range, scale, TipBody, usePeriodNames } from "@/components/chart";
 import { Icon } from "@/components/Icon";
 import { H2, HEAD } from "@/components/tournament/styles";
+import { useI18n } from "@/i18n/client";
 import type { CountryWeek } from "@/lib/api";
 import { nationPeakLink } from "@/lib/anchors";
-import { monthYear } from "@/lib/format";
 
 const RANGES: Record<Range, number | null> = { "1Y": 1, "4Y": 4, All: null };
 const DAY = 24 * 3600 * 1000;
@@ -35,6 +35,9 @@ export type PeriodPick = { title: string; after: number; until: number }; // day
 // when it is before the window, a way to it. On a desktop the nearest point under the
 // pointer: its period, the rating and place at its start and end.
 export function NationChart({ ioc, history, today, rating }: { ioc: string; history: CountryWeek[]; today: string; rating: number }) {
+  const { d, f, t } = useI18n();
+  const names = usePeriodNames();
+  const words = d.country.chart;
   const [range, setRange] = useState<Range>("4Y");
   const box = useRef<HTMLElement>(null);
   const [boxWidth, setBoxWidth] = useState<number | null>(null);
@@ -54,7 +57,7 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
   const years = RANGES[range];
   const from = years === null ? weeks[0].day : Math.max(weeks[0].day, now - years * YEAR);
   const period = PERIOD[range];
-  const name = (day: number) => periodName(period, day);
+  const name = (day: number) => periodName(period, day, names);
   // the last week of every period, and the all-time peak's week as a point of its own
   const points: Point[] = [];
   weeks.forEach((w, i) => {
@@ -65,7 +68,7 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
     const prior = previous ?? (i > 0 ? weeks[i - 1] : null);
     points.push({
       ...w,
-      period: w === best && !end ? periodName("week", w.day) : w.day === now ? "Today" : name(w.day),
+      period: w === best && !end ? periodName("week", w.day, names) : w.day === now ? words.today : name(w.day),
       before: prior ? { day: prior.day, rating: prior.rating, place: prior.place } : null,
     });
   });
@@ -98,12 +101,12 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
 
   const values = shown.map((p) => p.rating);
   const [low, step] = scale(Math.min(...values), Math.max(...values));
-  const label = `Leaders rating average, ${monthYear(new Date(start).toISOString())} to ${monthYear(today)}: ${shown[0].rating} to ${rating}`;
+  const label = t(words.label, { from: f.monthYear(new Date(start).toISOString()), to: f.monthYear(today), before: shown[0].rating, after: rating });
 
   return (
     <section ref={box} className="mt-14 lg:mt-16">
       <div className={HEAD}>
-        <h2 className={H2}>Leaders rating avg</h2>
+        <h2 className={H2}>{words.title}</h2>
         <div className="flex items-center gap-4 text-[14px] shrink-0">
           {(Object.keys(RANGES) as Range[]).map((r) => (
             <button
@@ -112,7 +115,7 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
               onClick={() => setRange(r)}
               className={r === range ? "font-bold text-claret border-b-2 border-claret pb-0.5" : "text-muted hover:text-ink cursor-pointer"}
             >
-              {r}
+              {words.ranges[r]}
             </button>
           ))}
         </div>
@@ -175,7 +178,7 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
                   score={peak.rating}
                   shift={peakShift(x(peak.day), l.left, l.right)}
                   href={nationPeakLink(ioc, new Date(peak.day).toISOString().slice(0, 10), today)}
-                  title="The nations' table of that week"
+                  title={words.peakTable}
                   font={FONT}
                 />
               )}
@@ -185,11 +188,11 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
               <g className="text-muted" {...text} textAnchor="middle">
                 {ticks.map((tick) => (
                   <text key={tick} x={x(tick)} y={l.height - 10}>
-                    {monthYear(new Date(tick).toISOString())}
+                    {f.monthYear(new Date(tick).toISOString())}
                   </text>
                 ))}
                 <text x={l.right} y={l.height - 10}>
-                  {monthYear(today)}
+                  {f.monthYear(today)}
                 </text>
               </g>
             </svg>
@@ -199,10 +202,10 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
                 onClick={() => setRange("All")}
                 className="absolute top-3 inline-flex items-center h-4 pr-1.5 border border-claret bg-[#F3EEE3] hover:bg-[#EBD5D6] active:bg-[#E0BFC2] transition-colors text-[11px] leading-none font-semibold text-ink cursor-pointer"
                 style={{ left: `${(l.left / l.width) * 100}%` }}
-                title={`Peak in ${monthYear(new Date(best.day).toISOString())}: show the whole history`}
+                title={t(words.peakIn, { month: f.monthYear(new Date(best.day).toISOString()) })}
               >
                 <Icon size={14} name="chevron_left" className="text-claret" />
-                Peak {best.rating}
+                {t(words.peak, { n: best.rating })}
               </button>
             )}
             {hovered && (
@@ -211,7 +214,7 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
                   action={
                     touched
                       ? {
-                          label: "Show tournaments",
+                          label: words.showTournaments,
                           onClick: () => {
                             showTournaments(hovered);
                             close();
@@ -221,7 +224,7 @@ export function NationChart({ ioc, history, today, rating }: { ioc: string; hist
                   }
                   title={hovered.period}
                   lines={[{ before: hovered.before?.rating ?? null, after: hovered.rating }]}
-                  places={[{ label: "Rank", before: hovered.before?.place ?? null, after: hovered.place }]}
+                  places={[{ kind: "rank", before: hovered.before?.place ?? null, after: hovered.place }]}
                 />
               </ChartTip>
             )}

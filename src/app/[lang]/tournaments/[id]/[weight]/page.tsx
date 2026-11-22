@@ -5,12 +5,12 @@ import { Suspense } from "react";
 import { stateOf, TournamentSkeleton, tournamentName } from "@/components/tournament/TournamentHeader";
 import { WeightView } from "@/components/tournament/WeightView";
 import { competition, competitionChances, competitionContests, competitionResults, competitions, competitionSlots, lastUpdate } from "@/lib/api";
-import { WEIGHTS, weightBySlug, weightTitle } from "@/lib/weights";
+import { WEIGHTS, weightBySlug } from "@/lib/weights";
 import { alternatesFor, NOINDEX } from "@/lib/seo";
 import { shortName } from "@/lib/format";
-import { currentLang } from "@/i18n/server";
+import { currentLang, i18n } from "@/i18n/server";
 
-const MEDALS = ["gold", "silver", "bronze"];
+const MEDALS = ["gold", "silver", "bronze"] as const;
 
 const MAJOR = ["Olympic Games", "World Championships", "Masters", "Grand Slam"];
 
@@ -31,15 +31,24 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/tournament
   const found = Number.isInteger(Number(id)) && weight ? await competition(Number(id)) : null;
   if (!found || !weight || !(found.weights.includes(weight.api) || (await underWay(found)))) notFound(); // a crawler is sent the head first: only here does a 404 get its status
   const name = tournamentName(found.name);
+  const { d, f, t } = await i18n();
   // its medallists, once there are: "gold Fawaz M. (FRA), silver …"
   const results = (await competitionResults(found.id)).filter((r) => r.weight === weight.api);
   const medals = MEDALS.flatMap((medal) =>
-    results.filter((r) => r.result === medal).map((r) => `${medal} ${shortName(r.family_name, r.given_name)}${r.country ? ` (${r.country})` : ""}`),
+    results
+      .filter((r) => r.result === medal)
+      .map((r) => {
+        const vars = { medal: d.tournament.medal[medal], name: shortName(r.family_name, r.given_name) };
+        return r.country ? t(d.tournament.meta.medallistOf, { ...vars, country: r.country }) : t(d.tournament.meta.medallist, vars);
+      }),
   );
   const indexed = MAJOR.includes(found.rank_name ?? "");
+  const vars = { weight: f.weightTitle(weight), name };
   return {
-    title: `${weightTitle(weight)} ${name} judo results`,
-    description: `${weightTitle(weight)} at the ${name}${medals.length ? `: ${medals.join(", ")}` : ""}.`,
+    title: t(d.tournament.meta.weightTitle, vars),
+    description: medals.length
+      ? t(d.tournament.meta.weightDescriptionMedallists, { ...vars, medallists: medals.join(", ") })
+      : t(d.tournament.meta.weightDescription, vars),
     alternates: alternatesFor(await currentLang(), `/tournaments/${id}/${slug}`, { indexed }),
     // the weights of the events people search for; the others reachable, not indexed
     ...(indexed ? {} : { robots: NOINDEX }),
@@ -72,12 +81,13 @@ async function TournamentWeight({ params }: { params: PageProps<"/[lang]/tournam
   if (!found.weights.includes(weight.api) && !weightChances.length) {
     // a weight of a tournament not over that has not started: the header stays, and this
     if (stateOf(found, (updated ?? "1970-01-01").slice(0, 10)) === "over") notFound();
+    const { d, f, t } = await i18n();
     return (
       <div className="mt-10 lg:mt-12 border-t-2 border-ink pt-6 max-w-2xl">
-        <h2 className="font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight">{weightTitle(weight)}: not started</h2>
-        <p className="mt-2 text-[14px] text-muted">
-          Its draw, medal chances and contests appear here once the IJF publishes them, usually the day before it is fought.
-        </p>
+        <h2 className="font-serif text-[20px] leading-[24px] sm:text-[24px] sm:leading-[28px] font-bold tracking-tight">
+          {t(d.tournament.weightNotStarted.title, { weight: f.weightTitle(weight) })}
+        </h2>
+        <p className="mt-2 text-[14px] text-muted">{d.tournament.weightNotStarted.lead}</p>
       </div>
     );
   }
