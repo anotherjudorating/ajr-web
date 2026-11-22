@@ -1,6 +1,7 @@
 // Слова, общие для всего сайта: месяцы, веса, стадии сетки, места, счётчики.
 
 import type { en } from "@/i18n/en";
+import { countries } from "@/i18n/ru/countries";
 import { forms } from "@/i18n/t";
 
 export const common = {
@@ -35,42 +36,8 @@ export const common = {
     opens: "Открытые турниры и кубки",
     other: "Прочие",
   },
-  // Страны, которые Intl.DisplayNames называет иначе, чем принято, и команды без страны.
-  countries: {
-    AIN: "Нейтральные спортсмены",
-    EOR: "Команда беженцев",
-    IJF: "IJF",
-    EJU: "EJU",
-    AJU: "AJU",
-    JUA: "JUA",
-    OJU: "OJU",
-    PJC: "PJC",
-    COR: "Объединённая Корея",
-    EUN: "Объединённая команда",
-    URS: "СССР",
-    TCH: "Чехословакия",
-    YUG: "Югославия",
-    SCG: "Сербия и Черногория",
-    FRG: "ФРГ",
-    GDR: "ГДР",
-    GBR: "Великобритания",
-    ENG: "Англия",
-    SCO: "Шотландия",
-    WAL: "Уэльс",
-    NIR: "Северная Ирландия",
-    KOR: "Южная Корея",
-    PRK: "КНДР",
-    TPE: "Тайвань",
-    USA: "США",
-    UAE: "ОАЭ",
-    MDA: "Молдова",
-    HKG: "Гонконг",
-    MAC: "Макао",
-    CIV: "Кот-д’Ивуар",
-    DOM: "Доминиканская Республика",
-    COD: "ДР Конго",
-    CGO: "Конго",
-  } as Record<string, string>,
+  // Названия стран по коду IOC (ru/countries.ts).
+  countries,
   // Результаты так, как их называет база.
   results: { gold: "Золото", silver: "Серебро", bronze: "Бронза", "5th": "5-е", "7th": "7-е" },
   contests: forms({ one: "{n} схватка", few: "{n} схватки", many: "{n} схваток", other: "{n} схватки" }),

@@ -27,7 +27,7 @@ const cy = (v: number) => round(B - ((v - LOW) / (HIGH - LOW)) * (B - T));
 // ranks him above a proven regular; at n = 3 (our tables until November 2026) the
 // regulars are favoured too hard; n = 1 predicts best.
 export function RdShift() {
-  const { d, t } = useI18n();
+  const { d, f, t } = useI18n();
   const s = d.methodology.rdShift;
   const [n, setN] = useState(1);
   const m = METRICS.find((x) => x.n === n) ?? METRICS[2];
@@ -85,8 +85,8 @@ export function RdShift() {
           </svg>
           <dl className="mt-2 grid grid-cols-2 gap-2 text-center tabular-nums">
             {[
-              [s.accuracy, `${(m.accuracy * 100).toFixed(1)}%`],
-              [s.logLoss, m.logLoss.toFixed(3)],
+              [s.accuracy, f.formatChance(m.accuracy, 1)],
+              [s.logLoss, f.decimal(m.logLoss, 3)],
             ].map(([label, value]) => (
               <div key={label} className="border border-rule bg-paper py-2">
                 <dt className="text-[10px] uppercase tracking-wider font-semibold text-muted">{label}</dt>

@@ -76,6 +76,11 @@ export function localeFormat(lang: Lang, dict: Dict) {
       const fixed = (value * 100).toFixed(digits);
       return `${lang === "en" ? fixed : fixed.replace(".", ",")}%`;
     },
+    // 0.5736 to 3 decimals -> "0.574" (ru "0,574"), a real minus.
+    decimal(value: number, digits: number): string {
+      const fixed = value.toFixed(digits).replace("-", "−");
+      return lang === "en" ? fixed : fixed.replace(".", ",");
+    },
     // 24503 -> "24,503"
     number(value: number): string {
       return numberFormat(lang).format(value);

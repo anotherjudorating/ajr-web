@@ -43,10 +43,7 @@ const slice = (key: string) => (data.benchmark.slices as unknown as Record<strin
 
 // The numbers the prose puts in its sentences, formatted in the page's language.
 function facts(f: Format, d: Dict): Facts {
-  const dec = (value: number, digits: number) => {
-    const fixed = value.toFixed(digits);
-    return f.lang === "en" ? fixed : fixed.replace(".", ",");
-  };
+  const dec = f.decimal;
   const all = slice("all");
   return {
     f,
