@@ -13,14 +13,32 @@ import RuProvider from "@/i18n/providers/ru";
 import { currentLang, dict } from "@/i18n/server";
 import { NOINDEX, SITE } from "@/lib/seo";
 
-// next/font cuts each family by unicode-range: an English page's visitor does not
-// download the Cyrillic (the loader wants the lists written out).
-const serif = Source_Serif_4({ variable: "--font-source-serif", subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"] });
+// The fonts, in two cuts: the Latin one for English, preloaded as before, and one
+// with the Cyrillic and the Latin extensions for the other languages. The second is
+// not preloaded (next/font preloads every subset it is given, to every visitor): its
+// files come by unicode-range, when a page shows those letters. The loader wants the
+// subset lists written out.
+const serif = Source_Serif_4({ variable: "--font-source-serif", subsets: ["latin"] });
 const sans = IBM_Plex_Sans({
+  variable: "--font-ibm-plex-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+const serifAll = Source_Serif_4({
+  variable: "--font-source-serif",
+  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
+  preload: false,
+});
+const sansAll = IBM_Plex_Sans({
   variable: "--font-ibm-plex-sans",
   subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
   weight: ["400", "500", "600", "700"],
+  preload: false,
 });
+const FONTS: Record<Lang, string> = {
+  en: `${serif.variable} ${sans.variable}`,
+  ru: `${serifAll.variable} ${sansAll.variable}`,
+};
 
 // The dictionary each language's pages hand the browser: one client chunk a language
 // (src/i18n/providers), the page loads only its own.
@@ -61,7 +79,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
   const lang = await currentLang();
   const Provider = PROVIDERS[lang];
   return (
-    <html lang={localeOf(lang).htmlLang} data-scroll-behavior="smooth" className={`${serif.variable} ${sans.variable} antialiased`}>
+    <html lang={localeOf(lang).htmlLang} data-scroll-behavior="smooth" className={`${FONTS[lang]} antialiased`}>
       <head>
         {/* Icons used by the design (search, close, download, arrows). "block": an icon
             font must not show its ligature names ("search") while loading. */}
