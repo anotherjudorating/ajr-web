@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "@/components/Link";
 import { notFound } from "next/navigation";
+import { builtAhead } from "@/i18n/locales";
 import { permanentRedirectTo } from "@/i18n/server";
 import { Suspense } from "react";
 
@@ -13,8 +14,10 @@ import { MOVED, recordBySlug, RECORDS, recordView } from "@/lib/records";
 import { weightBySlug } from "@/lib/weights";
 import { alternatesFor, hasParams, NOINDEX } from "@/lib/seo";
 
-export function generateStaticParams() {
-  return RECORDS.map((r) => ({ name: r.slug }));
+// The 26 records in English; another language builds one ahead (Cache Components want
+// at least one) and the rest on their first visit.
+export function generateStaticParams({ params }: { params: { lang: string } }) {
+  return (builtAhead(params.lang) ? RECORDS : RECORDS.slice(0, 1)).map((r) => ({ name: r.slug }));
 }
 
 export async function generateMetadata({ params, searchParams }: PageProps<"/[lang]/records/[name]">): Promise<Metadata> {

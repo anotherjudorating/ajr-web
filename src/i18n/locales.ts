@@ -79,6 +79,16 @@ export const PUBLISHED: readonly Locale[] = LOCALES.filter((l) => l.published);
 export const LANG_COOKIE = "lang";
 export const LANG_COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
 
+// Whether a language's pages beyond the core are built ahead at a deploy. English:
+// every page the site builds ahead (the tables, the 26 records, one athlete, one
+// tournament, one nation). The other languages: the core (the home, the tables, the
+// lists, the long pages) and one page of each dynamic route, which Cache Components
+// want, the rest on its first visit (ISR). Six languages built every page 2.7 times
+// over (580 pages, 88 MB of HTML, against 216 and 33 MB with two).
+export function builtAhead(lang: string): boolean {
+  return lang === DEFAULT_LANG;
+}
+
 export function isLang(value: unknown): value is Lang {
   return typeof value === "string" && (LANGS as readonly string[]).includes(value);
 }
