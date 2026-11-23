@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Flag } from "@/components/Flag";
+import Link from "@/components/Link";
 import { Figure } from "@/components/methodology/Figure";
 import data from "@/data/methodology.json";
 import { useI18n } from "@/i18n/client";
@@ -83,80 +84,68 @@ const ALL_OFFSETS = (["men", "women"] as const).flatMap((g) => P4P[g].flatMap((c
 const Y_MIN = Math.floor(Math.min(...ALL_OFFSETS) / 100) * 100;
 const Y_MAX = Math.ceil(Math.max(...ALL_OFFSETS) / 100) * 100;
 
-// On a phone the seven columns turn into rows: the scale runs across, each weight's
-// rivals around the zero line, the leader at their gap, the leader's name and gap at
-// the right where there is room for them.
-const ROW_H = 38;
-function Rows({ dots, width, shown, onPick, labels, p4pRow }: { dots: Dot[][]; width: number; shown: Dot; onPick: (d: Dot) => void; labels: string[]; p4pRow: string }) {
-  const LABEL = 46; // the weight and the P4P place
+// On a phone the seven columns turn into rows, as plain as it gets and not interactive:
+// each weight's rivals around the zero line, the leader at their gap, the leader's
+// flag, name and gap at the right.
+const ROW_H = 34;
+function Rows({ dots, width, labels }: { dots: Dot[][]; width: number; labels: string[] }) {
+  const LABEL = 40; // the weight
   const NAME = 116; // the leader's name and gap
-  const x0 = LABEL + 6;
+  const x0 = LABEL + 4;
   const x1 = width - NAME - 6;
   const x = (v: number) => x0 + ((v - Y_MIN) / (Y_MAX - Y_MIN)) * (x1 - x0);
   const r = (v: number) => Math.round(v * 10) / 10;
-  const H = ROW_H * dots.length + 26;
-  const ticks: number[] = [];
-  for (let v = Y_MIN; v <= Y_MAX; v += 200) ticks.push(v);
-  const same = (a: Dot, b: Dot) => a.a.id === b.a.id && a.weight === b.weight;
+  const H = ROW_H * dots.length;
   return (
     <>
       <svg viewBox={`0 0 ${width} ${H}`} width={width} height={H} className="block" aria-hidden>
-        <g stroke="#D6CFC2" strokeWidth="0.8">
-          {ticks.map((v) => v !== 0 && <line key={v} x1={r(x(v))} x2={r(x(v))} y1={0} y2={H - 22} />)}
-        </g>
-        <line x1={r(x(0))} x2={r(x(0))} y1={0} y2={H - 22} stroke="#66605C" strokeWidth="1.2" strokeDasharray="4,3" />
-        <g fill="#66605C" fontFamily={FONT} fontSize="10" textAnchor="middle">
-          {ticks.map((v) => (
-            <text key={v} x={r(x(v))} y={H - 8}>
-              {signed(v)}
-            </text>
-          ))}
-          <text x={2} y={H - 8} textAnchor="start">
-            {p4pRow}
-          </text>
-        </g>
+        <line x1={r(x(0))} x2={r(x(0))} y1={0} y2={H} stroke="#66605C" strokeWidth="1" strokeDasharray="4,3" />
         {dots.map((row, i) => {
           const lead = row[0];
           const cy = ROW_H * i + ROW_H / 2;
-          const first = lead.a.p4p === 1;
           return (
             <g key={lead.weight}>
-              {first && <rect x={0} y={ROW_H * i} width={width} height={ROW_H} fill="#990F3D" fillOpacity="0.06" />}
-              <text x={2} y={cy - 2} fontFamily={FONT} fontSize="12" fontWeight="600" fill="#33302E">
+              {lead.a.p4p === 1 && <rect x={0} y={ROW_H * i} width={width} height={ROW_H} fill="#990F3D" fillOpacity="0.06" />}
+              <text x={2} y={cy + 4} fontFamily={FONT} fontSize="12" fontWeight="600" fill="#33302E">
                 {labels[i]}
               </text>
-              <text x={2} y={cy + 11} fontFamily={FONT} fontSize="10" fontWeight={first ? 700 : 400} fill={first ? "#990F3D" : "#66605C"}>
-                {lead.a.p4p}
-              </text>
-              <line x1={r(x(0))} x2={r(x(lead.offset))} y1={cy} y2={cy} stroke="#990F3D" strokeWidth="3" strokeOpacity="0.3" />
+              <line x1={r(x(0))} x2={r(x(lead.offset))} y1={cy} y2={cy} stroke="#990F3D" strokeWidth="2.5" strokeOpacity="0.3" />
               {row.slice(1).map((o) => (
-                <circle key={o.a.id} cx={r(x(o.offset))} cy={cy} r={same(shown, o) ? 4 : 2.5} fill="#66605C" fillOpacity={same(shown, o) ? 1 : 0.7} />
+                <circle key={o.a.id} cx={r(x(o.offset))} cy={cy} r="2.5" fill="#66605C" fillOpacity="0.6" />
               ))}
-              <circle cx={r(x(lead.offset))} cy={cy} r="5" fill="#990F3D" stroke={same(shown, lead) ? "#33302E" : "none"} strokeWidth="1.5" />
-              {row.map((o) => (
-                <circle key={`hit-${o.a.id}`} cx={r(x(o.offset))} cy={cy} r="9" fill="transparent" className="cursor-pointer" onPointerEnter={() => onPick(o)} onClick={() => onPick(o)} />
-              ))}
+              <circle cx={r(x(lead.offset))} cy={cy} r="4.5" fill="#990F3D" />
             </g>
           );
         })}
       </svg>
-      {/* the leaders' names and gaps, at the right */}
       {dots.map((row, i) => {
         const lead = row[0];
         return (
-          <button
+          <div
             key={lead.weight}
-            type="button"
-            onClick={() => onPick(lead)}
-            className="absolute flex items-center justify-end gap-1 text-[11px] leading-none cursor-pointer"
+            className="absolute flex items-center justify-end gap-1 text-[11px] leading-none"
             style={{ right: 0, width: NAME, top: ROW_H * i, height: ROW_H }}
           >
             <Flag ioc={lead.a.ioc} />
             <span className="truncate font-semibold text-ink">{shortName(lead.a.family, lead.a.given)}</span>
             <span className="font-bold tabular-nums text-claret">{signed(lead.gap ?? Math.round(lead.offset))}</span>
-          </button>
+          </div>
         );
       })}
+    </>
+  );
+}
+
+// The caption, its date a link to that day's pound-for-pound leaderboard.
+function Caption({ template, day, href }: { template: string; day: string; href: string }) {
+  const [before, after = ""] = template.split("{day}");
+  return (
+    <>
+      {before}
+      <Link href={href} className="underline decoration-rule underline-offset-2 hover:decoration-ink">
+        {day}
+      </Link>
+      {after}
     </>
   );
 }
@@ -176,7 +165,7 @@ export function PoundForPound() {
 
   const W = width ?? 640;
   const phone = W < 560;
-  const H = phone ? ROW_H * 7 + 26 : 320; // a phone: the weights as rows
+  const H = phone ? ROW_H * 7 : 320; // a phone: the weights as rows
   const LEFT = phone ? 36 : 46;
   const RIGHT = W - 6;
   const TOP = 36;
@@ -191,10 +180,10 @@ export function PoundForPound() {
   const top = leaders.findIndex((x) => x.a.p4p === 1);
 
   return (
-    <Figure title={s.title} caption={t(s.caption, { day: f.formatDate(P4P.day) })}>
+    <Figure title={s.title} caption={<Caption template={s.caption} day={f.formatDate(P4P.day)} href={`/rankings/p4p/${gender}/${P4P.day}`} />}>
       <GenderToggle value={gender} onChange={setGender} />
       <div ref={box} className="w-full relative" style={{ height: H }} onPointerLeave={() => setPicked(null)}>
-        {width !== null && phone && <Rows dots={dots} width={W} shown={shown} onPick={setPicked} labels={WEIGHTS[gender].map((w) => w.label)} p4pRow={s.p4pRow} />}
+        {width !== null && phone && <Rows dots={dots} width={W} labels={WEIGHTS[gender].map((w) => w.label)} />}
         {width !== null && !phone && (
           <>
             <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={s.chartLabel} className="block">
@@ -278,6 +267,8 @@ export function PoundForPound() {
           </>
         )}
       </div>
+      {!phone && (
+      <>
       <div className="mt-3 min-h-[44px] text-[13px] tabular-nums">
         <div className="flex items-center gap-1.5 text-ink">
           <Flag ioc={shown.a.ioc} />
@@ -305,13 +296,9 @@ export function PoundForPound() {
           <span className="w-1.5 h-1.5 rounded-full bg-muted inline-block" />
           {s.legend.rivals}
         </span>
-        <span className="inline-flex items-center gap-1.5">
-          <svg width="16" height="4" aria-hidden>
-            <line x1="0" y1="2" x2="16" y2="2" stroke="#66605C" strokeWidth="1.2" strokeDasharray="4,3" />
-          </svg>
-          {s.legend.average}
-        </span>
       </div>
+      </>
+      )}
     </Figure>
   );
 }

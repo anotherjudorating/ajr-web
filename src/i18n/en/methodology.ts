@@ -279,9 +279,9 @@ export const methodology = {
   // Pound for pound: every weight's top eight on one scale, the leader over their rivals.
   p4pChart: {
     title: "Above their own weight",
-    caption: "Every weight's top eight on {day}, each column measured from the average rating of the leader's seven rivals.",
+    caption: "Every weight's top eight on {day}.",
     chartLabel: "The leaders of the seven weights and their rivals, by the gap over the rivals' average",
-    legend: { leader: "the weight's leader", rivals: "places 2 to 8", average: "the average of the leader's seven rivals" },
+    legend: { leader: "the weight's leader", rivals: "places 2 to 8" },
     // the row under the weights: the leader's pound-for-pound place
     p4pRow: "P4P",
     // the reading of one dot, after the name in bold: "Abe H., −66 kg, 1st in the weight"
