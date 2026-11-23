@@ -195,6 +195,22 @@ export const en: Prose = {
       </>
     ),
     weightMovesTitle: "Grigalashvili's weight moves",
+    p4p: () => (
+      <>
+        Ratings of different weights cannot be set side by side: a rating at −60 kg and one at +100 kg were won against different opponents.
+        Pound for pound measures instead how far an athlete stands above their own weight. The candidates are the top three of every weight.
+        Each is set against the seven best other athletes of the same weight, and the gap between their rating and those seven&apos;s average
+        is what the pound-for-pound leaderboard ranks. An athlete on two weights&apos; leaderboards counts once, with the bigger gap.
+      </>
+    ),
+    teams: () => (
+      <>
+        A nation&apos;s rating is the average rating of its best athlete in every weight: seven weights for the men&apos;s or the women&apos;s
+        table, all fourteen for the mixed one. A weight where a nation has nobody on the leaderboard counts as that weight&apos;s last place, so
+        strength across many weights ranks higher than one star. The table also shows in how many weights a nation has the best athlete of all
+        nations and in how many it is in the top eight.
+      </>
+    ),
   },
   works: {
     intro: () => <>A rating is only as good as its forecasts. Every number here is a contest predicted before it was fought.</>,

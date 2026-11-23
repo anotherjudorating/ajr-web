@@ -25,6 +25,7 @@ export const methodology = {
       skill: "Сила, неопределённость, рейтинг",
       calculator: "Калькулятор",
       weights: "Веса и таблицы",
+      p4p: "P4P и сборные",
       test: "Пять моделей, один тест",
       calibration: "Как читать шанс",
       oneRd: "Почему сила минус один RD",

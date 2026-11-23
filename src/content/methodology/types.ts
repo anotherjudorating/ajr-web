@@ -67,6 +67,8 @@ export type Prose = {
     weights2: P;
     afterTableRule: P;
     weightMovesTitle: string;
+    p4p: P;
+    teams: P;
   };
   works: {
     intro: P;

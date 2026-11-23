@@ -220,6 +220,10 @@ export default async function Methodology() {
           </div>
         </TryIt>
 
+        <Section id="p4p">{d.methodology.chapters.sections.p4p}</Section>
+        <p className={P}>{number.p4p(x)}</p>
+        <p className={P}>{number.teams(x)}</p>
+
         {/* Part 3: the test */}
         <Chapter id="works">{works.intro(x)}</Chapter>
         <Section id="test">{d.methodology.chapters.sections.test}</Section>
