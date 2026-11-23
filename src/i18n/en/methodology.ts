@@ -275,4 +275,31 @@ export const methodology = {
     orderAjr: "The order by AJR rating",
     seedsNote: "Seeds 1 to 8, the rest not seeded, drawn randomly.",
   },
+  // Pound for pound: every weight's top eight on one scale, the leader over their rivals.
+  p4pChart: {
+    title: "Above their own weight",
+    caption: "Every weight's top eight on {day}, each column measured from the average rating of the leader's seven rivals.",
+    chartLabel: "The leaders of the seven weights and their rivals, by the gap over the rivals' average",
+    legend: { leader: "the weight's leader", rivals: "places 2 to 8", average: "the average of the leader's seven rivals" },
+    // the row under the weights: the leader's pound-for-pound place
+    p4pRow: "P4P",
+    // the reading of one dot, after the name in bold: "Abe H., −66 kg, 1st in the weight"
+    readout: ", {weight} kg, {place} in the weight",
+    rating: "rating {rating}",
+    gap: "gap {gap}",
+    p4p: "P4P {n}",
+  },
+  // Nations: the top eight as rows, the weights as cells shaded by the best athlete there.
+  nationsGrid: {
+    title: "Seven weights, one average",
+    caption: "The top eight nations on {day}: a cell is the nation's best athlete in the weight, darker for a higher rating.",
+    gridLabel: "The top eight nations and their best athlete in every weight",
+    led: "Led",
+    top8: "Top 8",
+    // a cell's label for screen readers, and the reading under the table (after the name in bold)
+    cell: "{nation}, {weight} kg: {name}, rating {rating}, {place} among the nations",
+    empty: "{nation}, {weight} kg: nobody on the leaderboard, counted as its last place, rating {rating}",
+    cellReadout: ", rating {rating}, {place} among the nations",
+    emptyReadout: "Nobody on the leaderboard, counted as its last place: rating {rating}",
+  },
 };

@@ -9,6 +9,7 @@ import { RdShift } from "@/components/methodology/RdShift";
 import { RinerCareer, WeightMoves } from "@/components/methodology/SkillChart";
 import { BeatTheModel, ListingRule } from "@/components/methodology/Stories";
 import { DrawAnimation } from "@/components/methodology/DrawAnimation";
+import { Nations, PoundForPound } from "@/components/methodology/PoundForPound";
 import { Figure } from "@/components/methodology/Figure";
 import { NumberOneTable, ParisDraw, PointsOrStrength, TableRule, TwoGolds } from "@/components/methodology/Why";
 import { PROSE } from "@/content/methodology";
@@ -222,9 +223,11 @@ export default async function Methodology() {
 
         <Section id="p4p">{d.methodology.chapters.sections.p4p}</Section>
         <p className={P}>{number.p4p(x)}</p>
+        <PoundForPound />
 
         <Section id="teams">{d.methodology.chapters.sections.teams}</Section>
         <p className={P}>{number.teams(x)}</p>
+        <Nations />
 
         {/* Part 3: the test */}
         <Chapter id="works">{works.intro(x)}</Chapter>
