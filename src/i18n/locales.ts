@@ -42,7 +42,7 @@ export const LOCALES: readonly Locale[] = [
     short: "FR",
     htmlLang: "fr",
     ogLocale: "fr_FR",
-    published: false,
+    published: true,
   },
   {
     code: "es",
@@ -50,7 +50,7 @@ export const LOCALES: readonly Locale[] = [
     short: "ES",
     htmlLang: "es",
     ogLocale: "es_ES",
-    published: false,
+    published: true,
   },
   {
     code: "it",
@@ -58,7 +58,7 @@ export const LOCALES: readonly Locale[] = [
     short: "IT",
     htmlLang: "it",
     ogLocale: "it_IT",
-    published: false,
+    published: true,
   },
   {
     // Brazilian Portuguese: the larger judo audience, written without regional words
@@ -67,7 +67,7 @@ export const LOCALES: readonly Locale[] = [
     short: "PT",
     htmlLang: "pt-BR",
     ogLocale: "pt_BR",
-    published: false,
+    published: true,
   },
 ];
 

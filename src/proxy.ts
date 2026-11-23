@@ -100,6 +100,6 @@ export function proxy(request: NextRequest) {
 export const config = {
   // pages only: not the site's assets, not the health check
   matcher: [
-    "/((?!_next/|api/health|icon.svg|favicon.ico|robots.txt|sitemap.xml|llms.txt).*)",
+    "/((?!_next/|api/health|icon.svg|favicon.ico|robots.txt|sitemap.xml|sitemaps/|llms.txt).*)",
   ],
 };

@@ -9,11 +9,17 @@ import { WEIGHTS } from "@/lib/weights";
 // The pages worth indexing, with the day their content last changed (from the data,
 // so a revalidation that changed nothing writes the same file): the rankings, the
 // athletes with enough to show (lib/seo.ts), every tournament with rated contests,
-// every nation, the records and the lists. About 25 thousand URLs: one file (the
-// limit is 50 thousand). Each page once a published language, with the same page in
-// the other languages as its alternates (hreflang); with four languages or more,
-// generateSitemaps should split the file.
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+// every nation, the records and the lists. One file a published language (about 17
+// thousand URLs each, the limit is 50 thousand), at /sitemaps/sitemap/<lang>.xml, each
+// page with the same page in the other languages as its alternates (hreflang);
+// /sitemap.xml lists the files (app/sitemap.xml/route.ts).
+export async function generateSitemaps() {
+  return PUBLISHED.map((locale) => ({ id: locale.code }));
+}
+
+export default async function sitemap({ id }: { id: Promise<string> }): Promise<MetadataRoute.Sitemap> {
+  const asked = await id;
+  const lang = PUBLISHED.find((locale) => locale.code === asked)?.code ?? DEFAULT_LANG;
   // built on its first request, not with the site (one more heavy read while the
   // build renders every page at once); its data is cached until it changes
   await connection();
@@ -23,8 +29,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // dates that old, and they say nothing about a page anyway
   const address = (lang: (typeof PUBLISHED)[number]["code"], path: string) => `${SITE}${localePath(lang, path)}`;
   const page = (path: string, lastModified?: string | null) =>
-    PUBLISHED.map((locale) => ({
-      url: address(locale.code, path),
+    [lang].map((code) => ({
+      url: address(code, path),
       ...(lastModified && lastModified >= "2000-01-01" ? { lastModified } : {}),
       ...(PUBLISHED.length > 1
         ? {
