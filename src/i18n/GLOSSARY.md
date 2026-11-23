@@ -157,3 +157,79 @@ Rules: impersonal (no « nous »), no long dashes or semicolons, IJF and AJR alw
 | athletes' names | as in the data: « Abe U. », « Heydarov H. » | full names in the prose in Latin too: « Uta Abe » |
 | countries | in French from the table `fr/countries.ts` | as the countries call themselves where French allows: Biélorussie (the French press form, « Bélarus » is the diplomatic one), Corée du Sud, Corée du Nord, Taïwan (TPE), Kirghizistan, Moldavie, Timor oriental, Eswatini, « Athlètes individuels neutres » (AIN), « Équipe des réfugiés » (EOR), RDA, RFA, URSS, Zaïre |
 | 404 « Mate. Sore-made. », « Matte. » | unchanged, in romaji | |
+
+## Italian (it)
+
+Terms chosen for `src/i18n/it/*.ts` and `src/content/*/it.tsx`. Rules: no long dashes, no semicolons, no middle dot, impersonal (no "noi"), comparisons always "ranking IJF" / "rating AJR" side by side, athletes' and tournaments' names as in the IJF data, stages 1/16, 1/8, 1/4, 1/2, finale, weights "−73 kg" (real minus), decimal comma, typographic apostrophe (l’atleta).
+
+| English | Italiano | Where and why |
+|---|---|---|
+| rating | rating | the number, everywhere ("rating AJR", "rating più alto"). Italian sport writes "rating" for a computed strength (chess, tennis analytics), "punti" would clash with IJF points |
+| ranking, rankings (the list) | ranking (one list: "ranking mondiale IJF", "ranking P4P"), classifiche (the section) | header "Classifiche", breadcrumb; "classifica" is also the leaderboard of one weight |
+| skill | forza | the Glicko μ: "forza 2100 − RD 70 = rating 2030". Not "abilità" |
+| RD, rating deviation | RD, once in prose "RD (rating deviation, la deviazione del rating)" | code stays Latin |
+| uncertainty | incertezza | the band on the chart, "−176 incertezza" |
+| leaderboard, table | classifica | "classifica dei −73 kg", "fuori dalle classifiche" |
+| pound for pound, P4P | P4P, "pound for pound" written out in titles and prose | Italian coverage uses the English phrase |
+| nations, teams | nazioni (lists, filters, the nations ranking); "squadra" only in "rating di squadra" and "squadra più profonda" | header switcher "Nazioni", column "Paese" for the country filter |
+| NAT (narrow code column) | NAZ (rankings), Naz (records, explore) | three letters over the flag |
+| contest | incontro | FIJLKAM and the press say "incontro", never "combattimento" or "match" |
+| win / loss (letters) | V / S | as Italian tables write vittorie / sconfitte, "V–S", "V/S" |
+| chance, win chance | probabilità (column head "Prob.") | "70%", "1,74%" |
+| favourite / underdog | favorito / sfavorito | |
+| upset | sorpresa | "Sorprese del mese", "Vittorie a sorpresa". "Upset" as an anglicism was rejected |
+| movers (biggest movers) | Chi sale e chi scende | the home block, both directions |
+| lead (points ahead) | margine | column "Margine", "Margine P4P più grande" |
+| peak | picco | |
+| trend | trend | the column, an Italian word now |
+| rank, place | posizione (the rank in a list, column "Pos."), posto (a tournament place), "n. 1" | "#1" is written "n. 1" with a space, as Italian press does |
+| seed, seeded, seeding | testa di serie, teste di serie | "testa di serie n. 1", "non testa di serie", "teste di serie secondo il rating AJR" |
+| draw (the draw) | sorteggio (the event), tabellone (the bracket) | "Sorteggio non ancora pubblicato", figure "Il tabellone", switch "Tabellone / Elenco" |
+| bracket / list | tabellone / elenco | |
+| bye | bye | the Italian bracket word too |
+| walkover, WO, fusen-gachi | forfait, code WO, "fusen-gachi" | "Vittoria per forfait: {name} non si è presentato" |
+| golden score | golden score, code GS | as commentators say it |
+| ippon, waza-ari, yuko, shido, hansoku-make | ippon, waza-ari, yuko, shido, hansoku-make | letters in the contest table stay I / W / Y (as the IJF scoreboard) |
+| round | turno | column "Turno", "Il cammino verso l’incontro: 1/8 di finale" |
+| F, 1/2, 1/4, 1/8 … | Finale, Semifinale, Quarto di finale, 1/8 di finale | codes in brackets stay "F", "1/2"; group rows "Semifinali", "Quarti di finale" |
+| BR, bronze medal contest | finale per il bronzo | the press' term, "Finali per il bronzo" as a group row |
+| REP, repechage | recuperi | the Italian federation's word |
+| round-robin tour | girone, turno n | "Girone, turno 1" |
+| medal rounds | finali dei grandi tornei | the test's slice |
+| Grand Slam, Grand Prix, Masters, World Tour, European Open, European Cup | untranslated | tournament names stay English (owner's decision), "Coppe Europa" and "Open continentali" as levels in prose and filters |
+| Olympic Games, World Championships, Continental Championships | Giochi Olimpici, Campionati del mondo (short "Mondiali"), Campionati continentali (short "Continentali") | |
+| Other (level) | Altri | |
+| head-to-head | testa a testa | header and page, the usual Italian sports phrase |
+| Explore | Esplora | the catalogue of tournaments, athletes, contests and nations |
+| Records | Record | invariable in Italian, singular and plural |
+| Methodology | Metodologia (link), "Come funziona il rating" (page title) | |
+| How it works, How ratings work | Come funziona, Come funziona il rating | |
+| Export data | Esporta i dati | |
+| Export CSV | Esporta CSV | CSV headers stay English |
+| Contact | Contatti | |
+| Updated | Aggiornato, "Rating aggiornati il 13 nov 2026" | |
+| Live / Upcoming | In corso / In arrivo | tournament chips |
+| Inactive | Inattivo | over a year without a contest |
+| Still in / Placed | In gara / Classificati | a weight's athletes filter |
+| newcomer, debutant | esordiente | |
+| regular | atleta di lungo corso, "chi gareggia regolarmente" | |
+| nemesis | Bestia nera | the record, the Italian idiom for an opponent one keeps losing to |
+| giant killer | Ammazzagrandi | the record, the press' word |
+| golden score king | Re del golden score | |
+| deepest team | Squadra più profonda | |
+| greatest / longest rivalry | Rivalità più grande / più lunga | |
+| least likely champion | Campione meno probabile | |
+| log loss, Brier | log loss, punteggio di Brier | |
+| accuracy | precisione | |
+| coin flip | moneta | |
+| Elo, textbook Glicko-2 | Elo, Glicko-2 da manuale | |
+| volatility | volatilità | |
+| IJF, AJR, P4P, RD, GS, WO | Latin, as they are | |
+| months after a day | 5 ott 2026, 13 nov 2026 | three letters, lowercase, no dot (gen feb mar apr mag giu lug ago set ott nov dic), the same for a month alone: "mar 2026" |
+| numbers | 24.503, 1,7% | Intl.NumberFormat("it"): a point for thousands (none in four-digit numbers: 1091), a comma for decimals |
+| ordinals | 1º, 5º, 8º | one form, the masculine ordinal sign (an athlete's place, a nation's place) |
+| plurals | 1 incontro, 2 incontri | one / other |
+| ranges | 1–50 di 625, 7–8 dic | the short dash between numbers kept as a range sign, as in English |
+| athletes' names | as in the data: "Abe U.", "Heydarov H." | full names in prose also Latin: "Uta Abe" |
+| countries | in Italian from `it/countries.ts` | as the press writes them: Stati Uniti, Corea del Sud, Corea del Nord, Regno Unito, Taiwan (TPE), Bielorussia, Repubblica Ceca, Moldavia, RD del Congo, Timor Est, "Atleti neutrali individuali" (AIN), "Squadra dei rifugiati" (EOR), URSS, Jugoslavia, Cecoslovacchia, Germania Est / Ovest, Zaire |
+| 404 "Mate. Sore-made.", "Matte." | unchanged, romaji | |
