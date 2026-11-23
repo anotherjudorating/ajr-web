@@ -16,24 +16,31 @@ const arg = (name, fallback) => {
 const SITE = arg("site", "http://localhost:3000").replace(/\/$/, "");
 const LANG = arg("lang", "ru");
 // Words of the interface that cannot be part of a Latin-script name.
-const WORDS = arg(
-  "words",
-  [
-    "Rankings", "Explore", "Head-to-head", "Records", "Methodology", "Contact", "Export", "Search",
-    "Updated", "updated", "Source", "Upcoming", "Biggest", "movers", "Upsets", "upsets", "Final", "Semi-final",
-    "contests", "contest", "medals", "medal", "weeks", "week", "points", "rating", "Rating", "chance", "Show",
-    "Showing", "Shown", "Athletes", "Tournaments", "Nations", "Men", "Women", "Mixed", "Teams", "Gold", "Silver",
-    "Bronze", "results", "Results", "Download", "Filter", "Sort", "Page", "Next", "Previous", "Open", "Close",
-  ].join(","),
-).split(",");
-const WORD_RE = new RegExp(`(^|[^\\p{L}])(${WORDS.join("|")})(?=$|[^\\p{L}])`, "u");
+const ENGLISH = [
+  "Rankings", "Explore", "Head-to-head", "Records", "Methodology", "Contact", "Export", "Search",
+  "Updated", "updated", "Source", "Upcoming", "Biggest", "movers", "Upsets", "upsets", "Final", "Semi-final",
+  "contests", "contest", "medals", "medal", "weeks", "week", "points", "rating", "Rating", "chance", "Show",
+  "Showing", "Shown", "Athletes", "Tournaments", "Nations", "Men", "Women", "Mixed", "Teams", "Gold", "Silver",
+  "Bronze", "results", "Results", "Download", "Filter", "Sort", "Page", "Next", "Previous", "Open", "Close",
+];
+// Words a language writes as English does (its own words, by the glossary): not
+// English left behind. "rating" is the term of every Latin-script dictionary.
+const SHARED = {
+  fr: ["Records", "Contact", "Nations", "Source", "chance", "points", "Bronze"],
+  es: ["Final", "rating", "Rating", "Rankings"],
+  it: ["rating", "Rating", "Open"],
+  pt: ["Final", "rating", "Rating", "Rankings", "chance", "Bronze"],
+};
+const WORDS = arg("words", ENGLISH.filter((w) => !(SHARED[LANG] ?? []).includes(w)).join(",")).split(",");
+// A hyphen binds ("week-end" is not "week").
+const WORD_RE = new RegExp(`(^|[^\\p{L}-])(${WORDS.join("|")})(?=$|[^\\p{L}-])`, "u");
 // Not words of the interface: the site's name, a file's name, a tournament's name
 // (its level in English: "Taipei Asian Open 2026") outside a link, a judobase level.
 const NOT_WORDS = [
   /Another Judo Rating(, rating history)?/g,
   /\S+\.(?:csv|gz|md|json)\b/g,
   /\b(?:[A-Z][\w'.-]+ )+(?:Grand Slam|Grand Prix|Open|Cup|Masters|Championships|Games|Mixed Teams)\b(?: Mixed Teams)?( \d{4})?/g,
-  /(?<=\p{Script=Cyrillic}\.? )Open\b/gu, // a level's name kept in Latin ("континентальные Open", "Конт. Open")
+  /(?<=(?:\p{Script=Cyrillic}|\p{Ll})(?:\.? |’))Open\b/gu, // a level's name kept in Latin ("континентальные Open", "Конт. Open", "d’Open européen")
   /rating deviation/g, // RD spelled out
 ];
 const ALL = process.argv.includes("--all");

@@ -34,9 +34,16 @@ const sansAll = IBM_Plex_Sans({
   weight: ["400", "500", "600", "700"],
   preload: false,
 });
+// The Latin extension covers the accents of French, Spanish, Italian and Portuguese
+// (é, ñ, ã, ç, à) in the same cut as the Cyrillic.
+const ALL_SCRIPTS = `${serifAll.variable} ${sansAll.variable}`;
 const FONTS: Record<Lang, string> = {
   en: `${serif.variable} ${sans.variable}`,
-  ru: `${serifAll.variable} ${sansAll.variable}`,
+  ru: ALL_SCRIPTS,
+  fr: ALL_SCRIPTS,
+  es: ALL_SCRIPTS,
+  it: ALL_SCRIPTS,
+  pt: ALL_SCRIPTS,
 };
 
 // The language is the root parameter (/ru/...; English has no prefix: src/proxy.ts

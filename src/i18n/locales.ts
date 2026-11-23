@@ -3,7 +3,7 @@
 // (docs/audits/2026-11-21-i18n-plan-v2.md §3). Plain data and pure functions: this
 // file is read on the server, in the browser and by the proxy.
 
-export type Lang = "en" | "ru";
+export type Lang = "en" | "ru" | "fr" | "es" | "it" | "pt";
 
 export type Locale = {
   code: Lang;
@@ -34,6 +34,41 @@ export const LOCALES: readonly Locale[] = [
     ogLocale: "ru_RU",
     published: true,
   },
+  // The four below are translated and wait for a native proofreader: the owner
+  // publishes each after review (published: true).
+  {
+    code: "fr",
+    name: "Français",
+    short: "FR",
+    htmlLang: "fr",
+    ogLocale: "fr_FR",
+    published: true,
+  },
+  {
+    code: "es",
+    name: "Español",
+    short: "ES",
+    htmlLang: "es",
+    ogLocale: "es_ES",
+    published: true,
+  },
+  {
+    code: "it",
+    name: "Italiano",
+    short: "IT",
+    htmlLang: "it",
+    ogLocale: "it_IT",
+    published: true,
+  },
+  {
+    // Brazilian Portuguese: the larger judo audience, written without regional words
+    code: "pt",
+    name: "Português",
+    short: "PT",
+    htmlLang: "pt-BR",
+    ogLocale: "pt_BR",
+    published: true,
+  },
 ];
 
 export const DEFAULT_LANG: Lang = "en";
@@ -43,6 +78,16 @@ export const PUBLISHED: readonly Locale[] = LOCALES.filter((l) => l.published);
 // The switcher's cookie: the language a visitor chose, kept a year.
 export const LANG_COOKIE = "lang";
 export const LANG_COOKIE_MAX_AGE = 365 * 24 * 60 * 60;
+
+// Whether a language's pages beyond the core are built ahead at a deploy. English:
+// every page the site builds ahead (the tables, the 26 records, one athlete, one
+// tournament, one nation). The other languages: the core (the home, the tables, the
+// lists, the long pages) and one page of each dynamic route, which Cache Components
+// want, the rest on its first visit (ISR). Six languages built every page 2.7 times
+// over (580 pages, 88 MB of HTML, against 216 and 33 MB with two).
+export function builtAhead(lang: string): boolean {
+  return lang === DEFAULT_LANG;
+}
 
 export function isLang(value: unknown): value is Lang {
   return typeof value === "string" && (LANGS as readonly string[]).includes(value);
