@@ -311,3 +311,83 @@ Terms chosen for `src/i18n/pt/*.ts` and `src/content/*/pt.tsx`. Brazilian Portug
 | athletes' names | as in the data: "Abe U.", "Heydarov H." | in prose too: "Uta Abe" |
 | countries | from the table `pt/countries.ts` | Estados Unidos, Coreia do Sul, Coreia do Norte, Reino Unido, Taiwan (TPE), Belarus (the press's current form, not Bielorrússia), Tchéquia, Catar, Mianmar, "Atletas neutros" (AIN), "Equipe de refugiados" (EOR), URSS, Iugoslávia, Tchecoslováquia, Alemanha Oriental / Ocidental, Zaire |
 | 404 "Mate. Sore-made.", "Matte." | unchanged, romaji | |
+
+## Spanish (es)
+
+Terms chosen for `src/i18n/es/*.ts` and `src/content/*/es.tsx`. Rules: neutral international Spanish (no "vosotros" forms in copy, no Spain-only or LatAm-only words: "en curso" rather than "en directo" / "en vivo"), impersonal (no "nosotros"), no long dashes, no semicolons, no middle dot, the pair "ranking IJF" / "rating AJR" kept symmetric, athletes' and tournaments' names as in the IJF data. Stages: 1/16, 1/8, 1/4, 1/2 de final, Final. Weights: "−73 kg" (real minus), "−73" in tables. Decimal comma, Intl.NumberFormat("es") for thousands (24.503, but 1091: Spanish groups from five digits). Inverted ¿ ¡ where a question or exclamation appears.
+
+| English | Español | Where and why |
+|---|---|---|
+| rating | rating (m.) | everywhere, "el rating AJR", "rating más alto". "Puntuación" would clash with IJF points, "clasificación" and "ranking" are the list, not the number. "Rating" is how Spanish chess and sport write Elo-type numbers |
+| ranking, rankings (the list, the section) | ranking, Rankings | header, breadcrumb, "ranking mundial de judo", "ranking IJF" (the IJF World Ranking List). "Ranking" is the word Spanish judo coverage uses |
+| IJF rating / AJR rating | ranking IJF / rating AJR | the symmetric pair: the IJF has a points list, AJR a rating, always both named |
+| skill | fuerza | the Glicko μ: "fuerza 2100 − RD 70 = rating 2030". Not "habilidad" or "nivel" |
+| RD, rating deviation | RD, once in prose "RD (rating deviation, desviación del rating)" | code stays |
+| uncertainty | incertidumbre | the band on the chart, "−176 incertidumbre" |
+| leaderboard | clasificación | prose: "la clasificación de −73 kg", "fuera de las clasificaciones" |
+| table (UI) | tabla | "La tabla de esa semana", "fuera de la tabla" |
+| pound for pound, P4P | libra por libra, P4P | "Ranking P4P", "n.º 1 libra por libra"; boxing usage, understood everywhere |
+| nations (lists, filters), teams (nations ranking) | países, equipos | "Países" tab and column, "Equipos" in the weight switcher (shorter than "Selecciones"), "Ranking de países" for the nations ranking |
+| NAT (narrow column) | País | four letters, fits |
+| contest | combate | never "pelea" or "lucha" |
+| W / L | V / D | victoria / derrota, as Spanish tables write them. W–L: V–D, W/L: V/D |
+| chance, win chance | probabilidad, "Prob." in column heads | "70%", "1,74%" (decimal comma) |
+| favourite / underdog | favorito / "sin ser favorito", "el otro" | no single Spanish word for underdog in judo copy |
+| upset | sorpresa | "Sorpresas del mes", "Mayores sorpresas", "victorias sorpresa", chip "Sorpresa" |
+| movers (biggest movers) | Subidas y bajadas | home block, both ways |
+| lead (points ahead) | ventaja | column "Ventaja" |
+| peak | máximo | "Máximo 2600", column "Máximo" |
+| trend | tendencia | |
+| rank, place | puesto | "n.º 1", "1.º", column "Puesto". "#1" is written "n.º 1" (RAE abbreviation with the ordinal sign) |
+| seed, seeded, seeding | cabeza de serie | "cabeza de serie 1", "sin cabeza de serie", "Cabezas de serie por rating AJR" |
+| draw (the event) / bracket (the drawing) | sorteo / cuadro | "Sorteo aún no publicado", figure "El sorteo", switch "Cuadro / Lista" |
+| bracket / list | cuadro / lista | |
+| bye | exento (women's draw: exenta) | |
+| walkover, WO, fusen-gachi | incomparecencia, code WO, "fusen-gachi" | |
+| golden score | golden score, code GS | what Spanish commentators say, "punto de oro" is rarer |
+| ippon, waza-ari, yuko, shido, hansoku-make | ippon, waza-ari, yuko, shido, hansoku-make | letters in the contest table: I / W / Y, as in English |
+| round | ronda | column "Ronda", "Camino hasta el combate: 1/8 de final" |
+| F, 1/2, 1/4, 1/8 … | Final, 1/2 de final, 1/4 de final, 1/8 de final | codes in brackets stay "F", "1/2". Not "semifinal", "cuartos", "octavos" |
+| BR, bronze medal contest | combate por el bronce, in the bracket "Bronce" | |
+| REP, repechage | repesca | the word Spanish judo uses |
+| round-robin tour | ronda | "Ronda 1" |
+| medal rounds | rondas de medalla | |
+| Grand Slam, Grand Prix, Masters, World Tour, European Open, European Cup | untranslated | tournament names by the owner's decision. In prose "Copas de Europa", "Opens continentales" as levels |
+| Olympic Games, World Championships, Continental Championships | Juegos Olímpicos, Campeonato del Mundo (short "Mundial"), Campeonatos continentales | |
+| Other (level) | Otros | |
+| head-to-head | cara a cara | header section, page, "Cara a cara" |
+| Explore | Explorar | the lists of tournaments, athletes, contests, nations |
+| Records | Récords | with the accent (RAE) |
+| Methodology | Metodología (link), "Cómo funciona el rating" (page title) | |
+| How it works, How ratings work | Cómo funciona, Cómo funciona el rating | |
+| Export data | Exportar datos | |
+| Export CSV | Descargar CSV | CSV headers stay English |
+| Contact | Contacto | |
+| Updated | Actualizado | "Rankings actualizados el 13 nov 2026" |
+| Live / Upcoming | En curso / Próximo(s) | neutral between "en directo" (Spain) and "en vivo" (LatAm) |
+| Inactive | Inactivo | over a year without contests |
+| Still in / Placed | Siguen / Terminaron | the weight's athletes filter |
+| newcomer, debutant | novato, debutante | |
+| regular | habitual | "un habitual con decenas de combates" |
+| nemesis | Bestia negra | the record, the column "Bestia negra / rival" |
+| giant killer | Matagigantes | the record |
+| golden score king | Rey del golden score | |
+| deepest team | Equipo con más fondo | |
+| greatest / longest rivalry | Mayor rivalidad / Rivalidad más larga | |
+| least likely champion | Campeón menos probable | |
+| log loss, Brier | log loss, puntuación de Brier | |
+| accuracy | acierto | "Acierto del rating" in the tournaments list |
+| coin flip | moneda al aire, "Moneda" | |
+| Elo | Elo | |
+| textbook Glicko-2 | Glicko-2 de manual | |
+| volatility | volatilidad | |
+| athlete | atleta | "judoca" in meta titles and prose where the sport is named |
+| IJF, AJR, P4P, RD, GS, WO | unchanged | "la IJF" with the article when it is the federation acting |
+| months after a day | 5 oct 2026, 13 nov 2026 | three letters, lower case, no dot: ene feb mar abr may jun jul ago sep oct nov dic. Full names lower case in the tournament list ("enero 2026") |
+| numbers | 24.503, 1091, 1,7% | Intl.NumberFormat("es"): the point from five digits, four-digit numbers unseparated |
+| ordinals | 1.º, 5.º | the RAE's form, one for every number (Intl gives only `other`), refers to "puesto" |
+| plurals | 1 combate, 2 combates | forms one / other (Intl's `many` for millions falls back to other) |
+| ranges | 1–50 de 625, 7–8 dic | the en dash between numbers kept as in English |
+| athletes' names | as in the data: "Abe U.", "Heydarov H." | full names in prose also in Latin letters: "Uta Abe" |
+| countries | Spanish from the table `es/countries.ts` | Estados Unidos, Corea del Sur, Corea del Norte, Reino Unido, Taiwán (TPE), Bielorrusia (the press's form, not Belarús), Kirguistán, Moldavia, Timor Oriental, Costa de Marfil, Arabia Saudita, "Atletas neutrales" (AIN), "Equipo de refugiados" (EOR), URSS, Yugoslavia, Checoslovaquia, RDA, RFA, Zaire |
+| 404 "Mate. Sore-made.", "Matte." | unchanged (romaji) | |
