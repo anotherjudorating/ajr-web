@@ -293,7 +293,7 @@ export const methodology = {
   // Nations: the top eight as rows, the weights as cells shaded by the best athlete there.
   nationsGrid: {
     title: "Seven weights, one average",
-    caption: "The top eight nations on {day}: a cell is the nation's best athlete in the weight, darker for a higher rating.",
+    caption: "The top eight nations on {day}, a cell darker for a higher rating.",
     gridLabel: "The top eight nations and their best athlete in every weight",
     led: "Led",
     top8: "Top 8",

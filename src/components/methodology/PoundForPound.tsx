@@ -332,12 +332,12 @@ export function Nations() {
   const head = "py-1.5 text-[11px] sm:text-[12px] font-normal text-muted";
 
   return (
-    <Figure title={s.title} caption={t(s.caption, { day: f.formatDate(NATIONS.day) })}>
+    <Figure title={s.title} caption={<Caption template={s.caption} day={f.formatDate(NATIONS.day)} href={`/rankings/teams/${gender}/${NATIONS.day}`} />}>
       <GenderToggle value={gender} onChange={setGender} />
       <table className="w-full table-fixed border-collapse" aria-label={s.gridLabel} onPointerLeave={() => setPicked(null)}>
         <thead>
           <tr className="border-b border-ink">
-            <th className={`${head} w-[62px] sm:w-[84px] text-left`} />
+            <th className={`${head} w-[40px] sm:w-[84px] text-left`} />
             {WEIGHTS[gender].map((w) => (
               <th key={w.api} className={`${head} text-center tabular-nums text-[10px] sm:text-[12px] tracking-tight sm:tracking-normal`}>
                 {w.label}
@@ -355,14 +355,14 @@ export function Nations() {
                 <span className="inline-flex items-center gap-1.5">
                   <span className="w-3 text-right tabular-nums text-muted">{n.place}</span>
                   <Flag ioc={n.ioc} />
-                  <span className="font-semibold">{n.ioc}</span>
+                  <span className="hidden sm:inline font-semibold">{n.ioc}</span>
                 </span>
               </td>
               {n.cells.map((c, j) => {
                 const on = shown.row === i && shown.col === j;
                 const dark = c ? shade(c.rating) > 0.5 : false;
                 return (
-                  <td key={j} className="p-px">
+                  <td key={j} className="p-[1.5px] sm:p-px">
                     <button
                       type="button"
                       onPointerEnter={() => setPicked({ row: i, col: j })}
@@ -372,7 +372,7 @@ export function Nations() {
                           ? t(s.cell, { nation, weight: WEIGHTS[gender][j].label, name: shortName(c.family, c.given), rating: c.rating, place: f.ordinal(c.nationPlace) })
                           : t(s.empty, { nation, weight: WEIGHTS[gender][j].label, rating: table.weights[j].last })
                       }
-                      className={`block w-full h-7 sm:h-8 px-1 text-[11px] leading-none truncate cursor-pointer ${dark ? "text-paper" : "text-ink"} ${on ? "outline outline-2 outline-ink -outline-offset-2" : ""}`}
+                      className={`block w-full h-7 sm:h-8 px-1 text-[11px] leading-none truncate pointer-events-none sm:pointer-events-auto sm:cursor-pointer ${dark ? "text-paper" : "text-ink"} ${on ? "sm:outline sm:outline-2 sm:outline-ink sm:-outline-offset-2" : ""}`}
                       style={c ? { background: `rgba(153, 15, 61, ${(0.06 + 0.9 * shade(c.rating)).toFixed(2)})` } : { background: HATCH }}
                     >
                       <span className="hidden sm:inline tabular-nums">{c ? c.rating : ""}</span>
@@ -387,7 +387,8 @@ export function Nations() {
           ))}
         </tbody>
       </table>
-      <div className="mt-3 min-h-[44px] text-[13px] tabular-nums">
+      {/* what a tapped cell holds: on wider screens only (a phone's grid is not interactive) */}
+      <div className="hidden sm:block mt-3 min-h-[44px] text-[13px] tabular-nums">
         <div className="flex items-center gap-1.5 text-ink">
           <Flag ioc={row.ioc} />
           <b>{nation}</b>
