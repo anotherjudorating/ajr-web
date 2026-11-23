@@ -119,15 +119,10 @@ export async function CountryView({
                 <span>{words.top8}</span>
                 <span className="tabular-nums font-semibold text-ink">{c.top8}</span>
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1">
-                <Link href="/rankings/teams/mixed" className="font-serif text-[14px] font-semibold text-claret hover:underline">
-                  {words.nationsRanking}
-                </Link>
-                {/* as on an athlete's page: how the number is made, the methodology's nations section */}
-                <Link href="/methodology#teams" className="font-serif text-[14px] font-semibold text-claret hover:underline">
-                  {d.athlete.header.howItWorks}
-                </Link>
-              </div>
+              {/* as on an athlete's page: how the number is made, the methodology's nations section */}
+              <Link href="/methodology#teams" className="font-serif text-[14px] font-semibold text-claret hover:underline">
+                {d.athlete.header.howItWorks}
+              </Link>
             </div>
           </div>
         )}

@@ -31,7 +31,6 @@ export const country = {
     months6: "6 мес.",
     top1: "Топ-1",
     top8: "Средн. топ-8",
-    nationsRanking: "Рейтинг сборных",
   },
   chart: {
     title: "Средний рейтинг лидеров",

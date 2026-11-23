@@ -30,7 +30,6 @@ export const country = {
     months6: "6 months",
     top1: "Top 1",
     top8: "Top 8 avg",
-    nationsRanking: "Nations ranking",
   },
   chart: {
     title: "Leaders rating avg",
