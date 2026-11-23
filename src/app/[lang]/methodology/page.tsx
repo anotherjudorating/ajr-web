@@ -222,6 +222,8 @@ export default async function Methodology() {
 
         <Section id="p4p">{d.methodology.chapters.sections.p4p}</Section>
         <p className={P}>{number.p4p(x)}</p>
+
+        <Section id="teams">{d.methodology.chapters.sections.teams}</Section>
         <p className={P}>{number.teams(x)}</p>
 
         {/* Part 3: the test */}

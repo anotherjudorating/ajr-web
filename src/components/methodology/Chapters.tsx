@@ -23,6 +23,7 @@ export const CHAPTERS = [
       { id: "calculator", key: "calculator" },
       { id: "weights", key: "weights" },
       { id: "p4p", key: "p4p" },
+      { id: "teams", key: "teams" },
     ],
   },
   {

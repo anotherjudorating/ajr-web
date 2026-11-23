@@ -197,18 +197,18 @@ export const en: Prose = {
     weightMovesTitle: "Grigalashvili's weight moves",
     p4p: () => (
       <>
-        Ratings of different weights cannot be set side by side: a rating at −60 kg and one at +100 kg were won against different opponents.
-        Pound for pound measures instead how far an athlete stands above their own weight. The candidates are the top three of every weight.
-        Each is set against the seven best other athletes of the same weight, and the gap between their rating and those seven&apos;s average
-        is what the pound-for-pound leaderboard ranks. An athlete on two weights&apos; leaderboards counts once, with the bigger gap.
+        The rating lets one compare athletes of all weights by one measure: how far each stands above their own weight. The ratings themselves
+        are not compared, a rating at −60 kg and one at +100 kg were won against different opponents. The rule: the candidates are the top three
+        of every weight, each is set against the average rating of the seven best other athletes of the same weight, and the gap between the two
+        ranks the pound-for-pound leaderboard. An athlete on two weights&apos; leaderboards counts once, with the bigger gap.
       </>
     ),
     teams: () => (
       <>
         A nation&apos;s rating is the average rating of its best athlete in every weight: seven weights for the men&apos;s or the women&apos;s
-        table, all fourteen for the mixed one. A weight where a nation has nobody on the leaderboard counts as that weight&apos;s last place, so
-        strength across many weights ranks higher than one star. The table also shows in how many weights a nation has the best athlete of all
-        nations and in how many it is in the top eight.
+        table, all fourteen for the mixed one. A weight where the nation has nobody on the leaderboard counts as that weight&apos;s last place, so a
+        nation strong in many weights ranks above one with a single star. The table also counts the weights where a nation has the best athlete
+        of all nations and the weights where it is in the top eight.
       </>
     ),
   },
