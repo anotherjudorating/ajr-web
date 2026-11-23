@@ -375,7 +375,7 @@ export function Nations() {
                       className={`block w-full h-7 sm:h-8 px-1 text-[11px] leading-none truncate pointer-events-none sm:pointer-events-auto sm:cursor-pointer ${dark ? "text-paper" : "text-ink"} ${on ? "sm:outline sm:outline-2 sm:outline-ink sm:-outline-offset-2" : ""}`}
                       style={c ? { background: `rgba(153, 15, 61, ${(0.06 + 0.9 * shade(c.rating)).toFixed(2)})` } : { background: HATCH }}
                     >
-                      <span className="hidden sm:inline tabular-nums">{c ? c.rating : ""}</span>
+                      <span className="tabular-nums text-[10px] sm:text-[11px] tracking-tight sm:tracking-normal">{c ? c.rating : ""}</span>
                     </button>
                   </td>
                 );
