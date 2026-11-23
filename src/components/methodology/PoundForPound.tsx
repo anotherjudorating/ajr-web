@@ -46,6 +46,12 @@ function GenderToggle({ value, onChange }: { value: Gender; onChange: (g: Gender
   );
 }
 
+// A name cut to what fits a column of the chart (about 6.2px a character at 11px).
+const clip = (name: string, width: number) => {
+  const fits = Math.max(4, Math.floor((width - 6) / 6.2));
+  return name.length > fits ? `${name.slice(0, fits - 1)}…` : name;
+};
+
 // The width of a box, for an svg drawn to fit it.
 function useWidth() {
   const box = useRef<HTMLDivElement>(null);
@@ -77,6 +83,84 @@ const ALL_OFFSETS = (["men", "women"] as const).flatMap((g) => P4P[g].flatMap((c
 const Y_MIN = Math.floor(Math.min(...ALL_OFFSETS) / 100) * 100;
 const Y_MAX = Math.ceil(Math.max(...ALL_OFFSETS) / 100) * 100;
 
+// On a phone the seven columns turn into rows: the scale runs across, each weight's
+// rivals around the zero line, the leader at their gap, the leader's name and gap at
+// the right where there is room for them.
+const ROW_H = 38;
+function Rows({ dots, width, shown, onPick, labels, p4pRow }: { dots: Dot[][]; width: number; shown: Dot; onPick: (d: Dot) => void; labels: string[]; p4pRow: string }) {
+  const LABEL = 46; // the weight and the P4P place
+  const NAME = 116; // the leader's name and gap
+  const x0 = LABEL + 6;
+  const x1 = width - NAME - 6;
+  const x = (v: number) => x0 + ((v - Y_MIN) / (Y_MAX - Y_MIN)) * (x1 - x0);
+  const r = (v: number) => Math.round(v * 10) / 10;
+  const H = ROW_H * dots.length + 26;
+  const ticks: number[] = [];
+  for (let v = Y_MIN; v <= Y_MAX; v += 200) ticks.push(v);
+  const same = (a: Dot, b: Dot) => a.a.id === b.a.id && a.weight === b.weight;
+  return (
+    <>
+      <svg viewBox={`0 0 ${width} ${H}`} width={width} height={H} className="block" aria-hidden>
+        <g stroke="#D6CFC2" strokeWidth="0.8">
+          {ticks.map((v) => v !== 0 && <line key={v} x1={r(x(v))} x2={r(x(v))} y1={0} y2={H - 22} />)}
+        </g>
+        <line x1={r(x(0))} x2={r(x(0))} y1={0} y2={H - 22} stroke="#66605C" strokeWidth="1.2" strokeDasharray="4,3" />
+        <g fill="#66605C" fontFamily={FONT} fontSize="10" textAnchor="middle">
+          {ticks.map((v) => (
+            <text key={v} x={r(x(v))} y={H - 8}>
+              {signed(v)}
+            </text>
+          ))}
+          <text x={2} y={H - 8} textAnchor="start">
+            {p4pRow}
+          </text>
+        </g>
+        {dots.map((row, i) => {
+          const lead = row[0];
+          const cy = ROW_H * i + ROW_H / 2;
+          const first = lead.a.p4p === 1;
+          return (
+            <g key={lead.weight}>
+              {first && <rect x={0} y={ROW_H * i} width={width} height={ROW_H} fill="#990F3D" fillOpacity="0.06" />}
+              <text x={2} y={cy - 2} fontFamily={FONT} fontSize="12" fontWeight="600" fill="#33302E">
+                {labels[i]}
+              </text>
+              <text x={2} y={cy + 11} fontFamily={FONT} fontSize="10" fontWeight={first ? 700 : 400} fill={first ? "#990F3D" : "#66605C"}>
+                {lead.a.p4p}
+              </text>
+              <line x1={r(x(0))} x2={r(x(lead.offset))} y1={cy} y2={cy} stroke="#990F3D" strokeWidth="3" strokeOpacity="0.3" />
+              {row.slice(1).map((o) => (
+                <circle key={o.a.id} cx={r(x(o.offset))} cy={cy} r={same(shown, o) ? 4 : 2.5} fill="#66605C" fillOpacity={same(shown, o) ? 1 : 0.7} />
+              ))}
+              <circle cx={r(x(lead.offset))} cy={cy} r="5" fill="#990F3D" stroke={same(shown, lead) ? "#33302E" : "none"} strokeWidth="1.5" />
+              {row.map((o) => (
+                <circle key={`hit-${o.a.id}`} cx={r(x(o.offset))} cy={cy} r="9" fill="transparent" className="cursor-pointer" onPointerEnter={() => onPick(o)} onClick={() => onPick(o)} />
+              ))}
+            </g>
+          );
+        })}
+      </svg>
+      {/* the leaders' names and gaps, at the right */}
+      {dots.map((row, i) => {
+        const lead = row[0];
+        return (
+          <button
+            key={lead.weight}
+            type="button"
+            onClick={() => onPick(lead)}
+            className="absolute flex items-center justify-end gap-1 text-[11px] leading-none cursor-pointer"
+            style={{ right: 0, width: NAME, top: ROW_H * i, height: ROW_H }}
+          >
+            <Flag ioc={lead.a.ioc} />
+            <span className="truncate font-semibold text-ink">{shortName(lead.a.family, lead.a.given)}</span>
+            <span className="font-bold tabular-nums text-claret">{signed(lead.gap ?? Math.round(lead.offset))}</span>
+          </button>
+        );
+      })}
+    </>
+  );
+}
+
 // Seven columns, one scale: every weight's leader over the pack of their rivals, and the
 // column that stands highest is the pound-for-pound number 1.
 export function PoundForPound() {
@@ -92,7 +176,7 @@ export function PoundForPound() {
 
   const W = width ?? 640;
   const phone = W < 560;
-  const H = phone ? 300 : 320;
+  const H = phone ? ROW_H * 7 + 26 : 320; // a phone: the weights as rows
   const LEFT = phone ? 36 : 46;
   const RIGHT = W - 6;
   const TOP = 36;
@@ -110,7 +194,8 @@ export function PoundForPound() {
     <Figure title={s.title} caption={t(s.caption, { day: f.formatDate(P4P.day) })}>
       <GenderToggle value={gender} onChange={setGender} />
       <div ref={box} className="w-full relative" style={{ height: H }} onPointerLeave={() => setPicked(null)}>
-        {width !== null && (
+        {width !== null && phone && <Rows dots={dots} width={W} shown={shown} onPick={setPicked} labels={WEIGHTS[gender].map((w) => w.label)} p4pRow={s.p4pRow} />}
+        {width !== null && !phone && (
           <>
             <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={s.chartLabel} className="block">
               {/* the column of the number 1 */}
@@ -185,7 +270,7 @@ export function PoundForPound() {
               >
                 <div className="flex items-center justify-center gap-1 text-[11px] font-semibold text-ink whitespace-nowrap overflow-hidden">
                   <Flag ioc={lead.a.ioc} />
-                  {!phone && <span className="truncate">{shortName(lead.a.family, lead.a.given)}</span>}
+                  {!phone && <span className="truncate">{clip(shortName(lead.a.family, lead.a.given), colW - 22)}</span>}
                 </div>
                 <div className="text-[11px] font-bold tabular-nums text-claret">{signed(lead.gap ?? Math.round(lead.offset))}</div>
               </div>
@@ -235,7 +320,8 @@ export function PoundForPound() {
 const RATINGS = (["men", "women"] as const).flatMap((g) => NATIONS[g].rows.flatMap((row) => row.cells.flatMap((c) => (c ? [c.rating] : []))));
 const LO = Math.min(...RATINGS);
 const HI = Math.max(...RATINGS);
-const shade = (rating: number) => (rating - LO) / Math.max(HI - LO, 1);
+// squared: most cells sit in the upper middle, a straight scale left them all one pink
+const shade = (rating: number) => ((rating - LO) / Math.max(HI - LO, 1)) ** 2;
 const HATCH = "repeating-linear-gradient(135deg, #D6CFC2 0 2px, transparent 2px 6px)";
 
 type Pick = { row: number; col: number };
@@ -266,7 +352,7 @@ export function Nations() {
           <tr className="border-b border-ink">
             <th className={`${head} w-[62px] sm:w-[84px] text-left`} />
             {WEIGHTS[gender].map((w) => (
-              <th key={w.api} className={`${head} text-center tabular-nums`}>
+              <th key={w.api} className={`${head} text-center tabular-nums text-[10px] sm:text-[12px] tracking-tight sm:tracking-normal`}>
                 {w.label}
               </th>
             ))}
@@ -287,7 +373,7 @@ export function Nations() {
               </td>
               {n.cells.map((c, j) => {
                 const on = shown.row === i && shown.col === j;
-                const dark = c ? shade(c.rating) > 0.55 : false;
+                const dark = c ? shade(c.rating) > 0.5 : false;
                 return (
                   <td key={j} className="p-px">
                     <button
@@ -300,9 +386,9 @@ export function Nations() {
                           : t(s.empty, { nation, weight: WEIGHTS[gender][j].label, rating: table.weights[j].last })
                       }
                       className={`block w-full h-7 sm:h-8 px-1 text-[11px] leading-none truncate cursor-pointer ${dark ? "text-paper" : "text-ink"} ${on ? "outline outline-2 outline-ink -outline-offset-2" : ""}`}
-                      style={c ? { background: `rgba(153, 15, 61, ${(0.08 + 0.84 * shade(c.rating)).toFixed(2)})` } : { background: HATCH }}
+                      style={c ? { background: `rgba(153, 15, 61, ${(0.06 + 0.9 * shade(c.rating)).toFixed(2)})` } : { background: HATCH }}
                     >
-                      <span className="hidden sm:inline">{c ? shortName(c.family, c.given) : ""}</span>
+                      <span className="hidden sm:inline tabular-nums">{c ? c.rating : ""}</span>
                     </button>
                   </td>
                 );
