@@ -233,3 +233,81 @@ Terms chosen for `src/i18n/it/*.ts` and `src/content/*/it.tsx`. Rules: no long d
 | athletes' names | as in the data: "Abe U.", "Heydarov H." | full names in prose also Latin: "Uta Abe" |
 | countries | in Italian from `it/countries.ts` | as the press writes them: Stati Uniti, Corea del Sud, Corea del Nord, Regno Unito, Taiwan (TPE), Bielorussia, Repubblica Ceca, Moldavia, RD del Congo, Timor Est, "Atleti neutrali individuali" (AIN), "Squadra dei rifugiati" (EOR), URSS, Jugoslavia, Cecoslovacchia, Germania Est / Ovest, Zaire |
 | 404 "Mate. Sore-made.", "Matte." | unchanged, romaji | |
+
+## Portuguese (pt, Brazilian)
+
+Terms chosen for `src/i18n/pt/*.ts` and `src/content/*/pt.tsx`. Brazilian Portuguese (judô, judoca, luta, chave), without slang a reader in Portugal would not follow. Rules: no long dashes, no semicolons, no middle dot, impersonal (no nós/a gente), comparisons always "ranking IJF" / "rating AJR" symmetric, athletes' and tournaments' names as in the IJF data. Stages: 1/16, oitavas (1/8 in codes), quartas, semifinal, final. Weights: "−73 kg" (real minus), "−73" in tables.
+
+| English | Português | Where and why |
+|---|---|---|
+| rating | rating | everywhere, the number: "rating AJR", "rating 2543". Brazilian chess and sports press use "rating" for an Elo-type number. "Pontuação" would be confused with IJF points, "classificação" and "ranking" are the list |
+| ranking, rankings | ranking, "Rankings" (the section) | "ranking mundial de judô", "ranking de países". The IJF list is "ranking IJF" or "ranking mundial da IJF" |
+| skill | força | the Glicko μ: "força 2100 − RD 70 = rating 2030". Not "habilidade" or "nível" |
+| RD, rating deviation | RD, once in prose "RD (rating deviation, o desvio do rating)" | the code stays |
+| uncertainty | incerteza | the band on the chart, "−176 incerteza" |
+| leaderboard, table | tabela | "tabela de −73 kg", "fora das tabelas" |
+| pound for pound, P4P | P4P in labels, "peso por peso" in sentences | "Ranking P4P masculino", "1º peso por peso" |
+| nations, teams | países (lists, filters, columns), seleções (the teams ranking's name, "rating de seleção") | "Ranking de países", column "País" |
+| NAT (narrow column) | País / PAÍS | over the flag |
+| contest | luta | never "combate" (Portugal) or "partida" |
+| win / loss (W / L) | V / D | as Brazilian tables write vitória / derrota |
+| W–L, W/L | V–D, V/D | |
+| chance, win chance | chance, chance de vitória | "70%", "1,74%" (comma, no space before %) |
+| favourite / underdog | favorito / azarão | "azarão" is the Brazilian press's word, understood in Portugal |
+| upset | surpresa | "Surpresas do mês", "Maiores surpresas", "vitórias surpresa". "Zebra" is the Brazilian slang and very natural in speech, but informal and opaque in Portugal, so the neutral word was chosen for labels. A proofreader may prefer "zebra" on the home page |
+| movers (biggest movers) | Maiores variações | the home block, both directions |
+| lead (points ahead) | vantagem | column "Vantagem", "Maior vantagem P4P" |
+| peak | pico | |
+| trend | tendência | |
+| rank, place | posição (in a ranking), lugar (at a tournament) | "nº 1" with a space, "1º" as ordinal, columns "Posição" and "Lugar" |
+| seed, seeded, seeding | cabeça de chave, cabeças de chave | "cabeça de chave 1", "sem cabeça de chave", "cabeças de chave pelo rating AJR" |
+| draw (the event) | sorteio | "Sorteio ainda não publicado", figure "O sorteio" |
+| draw, bracket (the drawing) | chave | "a chave real", switch "Chave / Lista" |
+| bye | bye | the word Brazilian brackets use |
+| walkover, WO, fusen-gachi | WO, "fusen-gachi" in brackets | "WO: não lutou" |
+| golden score | golden score, code GS | as the commentators say it, not "ponto de ouro" |
+| ippon, waza-ari, yuko, shido, hansoku-make | ippon, waza-ari, yuko, shido, hansoku-make | letters in the contest table: I / W / Y |
+| round | fase | column "Fase", "Caminho até a luta" |
+| F, 1/2, 1/4, 1/8 … | Final, Semifinal, Quartas de final, 1/8 de final | the codes in brackets stay "F", "1/2"; in prose "oitavas", "quartas", "semifinais" |
+| BR, bronze medal contest | Luta pelo bronze, in the bracket "Bronze" | |
+| REP, repechage | Repescagem | |
+| round-robin tour | Rodada | "Rodada 1" |
+| medal rounds | lutas por medalha | |
+| Grand Slam, Grand Prix, Masters, World Tour, European Open, European Cup | untranslated | tournament names by the owner's decision. The level "Copas da Europa" and "Opens continentais" in the methodology's prose, "Opens e Copas continentais" in the filters |
+| Olympic Games, World Championships, Continental Championships | Jogos Olímpicos, Campeonato Mundial (short "Mundial"), Campeonatos continentais | tournament levels in the filters |
+| Other (level) | Outros | |
+| head-to-head | Confrontos (the header and the page), confronto direto (in sentences) | "Confronto direto no judô", "Confrontos anteriores" |
+| Explore | Explorar | the lists of tournaments, athletes, contests and nations |
+| Records | Recordes | |
+| Methodology | Metodologia (link), "Como funciona o rating" (the page's title) | |
+| How it works, How ratings work | Como funciona, Como funciona o rating | |
+| Export data | Exportar dados | |
+| Export CSV | Baixar CSV | CSV headers stay English |
+| Contact | Contato | |
+| Updated | Atualizado | "Ratings atualizados em 13 nov 2026" |
+| Live / Upcoming | Ao vivo / Em breve | tournament chips |
+| Inactive | Inativo | more than a year without a contest |
+| Still in / Placed | Na disputa / Classificados | the weight's athletes filter |
+| newcomer, debutant | novato, estreante | |
+| regular | veterano, "quem luta sempre" | |
+| nemesis | Carrasco | the record: the Brazilian press's word for the opponent who always beats you |
+| giant killer | Caçador de gigantes | record |
+| golden score king | Rei do golden score | record |
+| deepest team | Elenco mais profundo | record |
+| greatest / longest rivalry | Maior / mais longa rivalidade | |
+| least likely champion | Campeão menos provável | |
+| log loss, Brier | log loss, escore de Brier | |
+| accuracy | acerto | "Acerto do rating" |
+| coin flip | moeda | |
+| Elo | Elo | |
+| textbook Glicko-2 | Glicko-2 clássico | |
+| volatility | volatilidade | |
+| IJF, AJR, P4P, RD, GS, WO | as they are | |
+| months after a day | 5 mai 2026, 13 nov 2026 | three letters, lower case, no dot, both arrays the same (jan fev mar abr mai jun jul ago set out nov dez). Full names lower case in the explore month rows: "janeiro de 2026" |
+| numbers | 24.503, 1,7% | Intl.NumberFormat("pt"): a point for thousands, a comma for decimals |
+| ordinals | 1º, 5º | one form, masculine (lugar, posto), "{n}º" |
+| plurals | 1 luta, 2 lutas, 0 lutas | Intl.PluralRules("pt") gives one for 0 and 1: "0 lutas" would need a zero form the site never shows |
+| ranges | 1–50 de 625, 7–8 dez | the short dash between numbers kept as a range sign, as in English |
+| athletes' names | as in the data: "Abe U.", "Heydarov H." | in prose too: "Uta Abe" |
+| countries | from the table `pt/countries.ts` | Estados Unidos, Coreia do Sul, Coreia do Norte, Reino Unido, Taiwan (TPE), Belarus (the press's current form, not Bielorrússia), Tchéquia, Catar, Mianmar, "Atletas neutros" (AIN), "Equipe de refugiados" (EOR), URSS, Iugoslávia, Tchecoslováquia, Alemanha Oriental / Ocidental, Zaire |
+| 404 "Mate. Sore-made.", "Matte." | unchanged, romaji | |
