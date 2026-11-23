@@ -21,6 +21,7 @@ export const CHAPTERS = [
     sections: [
       { id: "skill", key: "skill" },
       { id: "calculator", key: "calculator" },
+      { id: "medals", key: "medals" },
       { id: "weights", key: "weights" },
       { id: "p4p", key: "p4p" },
       { id: "teams", key: "teams" },

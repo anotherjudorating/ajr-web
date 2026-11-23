@@ -22,6 +22,7 @@ export const methodology = {
       newcomers: "Points punish the young",
       skill: "Skill, uncertainty, rating",
       calculator: "The calculator",
+      medals: "Medal chances",
       weights: "Weights and leaderboards",
       p4p: "Pound for pound",
       teams: "Nations",

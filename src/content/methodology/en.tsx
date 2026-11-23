@@ -195,6 +195,23 @@ export const en: Prose = {
       </>
     ),
     weightMovesTitle: "Grigalashvili's weight moves",
+    medals1: () => (
+      <>
+        The calculator gives the chance of one contest. A tournament is many contests, so the chance of a medal comes from playing the whole
+        bracket. Once the IJF publishes a weight&apos;s draw, the day before, the rating job plays the drawn bracket 5,000 times with today&apos;s
+        ratings: the contests already decided stay as they were, the rest are fought by the rating&apos;s chances. It saves every athlete&apos;s
+        chance of the 1/4, the 1/2, the final, gold and any medal, and for every contest of the bracket who is likely to be in it. During a
+        tournament the chances follow every result.
+      </>
+    ),
+    medals2: () => (
+      <>
+        The brackets are the IJF&apos;s single elimination with repechage from the 1/4. A tournament of another shape, pools of a few athletes,
+        gets no chances, and before the draw there are none. On the first day of the Zagreb Grand Prix, 13 November 2026, with Scutto A. (ITA)
+        through to the 1/4 at −48 kg, her chance stood at 56% for gold and 95% for a medal: a loser of the 1/4 can still reach bronze through the
+        repechage.
+      </>
+    ),
     p4p: () => (
       <>
         The rating lets one compare athletes of all weights by one measure: how far each stands above their own weight. The ratings themselves

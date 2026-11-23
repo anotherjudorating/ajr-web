@@ -24,6 +24,7 @@ export const methodology = {
       newcomers: "Очки наказывают молодых",
       skill: "Сила, неопределённость, рейтинг",
       calculator: "Калькулятор",
+      medals: "Шансы на медали",
       weights: "Веса и таблицы",
       p4p: "P4P",
       teams: "Сборные",

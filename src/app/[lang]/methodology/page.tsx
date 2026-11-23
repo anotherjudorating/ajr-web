@@ -209,6 +209,10 @@ export default async function Methodology() {
         <RinerCareer />
         <p className={P}>{number.afterRiner(x)}</p>
 
+        <Section id="medals">{d.methodology.chapters.sections.medals}</Section>
+        <p className={P}>{number.medals1(x)}</p>
+        <p className={P}>{number.medals2(x)}</p>
+
         <Section id="weights">{d.methodology.chapters.sections.weights}</Section>
         <p className={P}>{number.weights1(x)}</p>
         <p className={P}>{number.weights2(x)}</p>
