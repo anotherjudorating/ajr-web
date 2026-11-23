@@ -9,6 +9,7 @@ import { RdShift } from "@/components/methodology/RdShift";
 import { RinerCareer, WeightMoves } from "@/components/methodology/SkillChart";
 import { BeatTheModel, ListingRule } from "@/components/methodology/Stories";
 import { DrawAnimation } from "@/components/methodology/DrawAnimation";
+import { Nations, PoundForPound } from "@/components/methodology/PoundForPound";
 import { Figure } from "@/components/methodology/Figure";
 import { NumberOneTable, ParisDraw, PointsOrStrength, TableRule, TwoGolds } from "@/components/methodology/Why";
 import { PROSE } from "@/content/methodology";
@@ -208,6 +209,10 @@ export default async function Methodology() {
         <RinerCareer />
         <p className={P}>{number.afterRiner(x)}</p>
 
+        <Section id="medals">{d.methodology.chapters.sections.medals}</Section>
+        <p className={P}>{number.medals1(x)}</p>
+        <p className={P}>{number.medals2(x)}</p>
+
         <Section id="weights">{d.methodology.chapters.sections.weights}</Section>
         <p className={P}>{number.weights1(x)}</p>
         <p className={P}>{number.weights2(x)}</p>
@@ -219,6 +224,14 @@ export default async function Methodology() {
             <ListingRule />
           </div>
         </TryIt>
+
+        <Section id="p4p">{d.methodology.chapters.sections.p4p}</Section>
+        <p className={P}>{number.p4p(x)}</p>
+        <PoundForPound />
+
+        <Section id="teams">{d.methodology.chapters.sections.teams}</Section>
+        <p className={P}>{number.teams(x)}</p>
+        <Nations />
 
         {/* Part 3: the test */}
         <Chapter id="works">{works.intro(x)}</Chapter>

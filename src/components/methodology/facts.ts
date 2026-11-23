@@ -31,6 +31,7 @@ export const LIMITS = [
   "Anything outside the senior individual contests the IJF judobase publishes: kata, juniors, cadets, veterans and team events (a junior world champion starts at 1500 like anyone), and a few World Championships of 2009 to 2011 are missing.",
   "Injuries, illness, a new coach, home crowds, a long day of contests, styles and grips: invisible until the results show them.",
   "How much a change of weight really costs a given athlete: the step is a flat 5% of the skill, once per move however far, the same for every weight, men and women.",
+  "Results the IJF judobase has not published yet: a contest reaches the rating within about 20 minutes of appearing there.",
 ];
 
 // Where a rating sits: the average of each place across the weights (11 November 2026).

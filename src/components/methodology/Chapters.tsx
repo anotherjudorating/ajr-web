@@ -21,7 +21,10 @@ export const CHAPTERS = [
     sections: [
       { id: "skill", key: "skill" },
       { id: "calculator", key: "calculator" },
+      { id: "medals", key: "medals" },
       { id: "weights", key: "weights" },
+      { id: "p4p", key: "p4p" },
+      { id: "teams", key: "teams" },
     ],
   },
   {
@@ -80,6 +83,19 @@ export function TryIt({ title, children, open = false }: { title: string; childr
 }
 
 // The chapter and the section in view (the last whose top passed a third of the screen).
+// A clicked entry of the contents: marked at once, and kept while the page scrolls to
+// it (and after, if a short section at the end cannot reach the top), until the reader
+// scrolls on their own. Shared by both navs.
+let pinned: { id: string } | null = null;
+const PIN_EVENT = "methodology:pin";
+// the reader moving the page themselves (not the scroll to a clicked entry)
+const OWN_SCROLL = ["wheel", "touchmove", "keydown"] as const;
+
+export function pinSection(id: string) {
+  pinned = { id };
+  window.dispatchEvent(new Event(PIN_EVENT));
+}
+
 function useCurrent(): { chapter: string; section: string | null } {
   const [current, setCurrent] = useState<{ chapter: string; section: string | null }>({ chapter: CHAPTERS[0].id, section: null });
   useEffect(() => {
@@ -91,13 +107,26 @@ function useCurrent(): { chapter: string; section: string | null } {
       }
       // at the bottom the last section is the one being read, however short
       if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) found = CHAPTERS[2].sections[2].id;
+      if (pinned) found = pinned.id;
       const chapter = CHAPTERS.find((c) => c.id === found || c.sections.some((s) => s.id === found)) ?? CHAPTERS[0];
       const section = chapter.sections.some((s) => s.id === found) ? found : null;
       setCurrent((c) => (c.chapter === chapter.id && c.section === section ? c : { chapter: chapter.id, section }));
     };
+    // the reader's own wheel, touch or key ends the pin
+    const own = () => {
+      if (!pinned) return;
+      pinned = null;
+      update();
+    };
     update();
     window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
+    window.addEventListener(PIN_EVENT, update);
+    for (const type of OWN_SCROLL) window.addEventListener(type, own, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener(PIN_EVENT, update);
+      for (const type of OWN_SCROLL) window.removeEventListener(type, own);
+    };
   }, []);
   return current;
 }
@@ -115,6 +144,7 @@ export function ChapterNav() {
           <li key={c.id}>
             <a
               href={`#${c.id}`}
+              onClick={() => pinSection(c.id)}
               aria-current={chapter === c.id && !section ? "true" : undefined}
               className={`block pl-3 py-1.5 -ml-px border-l-2 ${chapter === c.id ? "border-claret text-ink font-semibold" : "border-transparent text-muted hover:text-ink"}`}
             >
@@ -127,6 +157,7 @@ export function ChapterNav() {
                   <li key={s.id}>
                     <a
                       href={`#${s.id}`}
+                      onClick={() => pinSection(s.id)}
                       aria-current={section === s.id ? "true" : undefined}
                       className={`block pl-8 py-1 -ml-px border-l-2 text-[13px] ${section === s.id ? "border-claret text-ink" : "border-transparent text-muted hover:text-ink"}`}
                     >
@@ -170,7 +201,7 @@ export function ChapterStrip() {
         <ol className="flex gap-5 h-10 items-center whitespace-nowrap text-[13px] pr-8">
           {CHAPTERS.map((c, i) => (
             <li key={c.id}>
-              <a href={`#${c.id}`} className={chapter === c.id ? "text-claret font-semibold" : "text-muted"}>
+              <a href={`#${c.id}`} onClick={() => pinSection(c.id)} className={chapter === c.id ? "text-claret font-semibold" : "text-muted"}>
                 {i + 1} {d.methodology.chapters[c.id].short}
               </a>
             </li>

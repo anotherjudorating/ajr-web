@@ -63,10 +63,14 @@ export type Prose = {
     calculator2: P;
     career: P;
     afterRiner: P;
+    medals1: P;
+    medals2: P;
     weights1: P;
     weights2: P;
     afterTableRule: P;
     weightMovesTitle: string;
+    p4p: P;
+    teams: P;
   };
   works: {
     intro: P;
