@@ -7,12 +7,16 @@ import { permanentRedirect, redirect } from "next/navigation";
 import { lang } from "next/root-params";
 
 import { type Dict, en } from "@/i18n/en";
+import { es } from "@/i18n/es";
 import { type Format, localeFormat } from "@/i18n/format";
+import { fr } from "@/i18n/fr";
+import { it } from "@/i18n/it";
 import { DEFAULT_LANG, isLang, type Lang, localePath } from "@/i18n/locales";
+import { pt } from "@/i18n/pt";
 import { ru } from "@/i18n/ru";
 import { type Plural, plural, t, type Vars } from "@/i18n/t";
 
-const DICTS: Record<Lang, Dict> = { en, ru };
+const DICTS: Record<Lang, Dict> = { en, ru, fr, es, it, pt };
 
 // The page's language: the root parameter. The proxy rewrites every path whose
 // first segment is not a language into /en/..., so it is always one of ours.

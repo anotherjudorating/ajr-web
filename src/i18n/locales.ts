@@ -3,7 +3,7 @@
 // (docs/audits/2026-11-21-i18n-plan-v2.md §3). Plain data and pure functions: this
 // file is read on the server, in the browser and by the proxy.
 
-export type Lang = "en" | "ru";
+export type Lang = "en" | "ru" | "fr" | "es" | "it" | "pt";
 
 export type Locale = {
   code: Lang;
@@ -33,6 +33,41 @@ export const LOCALES: readonly Locale[] = [
     htmlLang: "ru",
     ogLocale: "ru_RU",
     published: true,
+  },
+  // The four below are translated and wait for a native proofreader: the owner
+  // publishes each after review (published: true).
+  {
+    code: "fr",
+    name: "Français",
+    short: "FR",
+    htmlLang: "fr",
+    ogLocale: "fr_FR",
+    published: false,
+  },
+  {
+    code: "es",
+    name: "Español",
+    short: "ES",
+    htmlLang: "es",
+    ogLocale: "es_ES",
+    published: false,
+  },
+  {
+    code: "it",
+    name: "Italiano",
+    short: "IT",
+    htmlLang: "it",
+    ogLocale: "it_IT",
+    published: false,
+  },
+  {
+    // Brazilian Portuguese: the larger judo audience, written without regional words
+    code: "pt",
+    name: "Português",
+    short: "PT",
+    htmlLang: "pt-BR",
+    ogLocale: "pt_BR",
+    published: false,
   },
 ];
 

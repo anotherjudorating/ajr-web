@@ -3,7 +3,11 @@
 import type { Lang } from "@/i18n/locales";
 
 import { en } from "./en";
+import { es } from "./es";
+import { fr } from "./fr";
+import { it } from "./it";
+import { pt } from "./pt";
 import { ru } from "./ru";
 import type { ContactProse } from "./types";
 
-export const CONTACT_PROSE: Record<Lang, ContactProse> = { en, ru };
+export const CONTACT_PROSE: Record<Lang, ContactProse> = { en, ru, fr, es, it, pt };

@@ -13,6 +13,10 @@ import type { Lang } from "@/i18n/locales";
 const PROVIDERS: Record<Lang, ComponentType<{ children: ReactNode }>> = {
   en: dynamic(() => import("@/i18n/providers/en")),
   ru: dynamic(() => import("@/i18n/providers/ru")),
+  fr: dynamic(() => import("@/i18n/providers/fr")),
+  es: dynamic(() => import("@/i18n/providers/es")),
+  it: dynamic(() => import("@/i18n/providers/it")),
+  pt: dynamic(() => import("@/i18n/providers/pt")),
 };
 
 export function LocaleGate({ lang, children }: { lang: Lang; children: ReactNode }) {
