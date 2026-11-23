@@ -1,4 +1,8 @@
-# Глоссарий русской версии
+# Глоссарий переводов
+
+Термины каждого языка сайта: русский ниже, затем французский, испанский, итальянский и португальский (пояснения к ним по-английски). Общие правила для всех языков: без длинных тире, без точек с запятой и точки-разделителя, безлично, сравнения «IJF» и «AJR» симметрично, имена спортсменов и названия турниров латиницей, как в данных IJF, стадии 1/16, 1/8, 1/4, 1/2 и слово «финал» на языке, веса «−73 kg» с настоящим минусом.
+
+## Русский (ru)
 
 Термины, выбранные для `src/i18n/ru/*.ts` и `src/content/*/ru.tsx`. Правила: без длинных тире, с «ё», без точек с запятой и точки-разделителя, безлично (без «мы»), сравнения всегда «IJF» и «AJR» симметрично, имена спортсменов и названия турниров латиницей, как в данных IJF. Стадии: 1/16, 1/8, 1/4, 1/2, финал. Веса: «−73 кг» (настоящий минус), в таблицах «−73».
 
@@ -76,3 +80,80 @@
 | athletes' names | как в данных: «Abe U.», «Heydarov H.» | в прозе полные имена тоже латиницей: «Uta Abe» |
 | countries | по-русски из таблицы `ru/countries.ts` | как страны называют себя по-русски: США, Республика Корея, КНДР, Великобритания, Тайвань (TPE), Беларусь, Кыргызстан, Молдова, Тимор-Лесте, «Нейтральные спортсмены» (AIN), «Команда беженцев» (EOR) |
 | 404 «Mate. Sore-made.», «Matte.» | «Матэ. Соре-мадэ.», «Матэ.» | |
+
+## French (fr)
+
+Rules: impersonal (no « nous »), no long dashes or semicolons, IJF and AJR always symmetric (« classement IJF » / « cote AJR », « points IJF » / « points AJR », « le numéro 1 IJF » / « le numéro 1 AJR »), athletes' and tournaments' names as in the IJF data, a no-break space before « : » « ? » « ! » (not before « % », where the formatter writes « 70% »), decimal comma, stages 1/16, 1/8, 1/4, 1/2, finale, weights « −73 kg ».
+
+| English | Français | Where and why |
+|---|---|---|
+| rating (the number) | cote | the Glicko number of an athlete or a nation: « cote 2030 », « cote AJR », column « Cote ». « Classement » is the list, and French judo has no word for a strength number. « Cote » is the chess usage for an Elo number (Belgium, Québec, chess clubs) and short enough for a column. Not « note », not « score » (the test's scores). Proofreader's first question: does « cote » read as betting odds next to « chance »? |
+| ranking, rankings, leaderboard, table | classement, « Classements » (the section) | the list of a weight, the IJF World Ranking List: « classement mondial IJF », « hors classement » (out of the tables). Not « tableau », which is the draw |
+| IJF World Ranking List | classement mondial IJF, World Ranking List once in the prose | |
+| skill | force | the Glicko μ: « force 2100 − RD 70 = cote 2030 ». Not « niveau » (vaguer), not « compétence » |
+| RD, rating deviation | RD, once in the prose « RD (rating deviation, l’incertitude) » | the code stays |
+| uncertainty | incertitude | the band on the chart, « −176 incertitude » |
+| pound for pound, P4P | P4P in short labels, « toutes catégories » in titles and descriptions | « Classement P4P hommes », « n°1 toutes catégories » |
+| nations, teams | nations (lists, filters, the nations ranking), « Équipes » (the switcher's row) | « Classement des nations », column « Nation », « cote d’équipe » for a nation's rating |
+| NAT (the narrow code column) | NAT / Nat | three letters over the flag, as in English |
+| contest | combat | never « match » or « rencontre » for a contest (« rencontre » is kept for a meeting between two athletes in the head-to-head) |
+| win / loss (letters W / L) | V / D | as French result tables write them, « V–D 12 mois », « V/D » |
+| chance, win chance | chance, chance de victoire | « 70% », « 1,74% » (the formatter's form, no space before %) |
+| favourite / underdog | favori / outsider | « outsider » is the usual French sports word |
+| upset | surprise | « Surprises du mois », « Plus grosses surprises », « victoires surprises », chip « Surprise ». « Exploit » names the winner's feat, « surprise » the contest, and it fits a chip |
+| movers (biggest movers) | Hausses et baisses | the home block, both directions |
+| lead (points ahead) | avance | column « Avance », « Plus grande avance P4P » |
+| peak | pic | « Pic 2600 », « pic à 2600 en juil 2024 » |
+| trend | tendance | |
+| rank, place | rang, place, « n°1 » | « N°1 », « 1er », column « Rang », « n°{place} » without a space, « #1 » never |
+| seed, seeded, seeding | tête de série, « têtes de série selon » | « tête de série n°1 », « non tête de série », « Têtes de série selon le classement IJF / la cote AJR » |
+| draw (the event) | tirage au sort, le tirage | « Tirage au sort pas encore publié », the methodology's figure « Le tirage au sort » |
+| bracket (the drawing) | tableau | the figure, the switch « Tableau / Liste », « tout le tableau », « la moitié du tableau » |
+| bye | exempt | |
+| walkover, WO, fusen-gachi | forfait, code WO, « fusen-gachi » | |
+| golden score | golden score, code GS | the French judo word |
+| ippon, waza-ari, yuko, shido, hansoku-make | ippon, waza-ari, yuko, shido, hansoku-make | the letters in the contest table: I / W / Y |
+| round (a stage) | tour | column « Tour », « le tour atteint » |
+| F, 1/2, 1/4, 1/8 … | Finale, 1/2 finale, 1/4 de finale, 1/8 de finale, 1/16 de finale | the codes in the brackets stay « F », « 1/2 »; the group rows « 1/2 finales », « 1/4 de finale », « 1/8 de finale » |
+| BR, bronze medal contest | combat pour le bronze, in the bracket's rows « Bronze » | |
+| REP, repechage | repêchage | |
+| round-robin tour | tour | « Tour 1 » |
+| medal rounds | blocs finaux | « blocs finaux des grands tournois », the French term for the medal session |
+| Grand Slam, Grand Prix, Masters, World Tour, European Open, European Cup | as in English | named events in English, by the owner's decision. In generic prose « Coupe d’Europe », « Opens continentaux », « championnats du monde » |
+| Olympic Games, World Championships, Continental Championships | Jeux olympiques, Championnats du monde, Championnats continentaux | the levels' filters, « Ch. du monde » and « Ch. continentaux » on phones |
+| Other (level) | Autres | |
+| head-to-head | face-à-face | the header, the page, the comparison. Four syllables, fits the 360 px header |
+| Explore | Explorer | the lists of tournaments, athletes, contests, nations |
+| Records | Records | the French word |
+| Methodology | Méthodologie (the link), « Comment fonctionne la cote » (the page's title) | |
+| How it works, How ratings work | Comment ça marche, Comment fonctionne la cote | |
+| Export data | Exporter les données | |
+| Export CSV | Exporter en CSV | CSV headers stay English |
+| Contact | Contact | |
+| Updated | mis à jour | « Classements mis à jour le 13 nov 2026 » |
+| Live / Upcoming | En direct / À venir | |
+| Inactive | Inactif | over a year without a contest |
+| Still in / Placed | En course / Classés | the weight's athletes filter |
+| newcomer, debutant | nouveau venu, débutant | |
+| regular | habitué | « un habitué aux dizaines de combats » |
+| nemesis | Bête noire | the record |
+| giant killer | Tueur de géants | the record |
+| golden score king | Roi du golden score | |
+| deepest team | Équipe la plus dense | « densité » is the French sports word for a deep squad |
+| greatest / longest rivalry | Plus grande / plus longue rivalité | |
+| least likely champion | Champion le plus improbable | |
+| strongest tournament | Tournoi le plus relevé | « relevé » is the French word for a strong field |
+| log loss, Brier | log loss, score de Brier | |
+| accuracy | précision | |
+| coin flip | pile ou face, « pièce » in short labels | |
+| Elo, textbook Glicko-2 | Elo, Glicko-2 standard | |
+| volatility | volatilité | |
+| IJF, AJR, P4P, RD, GS, WO | as in English | |
+| months after a day | 5 oct 2026, 13 nov 2026 | janv févr mars avr juin juil août sept oct nov déc: lowercase, no dot, four letters at most, the same array on its own (« mars 2026 ») |
+| numbers | 24 503 (narrow no-break space), 1,7% | Intl.NumberFormat("fr"), literal numbers in the prose written the same way |
+| ordinals | 1er, 2e, 3e | Intl ordinal rules: one « {n}er », other « {n}e »; used for an athlete's place (« 1er de la catégorie ») |
+| plurals | 1 combat, 2 combats, 0 combat | one / other |
+| ranges | 1–50 sur 625, 7–8 déc | the en dash between two numbers kept as a range sign, as in English |
+| athletes' names | as in the data: « Abe U. », « Heydarov H. » | full names in the prose in Latin too: « Uta Abe » |
+| countries | in French from the table `fr/countries.ts` | as the countries call themselves where French allows: Biélorussie (the French press form, « Bélarus » is the diplomatic one), Corée du Sud, Corée du Nord, Taïwan (TPE), Kirghizistan, Moldavie, Timor oriental, Eswatini, « Athlètes individuels neutres » (AIN), « Équipe des réfugiés » (EOR), RDA, RFA, URSS, Zaïre |
+| 404 « Mate. Sore-made. », « Matte. » | unchanged, in romaji | |
