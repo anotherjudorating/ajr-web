@@ -12,10 +12,12 @@ export const home = {
   lead: "Un rating Glicko-2 per ogni atleta del World Tour IJF, che si muove solo con chi batte e con chi lo batte.",
   howItWorks: "Come funziona",
   // LeaderPanel: men or women, the leader of every weight or the top of one
+  // LeaderPanel: the select is 112 px wide on a phone and the P4P link sits on the same
+  // row as the heading, so both stay short (the heading already says men or women)
   leaders: {
-    allWeights: "Tutte le categorie",
-    p4pMen: "Ranking P4P maschile",
-    p4pWomen: "Ranking P4P femminile",
+    allWeights: "Peso: tutti",
+    p4pMen: "Ranking P4P",
+    p4pWomen: "Ranking P4P",
   },
   movers: {
     title: "Chi sale e chi scende",

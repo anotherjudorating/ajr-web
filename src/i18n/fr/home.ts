@@ -12,10 +12,12 @@ export const home = {
   lead: "Une cote Glicko-2 pour chaque athlète du World Tour de l’IJF, qui ne bouge qu’avec ses victoires et ses défaites, selon l’adversaire.",
   howItWorks: "Comment ça marche",
   // LeaderPanel: men or women, the leader of every weight or the top of one
+  // LeaderPanel: the select is 112 px wide on a phone and the P4P link sits on the same
+  // row as the heading, so both stay short (the heading already says men or women)
   leaders: {
-    allWeights: "Toutes catégories",
-    p4pMen: "Classement P4P hommes",
-    p4pWomen: "Classement P4P femmes",
+    allWeights: "Tous poids",
+    p4pMen: "Classement P4P",
+    p4pWomen: "Classement P4P",
   },
   movers: {
     title: "Hausses et baisses",
