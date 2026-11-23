@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { DEFAULT_LANG, isLang } from "@/i18n/locales";
 import { client, overloaded } from "@/lib/data-client";
+import { noteLanguage } from "@/lib/languages";
 import { noteRequest, takePage } from "@/lib/page-limit";
 import { SITE } from "@/lib/seo";
 
@@ -65,6 +66,7 @@ export function proxy(request: NextRequest) {
       ].join(" "),
     );
   }
+  if (page && !crawler) noteLanguage(headers.get("accept-language"), ip);
   if (ip && page && html && !crawler) {
     const taken = takePage(ip);
     if (!taken.ok) {
